@@ -1,0 +1,6 @@
+# Aspen files are stored byte for byte (CRLF line endings, card-image .bkp)
+*.bkp -text
+*.his -text
+*.rep -text
+*.cpm -text
+*.inp -text

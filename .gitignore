@@ -1,0 +1,38 @@
+# Python
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.venv/
+venv/
+
+# ModelAide data (indexes are personal and may contain licensed content)
+.modelaide/
+*.sqlite
+*.sqlite-journal
+*.sqlite-wal
+
+# Aspen working files: never commit
+*.apw
+*.apwz
+*.appdf
+*.def
+*.scr
+_[0-9a-z][0-9a-z][0-9a-z][0-9a-z][0-9a-z][0-9a-z][0-9a-z].*
+!__init__.py
+*.bk$
+*.hc$
+*.xm$
+
+# Aspen help copies: never commit
+HtmlHelp/
+**/Subsystems/
+*.mcwebhelp
+
+# Eval results
+plugins/*/evals/results/
+
+# OS / editors
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/

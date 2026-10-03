@@ -1,0 +1,25 @@
+{
+  "name": "modelaide",
+  "owner": {
+    "name": "Denis Usosky",
+    "url": "https://orcid.org/0000-0002-6245-5110"
+  },
+  "description": "Claude Code plugins for chemical process simulation software. Answers are grounded in the user's own locally installed product help, model files and literature; no vendor content is distributed.",
+  "plugins": [
+    {
+      "name": "aspen-plus",
+      "source": "./plugins/aspen-plus",
+      "description": "Aspen Plus assistant: click paths checked against your local Aspen Plus help, run troubleshooting from .his/.cpm/.rep files, calculator and Fortran checks, model review and version comparison, literature search.",
+      "version": "0.1.0",
+      "author": {
+        "name": "Denis Usosky",
+        "url": "https://orcid.org/0000-0002-6245-5110"
+      },
+      "homepage": "https://github.com/usosky/modelaide",
+      "repository": "https://github.com/usosky/modelaide",
+      "license": "MIT",
+      "keywords": ["aspen-plus", "process-simulation", "chemical-engineering", "flowsheet", "aspentech"],
+      "category": "engineering"
+    }
+  ]
+}

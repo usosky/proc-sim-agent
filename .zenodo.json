@@ -1,0 +1,35 @@
+{
+  "title": "ModelAide: Claude Code plugins for chemical process simulation",
+  "upload_type": "software",
+  "description": "<p>Claude Code plugins that ground answers about process simulation software in the user's own locally installed product help, simulation files and literature. The first plugin covers Aspen Plus: full-text index of the local help, run-history, report and Control Panel parsers, inline-Fortran checks, model review and version comparison, and a curated knowledge base of run messages and calculator practice. No vendor content is distributed.</p>",
+  "creators": [
+    {
+      "name": "Usosky, Denis",
+      "orcid": "0000-0002-6245-5110"
+    }
+  ],
+  "license": "MIT",
+  "access_right": "open",
+  "language": "eng",
+  "keywords": [
+    "process simulation",
+    "Aspen Plus",
+    "chemical engineering",
+    "Claude Code",
+    "agent skills"
+  ],
+  "grants": [
+    {
+      "id": "10.13039/501100000780::101177949"
+    }
+  ],
+  "related_identifiers": [
+    {
+      "identifier": "10.1016/j.joule.2024.01.003",
+      "relation": "references",
+      "scheme": "doi",
+      "resource_type": "publication-article"
+    }
+  ],
+  "notes": "Developed within the AuSpire project. Co-funded by the European Union under the Marie Sklodowska-Curie Grant Agreement No 101177949 (AuSpire). Views and opinions expressed are however those of the author(s) only and do not necessarily reflect those of the European Union or the Research Executive Agency. Neither the European Union nor the granting authority can be held responsible for them. Licences: code and documentation MIT; the example model and run files in examples/joule-formic-acid CC BY 4.0 (cite Kim et al., Joule 8, 693-713, 2024)."
+}

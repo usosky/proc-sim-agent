@@ -1,0 +1,5 @@
+---
+type: regex
+pattern: "use\\s+import\\s*/\\s*export\\s+variables"
+flags: i
+---

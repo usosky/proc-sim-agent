@@ -1,0 +1,24 @@
+cff-version: 1.2.0
+message: "If you use ModelAide, please cite it as below."
+title: "ModelAide: Claude Code plugins for chemical process simulation"
+type: software
+abstract: >-
+  Claude Code plugins that ground answers about process simulation software in the user's own
+  locally installed product help, simulation files and literature. The first plugin covers
+  Aspen Plus: full-text index of the local help, run-history, report and Control Panel parsers,
+  inline-Fortran checks, model review and version comparison, and a curated knowledge base of
+  run messages and calculator practice.
+authors:
+  - family-names: Usosky
+    given-names: Denis
+    orcid: "https://orcid.org/0000-0002-6245-5110"
+version: 0.1.0
+date-released: 2026-10-03
+license: MIT
+repository-code: "https://github.com/usosky/modelaide"
+keywords:
+  - process simulation
+  - Aspen Plus
+  - chemical engineering
+  - Claude Code
+  - agent skills

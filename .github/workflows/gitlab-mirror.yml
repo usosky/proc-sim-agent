@@ -1,0 +1,35 @@
+name: mirror to GitLab
+
+# Pushes main and tags to GitLab. Needs two repository secrets:
+#   GITLAB_TOKEN  project access token with write_repository
+#   GITLAB_REPO   e.g. gitlab.com/usosky/modelaide.git
+# (Alternatively configure pull mirroring on GitLab and delete this workflow.)
+
+on:
+  push:
+    branches: [main]
+    tags: ["v*"]
+
+permissions:
+  contents: read
+
+jobs:
+  mirror:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Push to GitLab
+        env:
+          GITLAB_TOKEN: ${{ secrets.GITLAB_TOKEN }}
+          GITLAB_REPO: ${{ secrets.GITLAB_REPO }}
+        run: |
+          if [ -z "$GITLAB_TOKEN" ] || [ -z "$GITLAB_REPO" ]; then
+            echo "GitLab secrets not set - skipping mirror"; exit 0
+          fi
+          git remote add gitlab "https://oauth2:${GITLAB_TOKEN}@${GITLAB_REPO}"
+          if [ "${{ github.ref_type }}" = "branch" ]; then
+            git push gitlab "HEAD:refs/heads/main" --force
+          fi
+          git push gitlab --tags --force

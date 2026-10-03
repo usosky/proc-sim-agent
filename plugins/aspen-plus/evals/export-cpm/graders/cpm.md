@@ -1,0 +1,5 @@
+---
+type: regex
+pattern: "run messages.{0,20}\\.cpm"
+flags: i
+---
