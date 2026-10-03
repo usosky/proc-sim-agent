@@ -77,9 +77,19 @@ def detect_product(root: Path):
 
 _VER_IN_PATH = re.compile(r"\bV(\d+(?:\.\d+)*)\b", re.I)
 _VER_IN_TOC = re.compile(r"What.s New in .*?V(\d+(?:\.\d+)*)", re.I)
+# AspenTech help prints its release through a MadCap variable on the copyright page
+_VER_VARIABLE = re.compile(r"Date\.ExternalVersion[^>]*>\s*V(\d+(?:\.\d+)*)", re.I)
 
 
 def detect_version(root: Path) -> str:
+    html = Path(root) / "Content" / "html"
+    for f in [html / "copyright.htm"] + sorted(html.glob("*opyright*.htm")):
+        try:
+            m = _VER_VARIABLE.search(f.read_text(encoding="utf-8", errors="replace"))
+        except OSError:
+            continue
+        if m:
+            return "V" + m.group(1)
     for part in reversed(root.resolve().parts):
         m = _VER_IN_PATH.search(part)
         if m:

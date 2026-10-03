@@ -67,3 +67,10 @@ def test_build_is_resumable(help_root, mahome):
     assert second["complete"]
     assert second["topics"] == 7
     assert second["new_topics"] == 7 - first["topics"]
+
+
+def test_version_from_copyright_variable(help_root):
+    (help_root / "Content" / "html" / "copyright.htm").write_text(
+        '<html><body><b>Version: <span class="notranslate mc-variable Date.ExternalVersion variable">V16'
+        "</span></b></body></html>", encoding="utf-8")
+    assert madcap.detect_version(help_root) == "V16"  # wins over the TOC's "What's New ... V15"
