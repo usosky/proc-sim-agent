@@ -11,9 +11,10 @@
 
 ## GitHub (primary)
 
-1. Create `usosky/modelaide` (public, no template files).
-2. `git init -b main && git add . && git commit -m "ModelAide 0.1.0" && git remote add origin
-   https://github.com/usosky/modelaide.git && git push -u origin main`.
+1. Create `usosky/modelaide` (private while reviewing, no template files), then
+   `git remote add origin https://github.com/usosky/modelaide.git && git push -u origin main`.
+2. Review the repository on GitHub, then Settings > General > Danger Zone > Change visibility >
+   Public.
 3. Settings > About: description, topics (`aspen-plus`, `process-simulation`,
    `chemical-engineering`, `claude-code`, `claude-skills`), website = Zenodo DOI once it exists.
 4. Check that `/plugin marketplace add usosky/modelaide` works from a clean Claude Code.
@@ -28,9 +29,10 @@ repositories > `https://github.com/usosky/modelaide.git`, direction Pull), or th
 
 ## Zenodo (DOI)
 
-1. Log in to Zenodo with GitHub; Account > GitHub; switch on `usosky/modelaide`.
-2. Zenodo reads `.zenodo.json` (title, creator with ORCID and affiliation, MIT, EU grant
-   101177949, the Joule paper as related work, acknowledgment in notes).
+1. Once the repository is public: log in to Zenodo with GitHub; Account > GitHub; switch on
+   `usosky/modelaide`.
+2. Zenodo reads `.zenodo.json` (title, creator with ORCID, MIT, EU grant 101177949, the Joule
+   paper as related work, AuSpire acknowledgment in notes).
 3. GitHub > Releases > Draft a new release, tag `v0.1.0`, title "ModelAide 0.1.0", notes from
    `CHANGELOG.md`. Publishing the release triggers the Zenodo archive and DOI.
 4. Add the DOI badge to `README.md` and the DOI to `CITATION.cff` (`doi:` and

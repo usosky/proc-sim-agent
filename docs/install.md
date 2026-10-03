@@ -39,8 +39,8 @@ python fw.py setup --help-root "C:\ProgramData\AspenTech\Aspen Plus V15.0\HtmlHe
 ```
 
 Each `help-index` run works for about 100 seconds and saves its progress (exit code 3 = not
-finished yet). The V15 help (114 books) takes a few runs on a local disk; a network or
-cloud-synced folder is slower. `python fw.py status` shows progress. You can search while
+finished yet). The full V15 help (about 10,500 topics) took about 4-5 minutes in total in
+testing; a network or cloud-synced folder is slower. `python fw.py status` shows progress. You can search while
 indexing; results then say the index is incomplete.
 
 The same commands work for Aspen HYSYS and Aspen Adsorption help folders (`HYSYS.mcwebhelp`,

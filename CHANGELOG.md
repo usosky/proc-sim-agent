@@ -9,8 +9,9 @@ bump `version` in `plugins/<plugin>/.claude-plugin/plugin.json` and in
 First public version.
 
 ### aspen-plus plugin
-- Local help index: reads Aspen Plus MadCap WebHelp (114 books in V15), resumable SQLite FTS5
-  index with ranked search, topic reader (Markdown, links, equations), table of contents, F1 ids.
+- Local help index: reads Aspen Plus MadCap WebHelp (V15: about 10,500 topics), resumable
+  SQLite FTS5 index with ranked search, topic reader (Markdown, links, equations), table of
+  contents, F1 ids. The help version is read from the help itself.
 - Library index of PDFs, Word files and notes with page-level search and duplicate detection.
 - Parsers: `.his` digest (input echo, messages with IDs, convergence history, block results,
   calculator Fortran with lint, iteration-0 detection, history diff), `.rep` (status, convergence,
