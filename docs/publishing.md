@@ -21,11 +21,19 @@
 
 ## GitLab (mirror)
 
-Either use GitLab's pull mirroring (GitLab project > Settings > Repository > Mirroring
-repositories > `https://github.com/usosky/modelaide.git`, direction Pull), or the push workflow in
-`.github/workflows/gitlab-mirror.yml`: create an empty GitLab project, a project access token with
-`write_repository`, and add the repository secrets `GITLAB_TOKEN` (the token) and `GITLAB_REPO`
-(for example `gitlab.com/usosky/modelaide.git`).
+The workflow `.github/workflows/gitlab-mirror.yml` pushes `main` and tags to GitLab after every
+push. It works on GitLab Free:
+
+1. Create an empty GitLab project (no README), e.g. `gitlab.com/usosky/modelaide`.
+2. GitLab > avatar > Edit profile > Access tokens: add a personal access token with the scope
+   `write_repository` and an expiry date. (Project access tokens and pull mirroring need GitLab
+   Premium on gitlab.com.)
+3. GitHub > repository Settings > Secrets and variables > Actions > New repository secret:
+   `GITLAB_TOKEN` = the token, `GITLAB_REPO` = `gitlab.com/usosky/modelaide.git`.
+4. The next push to `main` (or a re-run of the workflow) fills the GitLab project. Renew the token
+   before it expires.
+
+Without the secrets the workflow skips itself.
 
 ## Zenodo (DOI)
 
@@ -40,14 +48,20 @@ repositories > `https://github.com/usosky/modelaide.git`, direction Pull), or th
 
 ## Releases
 
-- Bump `version` in `plugins/aspen-plus/.claude-plugin/plugin.json` and in
-  `.claude-plugin/marketplace.json` together; add a `CHANGELOG.md` entry; update
-  `date-released` and `version` in `CITATION.cff`; tag `vX.Y.Z`.
-- Users update with `/plugin marketplace update modelaide`.
+- Bump `version` in `plugins/aspen-plus/.claude-plugin/plugin.json` (and `__version__` in
+  `fwlib/__init__.py`); the marketplace entry carries no version. Add a `CHANGELOG.md` entry;
+  update `date-released` and `version` in `CITATION.cff`; publish a GitHub release `vX.Y.Z`
+  (Zenodo adds a new version under the same concept DOI).
+- Users update with `/plugin marketplace update modelaide` or
+  `claude plugin update aspen-plus@modelaide`, or turn on auto-update for the marketplace in
+  `/plugin` > Marketplaces.
 
 ## Plugin directories
 
-- Anthropic's plugin submission form: https://platform.claude.com/plugins/submit (link the
-  GitHub repository; the marketplace manifest is at `.claude-plugin/marketplace.json`).
+- Anthropic's community marketplace: submit through the Console form
+  https://platform.claude.com/plugins/submit (for individual authors; the claude.ai form needs a
+  Team or Enterprise organization). Run `claude plugin validate --strict .` first. Once listed,
+  users can also install with `/plugin marketplace add anthropics/claude-plugins-community` and
+  `/plugin install aspen-plus@claude-community`.
 - Community lists of Claude skills and plugins accept pull requests that add a line with the
   repository link and a one-sentence description.

@@ -1,8 +1,8 @@
 # Changelog
 
 All notable changes are listed here. Versions follow [Semantic Versioning](https://semver.org);
-bump `version` in `plugins/<plugin>/.claude-plugin/plugin.json` and in
-`.claude-plugin/marketplace.json` with every release, or installed copies will not update.
+bump `version` in `plugins/<plugin>/.claude-plugin/plugin.json` (the only place it is set) with
+every release, or installed copies will not update.
 
 ## [0.1.0] - 2026-10-03
 

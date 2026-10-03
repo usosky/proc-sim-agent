@@ -10,7 +10,6 @@
       "name": "aspen-plus",
       "source": "./plugins/aspen-plus",
       "description": "Aspen Plus assistant: click paths checked against your local Aspen Plus help, run troubleshooting from .his/.cpm/.rep files, calculator and Fortran checks, model review and version comparison, literature search.",
-      "version": "0.1.0",
       "author": {
         "name": "Denis Usosky",
         "url": "https://orcid.org/0000-0002-6245-5110"

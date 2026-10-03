@@ -36,7 +36,7 @@ To try a change in Claude Code without reinstalling: `claude --plugin-dir ./plug
 ## Pull requests
 
 - One topic per pull request, with a line in `CHANGELOG.md`.
-- Bump the plugin version (plugin.json and marketplace.json) when behaviour changes.
+- Bump the plugin version (`plugin.json` only) when behaviour changes.
 - CI must pass (tests on Windows and Linux, manifest validation, privacy check).
 
 By contributing you agree that your contribution is licensed under the MIT License.

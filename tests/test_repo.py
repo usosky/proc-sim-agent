@@ -24,7 +24,8 @@ def test_manifests_agree():
     plugin = json.loads((PLUGIN / ".claude-plugin" / "plugin.json").read_text(encoding="utf-8"))
     entry = next(p for p in market["plugins"] if p["name"] == plugin["name"])
     assert entry["source"] == "./plugins/aspen-plus"
-    assert entry["version"] == plugin["version"]
+    # the version lives only in plugin.json (Claude Code docs: don't set it in both places)
+    assert "version" not in entry
     from fwlib import __version__
     assert __version__ == plugin["version"]
     cff = (ROOT / "CITATION.cff").read_text(encoding="utf-8")
