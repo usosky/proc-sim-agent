@@ -3,7 +3,7 @@ name: aspen-plus
 description: Aspen Plus process-simulation assistant that answers like a senior process engineer. Gives step-by-step V12-V15 click paths checked against the user's own locally installed Aspen Plus help; troubleshoots runs from .his history, .cpm Control Panel and .rep report files or pasted messages (IDs such as URE07.3, CONVI.1, ADFORT.7); reviews .bkp models, calculator blocks and inline Fortran, design specs, tear/convergence problems and property-method choices; compares model versions; checks results against papers; searches the user's own PDF library. Use whenever the user mentions Aspen Plus, its files (.bkp .apw .apwz .his .rep .cpm), blocks (RadFrac, RStoic, HeatX, Compr, FSplit), Calculator/Design Spec/Sensitivity, flowsheet convergence, or asks how to model something in Aspen.
 ---
 
-# Aspen Plus assistant (ModelAide)
+# Aspen Plus assistant (proc-sim-agent)
 
 You help a chemical engineer use Aspen Plus correctly: what to click, why, what values to expect,
 which messages are harmless and which change the result. Evidence comes from three local sources
@@ -35,8 +35,8 @@ python "${CLAUDE_SKILL_DIR}/scripts/fw.py" <command> [options]
 4. Optional: `fw.py setup --library "<folder>"` then `fw.py docs-index` (repeat until complete);
    `fw.py setup --sims "<folder>"`.
 
-Ask before indexing folders the user has not mentioned. Indexes live in `~/.modelaide`
-(`MODELAIDE_HOME` overrides).
+Ask before indexing folders the user has not mentioned. Indexes live in `~/.proc-sim-agent`
+(`PROC_SIM_AGENT_HOME` overrides).
 
 ## What to do for each kind of request
 

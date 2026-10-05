@@ -5,8 +5,8 @@ __pycache__/
 .venv/
 venv/
 
-# ModelAide data (indexes are personal and may contain licensed content)
-.modelaide/
+# proc-sim-agent data (indexes are personal and may contain licensed content)
+.proc-sim-agent/
 *.sqlite
 *.sqlite-journal
 *.sqlite-wal

@@ -1,14 +1,14 @@
 {
   "name": "aspen-plus",
-  "displayName": "Aspen Plus (ModelAide)",
+  "displayName": "Aspen Plus (proc-sim-agent)",
   "version": "0.1.0",
   "description": "Aspen Plus assistant that answers like a senior process engineer: click paths checked against your local Aspen Plus help, run troubleshooting from .his/.cpm/.rep files, calculator and Fortran checks, model review, version comparison and literature search. Nothing leaves your computer.",
   "author": {
     "name": "Denis Usosky",
     "url": "https://orcid.org/0000-0002-6245-5110"
   },
-  "homepage": "https://github.com/usosky/modelaide",
-  "repository": "https://github.com/usosky/modelaide",
+  "homepage": "https://github.com/usosky/proc-sim-agent",
+  "repository": "https://github.com/usosky/proc-sim-agent",
   "license": "MIT",
   "keywords": ["aspen-plus", "process-simulation", "chemical-engineering", "flowsheet", "aspentech", "fortran"]
 }

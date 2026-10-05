@@ -1,4 +1,4 @@
-# ModelAide
+# proc-sim-agent
 
 <p>
   <img src="assets/auspire-logo.png" alt="AuSpire" height="44">
@@ -13,12 +13,12 @@ choice, typical values, and the messages to expect. It reads your run files (.hi
 .bkp) to troubleshoot runs, review models and compare versions, and it searches your own library
 of papers and notes.
 
-ModelAide ships no AspenTech content. On first use it indexes the help that came with your Aspen
+proc-sim-agent ships no AspenTech content. On first use it indexes the help that came with your Aspen
 Plus installation, on your computer; your models, results and library never leave it.
 
 ## What it does
 
-| You ask | ModelAide does |
+| You ask | proc-sim-agent does |
 |---|---|
 | "How do I set a calculator to run before a block?" | searches your local help, reads the relevant topics, answers with numbered steps, click paths and why |
 | "My run fails with *SPEC ... CONVERGENCE BLOCK $OLVER02 WILL BE DELETED*" | explains the root cause and the fix (a curated table of real Aspen messages and their fixes) |
@@ -31,8 +31,8 @@ Plus installation, on your computer; your models, results and library never leav
 ## Install (Claude Code)
 
 ```text
-/plugin marketplace add usosky/modelaide
-/plugin install aspen-plus@modelaide
+/plugin marketplace add usosky/proc-sim-agent
+/plugin install aspen-plus@proc-sim-agent
 ```
 
 Requirements: Claude Code, Python 3.8 or newer (`python` or `py -3` on Windows), Aspen Plus
@@ -40,7 +40,7 @@ V12-V15 installed (for its help files). Optional: `pip install pypdf` to index P
 
 ## First run
 
-Ask Claude *"Set up ModelAide for my Aspen Plus help"*, or run the commands yourself
+Ask Claude *"Set up proc-sim-agent for my Aspen Plus help"*, or run the commands yourself
 (`fw.py` lives in `plugins/aspen-plus/skills/aspen-plus/scripts/`):
 
 ```bash
@@ -52,7 +52,7 @@ python fw.py setup --sims "D:\Simulations"         # optional: your model folder
 python fw.py status
 ```
 
-Indexes are stored in `%USERPROFILE%\.modelaide` (set `MODELAIDE_HOME` to move them).
+Indexes are stored in `%USERPROFILE%\.proc-sim-agent` (set `PROC_SIM_AGENT_HOME` to move them).
 Details: [docs/install.md](docs/install.md).
 
 ## Try it on a published model

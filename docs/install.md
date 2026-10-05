@@ -1,4 +1,4 @@
-# Installing and setting up ModelAide
+# Installing and setting up proc-sim-agent
 
 ## 1. Requirements
 
@@ -13,16 +13,16 @@
 In Claude Code:
 
 ```text
-/plugin marketplace add usosky/modelaide
-/plugin install aspen-plus@modelaide
+/plugin marketplace add usosky/proc-sim-agent
+/plugin install aspen-plus@proc-sim-agent
 ```
 
 Restart Claude Code if the skill does not appear (`/plugin` lists installed plugins).
-Updates: `/plugin marketplace update modelaide`.
+Updates: `/plugin marketplace update proc-sim-agent`.
 
 ## 3. Register and index the help
 
-Ask Claude *"Set up ModelAide for my Aspen Plus help"*, or run from the plugin's
+Ask Claude *"Set up proc-sim-agent for my Aspen Plus help"*, or run from the plugin's
 `skills/aspen-plus/scripts` folder:
 
 ```bash
@@ -62,8 +62,8 @@ plus a short `notes.md` saying what changed.
 
 ## 5. Where data is stored
 
-`%USERPROFILE%\.modelaide\` (Windows) or `~/.modelaide/`: `config.json` and the SQLite indexes.
-Set the environment variable `MODELAIDE_HOME` to use another folder. Delete the folder to start
+`%USERPROFILE%\.proc-sim-agent\` (Windows) or `~/.proc-sim-agent/`: `config.json` and the SQLite indexes.
+Set the environment variable `PROC_SIM_AGENT_HOME` to use another folder. Delete the folder to start
 over. The indexes contain text from your licensed help and documents: do not share them.
 
 ## Troubleshooting

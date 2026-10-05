@@ -3,7 +3,7 @@
 ## Trademarks and affiliation
 
 Aspen Plus, Aspen HYSYS, Aspen Adsorption, aspenONE and AspenTech are trademarks of Aspen
-Technology, Inc. Claude and Claude Code are trademarks of Anthropic, PBC. ModelAide is an
+Technology, Inc. Claude and Claude Code are trademarks of Anthropic, PBC. proc-sim-agent is an
 independent open-source project. It is not affiliated with, sponsored or endorsed by Aspen
 Technology, Inc. or Anthropic, PBC. Product names are used only to say which software the tools
 work with.
@@ -20,7 +20,7 @@ identify messages and explain them.
 
 ## Funding
 
-ModelAide is developed by Denis Usosky within the AuSpire project, co-funded by the European
+proc-sim-agent is developed by Denis Usosky within the AuSpire project, co-funded by the European
 Union under the Marie Sklodowska-Curie Grant Agreement No 101177949 (full acknowledgment in
 README.md). The AuSpire logo and the EU emblem in `assets/` are not covered by the repository's
 licences.

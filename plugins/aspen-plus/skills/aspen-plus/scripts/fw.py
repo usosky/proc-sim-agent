@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""ModelAide command line: index and search local Aspen help, a personal library, and simulation folders.
+"""proc-sim-agent command line: index and search local Aspen help, a personal library, and simulation folders.
 
 Run `python fw.py <command> -h` for details. Commands:
   setup        register help folders, library folders and simulation folders
@@ -18,7 +18,7 @@ Run `python fw.py <command> -h` for details. Commands:
   cpm          read a Control Panel export (.cpm): progress, loops, messages, error summary
 
 Only the Python standard library is required (PDF text needs pypdf or PyMuPDF).
-Nothing is uploaded: indexes live in ~/.modelaide (override with MODELAIDE_HOME).
+Nothing is uploaded: indexes live in ~/.proc-sim-agent (override with PROC_SIM_AGENT_HOME).
 """
 from __future__ import annotations
 

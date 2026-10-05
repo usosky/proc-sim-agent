@@ -1,4 +1,4 @@
-# aspen-plus (ModelAide)
+# aspen-plus (proc-sim-agent)
 
 Aspen Plus assistant for Claude Code. Claude answers like a senior process engineer: numbered
 steps with click paths checked against your installed Aspen Plus help, the reason for each
@@ -9,11 +9,11 @@ your own library of papers and notes. Everything stays on your computer.
 ## Install
 
 ```text
-/plugin marketplace add usosky/modelaide
-/plugin install aspen-plus@modelaide
+/plugin marketplace add usosky/proc-sim-agent
+/plugin install aspen-plus@proc-sim-agent
 ```
 
-Then ask: *"Set up ModelAide for my Aspen Plus help."* Claude runs `fw.py setup --auto` (finds
+Then ask: *"Set up proc-sim-agent for my Aspen Plus help."* Claude runs `fw.py setup --auto` (finds
 `C:\ProgramData\AspenTech\Aspen Plus V15.0\HtmlHelp` or similar) and builds the index
 (`fw.py help-index`, a few resumable runs of about 100 s each).
 

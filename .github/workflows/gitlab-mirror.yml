@@ -2,7 +2,7 @@ name: mirror to GitLab
 
 # Pushes main and tags to GitLab. Needs two repository secrets:
 #   GITLAB_TOKEN  personal (or, on Premium, project) access token with write_repository
-#   GITLAB_REPO   e.g. gitlab.com/usosky/modelaide.git
+#   GITLAB_REPO   e.g. gitlab.com/usosky/proc-sim-agent.git
 # (On GitLab Premium you can configure pull mirroring instead and delete this workflow.)
 
 on:

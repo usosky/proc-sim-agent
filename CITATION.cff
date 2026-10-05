@@ -1,6 +1,6 @@
 cff-version: 1.2.0
-message: "If you use ModelAide, please cite it as below."
-title: "ModelAide: Claude Code plugins for chemical process simulation"
+message: "If you use proc-sim-agent, please cite it as below."
+title: "proc-sim-agent: Claude Code plugins for chemical process simulation"
 type: software
 abstract: >-
   Claude Code plugins that ground answers about process simulation software in the user's own
@@ -15,7 +15,7 @@ authors:
 version: 0.1.0
 date-released: 2026-10-03
 license: MIT
-repository-code: "https://github.com/usosky/modelaide"
+repository-code: "https://github.com/usosky/proc-sim-agent"
 keywords:
   - process simulation
   - Aspen Plus

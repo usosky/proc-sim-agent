@@ -15,8 +15,8 @@ import sys
 from pathlib import Path
 
 # The project name lives here (and in the plugin manifests) so a rename is one edit.
-APP_NAME = "modelaide"
-APP_TITLE = "ModelAide"
+APP_NAME = "proc-sim-agent"
+APP_TITLE = "proc-sim-agent"
 CONFIG_VERSION = 1
 
 # Help systems we know. The root .mcwebhelp file name identifies the product.
@@ -54,7 +54,7 @@ def setup_io() -> None:
 
 def data_home() -> Path:
     """Folder that holds config and indexes. Never inside the plugin folder."""
-    env = os.environ.get("MODELAIDE_HOME")
+    env = os.environ.get("PROC_SIM_AGENT_HOME")
     base = Path(env).expanduser() if env else Path.home() / ("." + APP_NAME)
     base.mkdir(parents=True, exist_ok=True)
     (base / "index").mkdir(exist_ok=True)

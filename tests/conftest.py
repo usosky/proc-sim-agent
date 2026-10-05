@@ -16,9 +16,9 @@ import samples  # noqa: E402
 
 @pytest.fixture
 def mahome(tmp_path, monkeypatch):
-    """Isolated ModelAide data folder."""
+    """Isolated proc-sim-agent data folder."""
     home = tmp_path / "mahome"
-    monkeypatch.setenv("MODELAIDE_HOME", str(home))
+    monkeypatch.setenv("PROC_SIM_AGENT_HOME", str(home))
     return home
 
 

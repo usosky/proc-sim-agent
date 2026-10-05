@@ -12,7 +12,7 @@ FW = SCRIPTS / "fw.py"
 
 
 def run(args, home, ok=(0,)):
-    env = dict(os.environ, MODELAIDE_HOME=str(home), PYTHONIOENCODING="utf-8")
+    env = dict(os.environ, PROC_SIM_AGENT_HOME=str(home), PYTHONIOENCODING="utf-8")
     p = subprocess.run([sys.executable, str(FW)] + [str(a) for a in args], capture_output=True, text=True,
                        encoding="utf-8", env=env, timeout=300)
     assert p.returncode in ok, f"exit {p.returncode}\n{p.stdout}\n{p.stderr}"
@@ -69,7 +69,7 @@ def test_relative_paths_are_stored_absolute(tmp_path):
     lib = tmp_path / "work" / "papers"
     lib.mkdir(parents=True)
     (lib / "n.md").write_text("# Notes\n\nWegstein acceleration bounds.\n", encoding="utf-8")
-    env = dict(os.environ, MODELAIDE_HOME=str(home), PYTHONIOENCODING="utf-8")
+    env = dict(os.environ, PROC_SIM_AGENT_HOME=str(home), PYTHONIOENCODING="utf-8")
     subprocess.run([sys.executable, str(FW), "setup", "--library", "papers"], cwd=lib.parent, env=env,
                    capture_output=True, timeout=120, check=True)
     cfg = json.loads((home / "config.json").read_text(encoding="utf-8"))

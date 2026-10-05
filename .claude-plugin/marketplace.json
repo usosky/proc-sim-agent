@@ -1,5 +1,5 @@
 {
-  "name": "modelaide",
+  "name": "proc-sim-agent",
   "owner": {
     "name": "Denis Usosky",
     "url": "https://orcid.org/0000-0002-6245-5110"
@@ -14,8 +14,8 @@
         "name": "Denis Usosky",
         "url": "https://orcid.org/0000-0002-6245-5110"
       },
-      "homepage": "https://github.com/usosky/modelaide",
-      "repository": "https://github.com/usosky/modelaide",
+      "homepage": "https://github.com/usosky/proc-sim-agent",
+      "repository": "https://github.com/usosky/proc-sim-agent",
       "license": "MIT",
       "keywords": ["aspen-plus", "process-simulation", "chemical-engineering", "flowsheet", "aspentech"],
       "category": "engineering"

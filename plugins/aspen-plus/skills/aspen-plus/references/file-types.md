@@ -1,4 +1,4 @@
-# Aspen Plus files: what each holds, how to get it, what ModelAide reads
+# Aspen Plus files: what each holds, how to get it, what proc-sim-agent reads
 
 ## Model files
 
@@ -19,7 +19,7 @@ UTF-8 save makes it unreadable to Aspen) and keep the original.
 
 ## Run outputs (text)
 
-| File | How to get it (V12-V15) | Holds | ModelAide |
+| File | How to get it (V12-V15) | Holds | proc-sim-agent |
 |---|---|---|---|
 | `.his` history | written by every run; view with Home > Summary > History; save from the editor or File > Export | input echo (numbered input-language lines, inline Fortran), input-translation messages, flowsheet analysis (convergence blocks, computation order), block-by-block trace with loop iterations, message IDs, and the summary of errors written at save | `fw.py his`, `fw.py his-diff` |
 | `.cpm` run messages | File > Export > Save as type *Run Messages (\*.cpm)*; must be exported, it is not kept otherwise | what the Control Panel showed: progress, loop iterations, RadFrac iteration tables, messages **without IDs**, summary of simulation errors | `fw.py cpm` |
@@ -67,7 +67,7 @@ releases (databank updates, solver changes); say so when comparing with a public
 - A `.bkp` that crashes Aspen on opening: work on a copy and try File > Repair File, which removes
   the ADS and/or shell-settings sections of a backup file.
 - `.def` and `.scr`: engine settings and scratch data. They can contain the Windows user name and
-  install paths. ModelAide lists them but never reads them.
+  install paths. proc-sim-agent lists them but never reads them.
 
 ## Privacy before sharing files
 
@@ -78,7 +78,7 @@ releases (databank updates, solver changes); say so when comparing with a public
 | `.cpm` | usually nothing | check anyway |
 | `.def`, `.scr`, `_xxxxxxx.*` | user name, paths | do not share |
 
-ModelAide's digests leave out the licence line, user and computer names and run folders; raw views
+proc-sim-agent's digests leave out the licence line, user and computer names and run folders; raw views
 (`rep --find`, `rep --section`) show other text as it is in the file.
 `tools/scrub_aspen_files.py` in the repository makes a scrubbed copy for publishing (it keeps
 the original encoding).
