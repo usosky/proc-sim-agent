@@ -463,3 +463,265 @@ CPM = """<< Run reinitialized 10:15:00 Tue Mar 3, 2026>>
 
 << Report exported 10:15:05 Tue Mar 3, 2026>>
 """
+
+
+# ---------------------------------------------------------------------------
+# v0.2: example-library models (.bkp / .apwz), input files (.inp), stream tables
+# ---------------------------------------------------------------------------
+_BKP_HEAD = """MM "41.0" FLAVOR "NO" VERSION "41.0" DATETIME "{date}" 
+MACHINE "WIN-NT/VC"  ; 
+startlibrary
+version1
+NumLibs = 1
+Built-In
+NumCats = 1
+Separators
+active
+endlibrary
+; 
+"""
+
+# Electrolyte demo: chemistry with an equilibrium and a dissociation, Henry components, a
+# hierarchy block with its own property method, a calculator, a design spec, a tear stream, and
+# two objects hidden with Hide/Reveal (one buffer ends with '\\@END_HIDEBUF', one without '@').
+BKP_DEMO = _BKP_HEAD.format(date="Mon Oct  5 10:00:00 2026") + r"""3
+>VERSION 0
+MIX
+Mixer
+Built-In
+MIXER
+>VERSION 0
+FL1
+Flash2
+Built-In
+FLASH2
+>VERSION 0
+HB
+Hierarchy
+Built-In
+HIERARCHY
+? HIDE_BUFFER SENSITIVITY ? PASTE_ITEMS ? 1 LEVEL = 1 SENSITIVITY "S-OLD" 
+CANPARAM = 1 USENAME = "S-OLD" \ 
+? SENSITIVITY "S-OLD" ? \ TABULATE COLNO = 1 EXPR = "X" \ \@
+END_HIDEBUF ? HIDE_BUFFER CONVERGENCE ? PASTE_ITEMS ? 1 LEVEL = 2 
+CONVERGENCE BROYDEN "CV-OLD" CANPARAM = 1 USENAME = "CV-OLD" \ ? CONVERGENCE 
+BROYDEN "CV-OLD" ? \ PARAM MAXIT = 50 \ 
+END_HIDEBUF ? SETUP MAIN ? \ "RUN-CLASS" RUN-CLASS = FLOWSHEET \ \ SIMULATE 
+INTERACTIVE = NO \ ? SETUP DESCRIPTION ? \ DESCRIPTION DESCRIP = ( 
+"Demo absorber: carbon dioxide into a sodium chloride brine" 
+"with bicarbonate chemistry" ) \ ? COMPONENTS MAIN ? \ COMPONENTS CID = H2O 
+ANAME = H2O OUTNAME = H2O DBNAME1 = "WATER" ANAME1 = "H2O" /  CID = CO2 ANAME = 
+CO2 OUTNAME = CO2 DBNAME1 = "CARBON-DIOXIDE" ANAME1 = "CO2" /  CID = NACL ANAME 
+= NACL OUTNAME = NACL DBNAME1 = "SODIUM-CHLORIDE" ANAME1 = "NACL" /  CID = 
+"H3O+" ANAME = H3O+ OUTNAME = "H3O+" DBNAME1 = "H3O+" ANAME1 = "H3O+" /  CID = 
+"HCO3-" ANAME = HCO3- OUTNAME = "HCO3-" DBNAME1 = "HCO3-" ANAME1 = "HCO3-" /  
+CID = "NA+" ANAME = NA+ OUTNAME = "NA+" DBNAME1 = "NA+" ANAME1 = "NA+" /  CID = 
+"CL-" ANAME = CL- OUTNAME = "CL-" DBNAME1 = "CL-" ANAME1 = "CL-" \ ? COMPONENTS 
+"HENRY-COMPS" GLOBAL ? \ "HENRY-COMPS" CID = ( CO2 ) \ ? CHEMISTRY "C-1" ? ; 
+"METCBAR_MOLE" ; \ STOIC REACNO = 1 STOIC-CID = CO2 COEF = -1. <0> <0> /  
+REACNO = 1 STOIC-CID = H2O COEF = -2. <0> <0> \ \ STOIC1 REACNO1 = 1 STOIC-CID1 
+= "HCO3-" COEF1 = 1. <0> <0> /  REACNO1 = 1 STOIC-CID1 = "H3O+" COEF1 = 1. <0> 
+<0> \ \ K-STOIC K-S-REACNO = 1 A = 231.465 <0> <0> B = -12092.1 <0> <0> C = 
+-36.7816 <0> <0> \ \ DISS ELECID = NACL DISS-CID = "NA+" DISS-COEF = 1. <0> <0> 
+/  ELECID = NACL DISS-CID = "CL-" DISS-COEF = 1. <0> <0> \ ? PROPERTIES MAIN ? 
+\ GPROPERTIES GPPROCTYPE = ALL GBASEOPSET = ELECNRTL GOPSETNAME = ELECNRTL GHEN 
+= GLOBAL GCHEMISTRY = "C-1" GTRUE-COMPS = YES \ ? PROPERTIES "HB.MAIN" ? \ 
+GPROPERTIES GBASEOPSET = "ENRTL-RK" \ ? FLOWSHEET GLOBAL ? \ BLOCK BLKID = MIX 
+BLKTYPE = "MIXER" MDLTYPE = "Mixer" IN = ( FEED M0-1 "GAS-IN" M0-1 ) OUT = ( S1 
+M0-1 ) \ \ BLOCK BLKID = FL1 BLKTYPE = "FLASH2" MDLTYPE = "Flash2" IN = ( S1 
+M0-1 ) OUT = ( VAP M1-2 LIQ M2-3 ) \ \ BLOCK BLKID = HB BLKTYPE = "HIERARCHY" 
+MDLTYPE = "Hierarchy" IN = ( LIQ M0-1 ) OUT = ( PROD M0-1 ) \ ? FLOWSHEET 
+"HB.GLOBAL" ? \ BLOCK BLKID = P1 BLKTYPE = "PUMP" MDLTYPE = "Pump" IN = ( LIQ 
+M0-1 ) OUT = ( PROD M0-1 ) \ ? STREAM MATERIAL FEED ? ; "METCBAR_MOLE" ; \ 
+SUBSTREAM SSID = MIXED TEMP = 25. PRES = 1. \ ? BLOCK FLASH2 FL1 ? ; 
+"METCBAR_MOLE" ; \ PARAM TEMP = 25. PRES = 0.1 \ ? BLOCK PUMP "HB.P1" ? \ PARAM 
+PRES = 3. \ ? CALCULATOR "C-1" ? \ DEFINE FVN = FNACL FVN-VARTYPE = "MOLE-FLOW" 
+\ \ FORTRAN FORTRAN-EXEC = ( "      FH2O = 55.5 * FNACL" ) \ ? "DESIGN-SPEC" 
+"DS-1" ? \ DEFINE FVN = XCO2 FVN-VARTYPE = "MOLE-FRAC" \ ? TEAR ? \ TEAR SID = 
+LIQ \ 
+ GRAPHICS_BACKUP
+PFS V 5.00
+$_SUMMARY_FILE
+ DSET RUN-STATUS VERS @VERS ( "41.0" "WIN-X64" "JDOE" "PC-123" "" )
+ DSET RUN-STATUS IT @IT ( "OCTOBER 5, 2026  10:00:00 A.M." "_0001abc.inm" 4) 
+"""
+
+# Methanol-water column: no results stored, a sensitivity study and a user sequence.
+BKP_COLUMN = _BKP_HEAD.format(date="Mon Oct  5 11:00:00 2026") + r"""2
+>VERSION 0
+COL
+RadFrac
+Built-In
+RADFRAC
+? SETUP MAIN ? \ "RUN-CLASS" RUN-CLASS = FLOWSHEET \ ? COMPONENTS MAIN ? \ 
+COMPONENTS CID = METHANOL ANAME = CH4O OUTNAME = METHANOL DBNAME1 = "METHANOL" 
+ANAME1 = "CH4O" /  CID = WATER ANAME = H2O OUTNAME = WATER DBNAME1 = "WATER" 
+ANAME1 = "H2O" \ ? PROPERTIES MAIN ? \ GPROPERTIES GBASEOPSET = NRTL GOPSETNAME 
+= NRTL \ ? FLOWSHEET GLOBAL ? \ BLOCK BLKID = COL BLKTYPE = "RADFRAC" MDLTYPE = 
+"RadFrac" IN = ( FEED M0-1 ) OUT = ( DIST M1-2 BTMS M2-3 ) \ \ BLOCK BLKID = 
+COND BLKTYPE = "HEATER" MDLTYPE = "Heater" IN = ( DIST M0-1 ) OUT = ( D2 M0-1 ) 
+\ ? SENSITIVITY "S-1" ? \ DEFINE FVN = XD \ ? SEQUENCE "SEQ-1" ? \ SEQUENCE 
+BLOCK-TYPE = BLOCK BLOCK-ID = COL \ 
+ GRAPHICS_BACKUP
+PFS V 5.00
+"""
+
+
+def minimal_pdf(text: str) -> bytes:
+    """A valid one-page PDF with one line of text (enough for pypdf's text extraction)."""
+    content = ("BT /F1 12 Tf 72 720 Td (" + text + ") Tj ET").encode("latin-1")
+    objs = [
+        b"<< /Type /Catalog /Pages 2 0 R >>",
+        b"<< /Type /Pages /Kids [3 0 R] /Count 1 >>",
+        b"<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Contents 4 0 R "
+        b"/Resources << /Font << /F1 5 0 R >> >> >>",
+        b"<< /Length " + str(len(content)).encode() + b" >>\nstream\n" + content + b"\nendstream",
+        b"<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>",
+    ]
+    out = b"%PDF-1.4\n"
+    offsets = []
+    for i, o in enumerate(objs, 1):
+        offsets.append(len(out))
+        out += str(i).encode() + b" 0 obj\n" + o + b"\nendobj\n"
+    xref = len(out)
+    out += b"xref\n0 " + str(len(objs) + 1).encode() + b"\n0000000000 65535 f \n"
+    for off in offsets:
+        out += ("%010d 00000 n \n" % off).encode()
+    out += (b"trailer\n<< /Size " + str(len(objs) + 1).encode() + b" /Root 1 0 R >>\nstartxref\n"
+            + str(xref).encode() + b"\n%%EOF\n")
+    return out
+
+
+def make_example_library(root: Path) -> Path:
+    """Three models in topic folders, like the Aspen Plus example library."""
+    import zipfile
+    a = root / "Carbon Capture" / "Brine absorber"
+    write(a / "brine_absorber.bkp", BKP_DEMO)
+    (a / "brine_absorber.pdf").write_bytes(minimal_pdf("Brine absorber guide: packing hydraulics and "
+                                                       "rate-based mass transfer"))
+    (a / "usrkin.f").write_text("      SUBROUTINE USRKIN\n      END\n", encoding="latin-1")
+    write(root / "Getting Started" / "Distillation" / "methanol_column.bkp", BKP_COLUMN)
+    p = root / "Getting Started" / "Packed" / "packed_column.apwz"
+    p.parent.mkdir(parents=True, exist_ok=True)
+    with zipfile.ZipFile(str(p), "w") as z:
+        z.writestr("packed_column.bkp", BKP_COLUMN.replace("11:00:00", "12:00:00").replace("\n", "\r\n"))
+        z.writestr("usrpack.f", "      SUBROUTINE USRPACK\n      END\n")
+    return root
+
+
+# A complete input file: two feeds, mixer, heater, flash, calculator and sensitivity study.
+INP_FLASH = """; methanol-water flash with a calculator and a sensitivity study
+TITLE 'Methanol-water flash'
+IN-UNITS MET PRESSURE=bar TEMPERATURE=C DELTA-T=C PDROP=bar
+DEF-STREAMS CONVEN ALL
+DATABANKS 'APV150 PURE41' / 'APV150 AQUEOUS' / 'APV150 SOLIDS' &
+         / 'APV150 INORGANIC' / NOASPENPCD
+PROP-SOURCES 'APV150 PURE41' / 'APV150 AQUEOUS' / 'APV150 SOLIDS' &
+         / 'APV150 INORGANIC'
+COMPONENTS
+    METHANOL CH4O /
+    WATER H2O
+PROPERTIES NRTL
+FLOWSHEET
+    BLOCK MIX IN=FEED MAKEUP OUT=S1
+    BLOCK HEAT IN=S1 OUT=S2
+    BLOCK FL1 IN=S2 OUT=VAP LIQ
+STREAM FEED
+    SUBSTREAM MIXED TEMP=25. PRES=1.5 MOLE-FLOW=100.
+    MOLE-FRAC METHANOL 0.4 / WATER 0.6
+STREAM MAKEUP
+    SUBSTREAM MIXED TEMP=25. PRES=1.5
+    MOLE-FLOW WATER 10.
+BLOCK MIX MIXER
+    PARAM
+BLOCK HEAT HEATER
+    PARAM TEMP=80. PRES=0
+BLOCK FL1 FLASH2
+    PARAM TEMP=80. PRES=1.
+CALCULATOR C-1
+    DEFINE FMU MOLE-FLOW STREAM=MAKEUP SUBSTREAM=MIXED COMPONENT=WATER  &
+        UOM="kmol/hr"
+    DEFINE FTOT STREAM-VAR STREAM=FEED SUBSTREAM=MIXED VARIABLE=MOLE-FLOW  &
+        UOM="kmol/hr"
+F     FMU = 0.1 * FTOT
+    READ-VARS FTOT
+    WRITE-VARS FMU
+SENSITIVITY S-1
+    DEFINE XMV MOLE-FRAC STREAM=VAP SUBSTREAM=MIXED COMPONENT=METHANOL
+    TABULATE 1 "XMV"
+    VARY BLOCK-VAR BLOCK=FL1 VARIABLE=TEMP SENTENCE=PARAM UOM="C"
+    RANGE OPT-LIST=RANGE LOWER="70" UPPER="95" INCR="5"
+STREAM-REPOR MOLEFLOW MASSFLOW MOLEFRAC
+"""
+
+# The same kind of file with one planted mistake per check (line numbers matter: keep the order).
+INP_BAD = """TITLE 'planted mistakes'
+DATABANKS 'APV150 PURE41' / 'APV140 AQUEOUS'
+COMPONENTS
+    H2O H2O /
+    CO2 CO2 /
+    H3O+ H3O+ /
+    HCO3- HCO3- /
+    NACL NACL /
+    NA+ NA+ /
+    CL- CL-
+HENRY-COMPS HC-1 CO2
+CHEMISTRY C-1
+    STOIC 1 CO2 -1. / H2O -2. / HCO3- 1. / H3O+ 2.
+    DISS NACL NA+ 1. / CL- 1.
+CHEMISTRY C-2
+    STOIC 1 H2O -2. / H3O+ 1. / OH- 1.
+PROPERTIES ELECNRTL CHEMISTRY=C-1 HENRY-COMPS=HC-1 TRUE-COMPS=NO
+FLOWSHEET
+    BLOCK B1 IN=FEED OUT=S1
+    BLOCK B2 IN=S1 OUT=S2 S3
+    BLOCK B3 IN=S1 OUT=S4
+    BLOCK B4 IN=S4 OUT=S5
+    BLOCK R1 IN=S5 OUT=S6
+STREAM FEED
+    SUBSTREAM MIXED TEMP=25. PRES=1. VFRAC=0.
+    MOLE-FRAC H2O 0.9 / CO2 0.1
+BLOCK B1 HEATER
+    PARAM TEMP=50.
+BLOCK B2 FLASH2
+    PARAM TEMP=50. PRES=1. VFRAC=0.5
+BLOCK B3 COMPR
+    PARAM PRES=5.
+BLOCK R1 RSTOIC
+    PARAM TEMP=50. PRES=1.
+    STOIC 1 MIXED CO2 -1. / H2O -1. / CH4 1.
+DESIGN-SPEC DS-1
+    DEFINE X MOLE-FRAC STREAM=S2 SUBSTREAM=MIXED COMPONENT=CO2
+    SPEC "X" TO "0.01"
+    VARY BLOCK-VAR BLOCK=B1 VARIABLE=TEMP SENTENCE=PARAM
+    LIMITS "20" "80"
+SENSITIVITY S-1
+    DEFINE Y MOLE-FRAC STREAM=S2 SUBSTREAM=MIXED COMPONENT=CO2
+    VARY BLOCK-VAR BLOCK=B1 VARIABLE=TEMP SENTENCE=PARAM
+CALCULATOR C-1
+    DEFINE A MOLE-FLOW STREAM=FEED SUBSTREAM=MIXED COMPONENT=H2O
+F     A = 2.0 * A
+    READ-VARS A Z
+DISABLE
+    BLOCK B9
+"""
+
+# Stream results copied from the Aspen Plus results grid (tab-separated), apparent basis.
+STREAM_TABLE = "\n".join("\t".join(r) for r in [
+    ["", "Units", "FEED", "GAS", "LIQ"],
+    ["Description", "", "", "", ""],
+    ["From", "", "", "FL1", "FL1"],
+    ["To", "", "FL1", "", ""],
+    ["Stream Class", "", "CONVEN", "CONVEN", "CONVEN"],
+    ["Phase", "", "Liquid Phase", "Vapor Phase", "Liquid Phase"],
+    ["Temperature", "C", "25", "25", "25"],
+    ["Pressure", "bar", "1", "0.1", "0.1"],
+    ["Mole Flows", "kmol/hr", "10.1", "0.06", "10.04"],
+    ["H2O", "kmol/hr", "10", "0.04", "9.96"],
+    ["CO2", "kmol/hr", "0.1", "0.02", "0.08"],
+    ["NA+", "kmol/hr", "0", "0", "0"],
+    ["HCO3-", "kmol/hr", "0", "0", "0"],
+    ["Mass Flows", "kg/hr", "184.553", "1.6011", "182.952"],
+    ["H2O", "kg/hr", "180.153", "0.72061", "179.432"],
+    ["CO2", "kg/hr", "4.401", "0.88020", "3.5208"],
+]) + "\n"

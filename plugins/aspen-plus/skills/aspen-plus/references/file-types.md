@@ -6,7 +6,7 @@
 |---|---|---|---|
 | `.bkp` backup | ASCII | all input and results, no intermediate convergence data | Portable across computers and **newer** versions; best for archiving and version folders. On rerun Aspen reinitializes and reconverges. |
 | `.apw` document | binary | input, results and convergence state (quick restart) | Tied to the version that wrote it. |
-| `.apwz` compound | binary | the model plus every file it uses | Good for sending a complete case. |
+| `.apwz` compound | zip | the model (a .bkp inside) plus every file it uses | Good for sending a complete case; `examples-index` reads the .bkp inside. |
 | `.apmbd` | binary | embedded objects (spreadsheets, pictures) | Keep it next to its `.bkp` (same name). |
 | `.appdf` | binary | problem-definition arrays, intermediate convergence data | Rebuilt by Aspen; not needed for archiving. |
 | `.apt` template, `.apsst` stream-summary template, `.slb` stream library | | | |
@@ -24,7 +24,7 @@ UTF-8 save makes it unreadable to Aspen) and keep the original.
 | `.his` history | written by every run; view with Home > Summary > History; save from the editor or File > Export | input echo (numbered input-language lines, inline Fortran), input-translation messages, flowsheet analysis (convergence blocks, computation order), block-by-block trace with loop iterations, message IDs, and the summary of errors written at save | `fw.py his`, `fw.py his-diff` |
 | `.cpm` run messages | File > Export > Save as type *Run Messages (\*.cpm)*; must be exported, it is not kept otherwise | what the Control Panel showed: progress, loop iterations, RadFrac iteration tables, messages **without IDs**, summary of simulation errors | `fw.py cpm` |
 | `.rep` report | File > Export > *Report files (\*.rep)*; content set in Setup > Report Options | run control, flowsheet balance, convergence and design-spec results, every block's inputs/results, stream tables | `fw.py rep` |
-| `.inp` input file | File > Export > Input | input language without graphics | read as text |
+| `.inp` input file | File > Export > *Aspen Plus Input Files*, *Input Files with Graphics* or *Input and Graphics Data File* (.inp + .apmbd); every .his starts with the input of its run | the whole input as text, no results; opens with File > Open > Input Files; the engine runs it with `aspen <runid>` | `fw.py inp-check`, `his --inp`, `inp-find` (input-language.md) |
 | `.sum` summary | File > Export > Summary | results for programs | `sim-scan` only |
 
 Diagnostic detail of the .his and the Control Panel is set separately: globally in

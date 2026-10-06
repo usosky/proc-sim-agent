@@ -7,9 +7,10 @@
 </p>
 
 **Claude Code plugins for chemical process simulation.** The first plugin, `aspen-plus`, makes
-Claude answer Aspen Plus questions like a senior process engineer mentoring a colleague: exact
-click paths checked against *your* installed Aspen Plus help, the engineering reason for each
-choice, typical values, and the messages to expect. It reads your run files (.his, .rep, .cpm,
+Claude work like a senior process engineer next to you: it builds models with you stage by stage
+(and can write them as Aspen Plus input files you open directly), shows how AspenTech's own
+example models set up a similar process, gives exact click paths checked against *your* installed
+Aspen Plus help, and checks every result with numbers. It reads your run files (.his, .rep, .cpm,
 .bkp) to troubleshoot runs, review models and compare versions, and it searches your own library
 of papers and notes.
 
@@ -27,6 +28,10 @@ Plus installation, on your computer; your models, results and library never leav
 | "Check my calculator code" | extracts the inline Fortran and lints it (column 72, tabs, undefined names, assigned imports, unused imports) |
 | "Compare the reboiler duty with Table S15 of the paper" | reads the report, converts units, builds the comparison table |
 | "What does my library say about formic acid / NRTL binaries?" | full-text search of your PDFs and notes, with document and page |
+| "Let's build a model of this process from scratch" | plans the build in stages with pass criteria, keeps a BUILD.md log, checks each run (balances, KPIs) before the next step |
+| "Write it as an input file" | writes the model as an `.inp`, checks it (`inp-check`), you open it with File > Open and run |
+| "How does AspenTech model MEA capture?" | searches the example library on your computer by process, block, property method, component; shows the chemistry and block setup |
+| "Here is my stream table - what is the recovery?" | mass, element and charge balances, apparent vs true basis, and your KPIs computed from the pasted table or the .rep |
 
 ## Install (Claude Code)
 
@@ -49,6 +54,8 @@ python fw.py help-index          # repeat until it prints "complete" (each run ~
 python fw.py setup --library "D:\Papers\Process"   # optional: your PDFs and notes
 python fw.py docs-index          # repeat until "complete"
 python fw.py setup --sims "D:\Simulations"         # optional: your model folders
+python fw.py setup --examples "C:\Program Files\AspenTech\Aspen Plus V15.0\GUI\Examples"
+python fw.py examples-index      # optional: the example library (under a minute)
 python fw.py status
 ```
 
@@ -66,13 +73,16 @@ report (8 of 9 items within 0.6 %; the one difference is explained).
 
 ```text
 your Aspen help (MadCap WebHelp) --index--> SQLite FTS5 --+
+Aspen example models (.bkp/.apwz) --index--> SQLite FTS5 --+
 your PDFs / notes ------------------index--> SQLite FTS5 --+--> fw.py --> Claude + references/*.md
-your .his .rep .cpm .bkp -----------parsers----------------+
+your .his .rep .cpm .bkp -----------parsers----------------+          |
+                                                                      +--> .inp files you open in Aspen
 ```
 
 - `skills/aspen-plus/SKILL.md`: when and how Claude uses the tool, the answer style, privacy rules.
 - `skills/aspen-plus/references/`: curated knowledge (messages and fixes, calculator and Fortran
-  rules, workflows, GUI paths, file types, help map).
+  rules, workflows, build mode, input language, example library, GUI paths, file types, help map).
+- `skills/aspen-plus/templates/`: a BUILD.md plan template and starting input files.
 - `skills/aspen-plus/scripts/fw.py`: standard-library Python, no network access.
 
 ## Privacy
@@ -85,6 +95,7 @@ your .his .rep .cpm .bkp -----------parsers----------------+
 
 ## Roadmap
 
+Driving Aspen Plus directly (automation from Python or MATLAB: set inputs, run, read results),
 Aspen HYSYS and Aspen Adsorption plugins (the indexer already reads their help), more curated
 messages, evaluation cases from real support questions. Contributions welcome:
 [CONTRIBUTING.md](CONTRIBUTING.md).

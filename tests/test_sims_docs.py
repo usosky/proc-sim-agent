@@ -90,3 +90,15 @@ def test_docx_entities_and_open_page_ranges(tmp_path, mahome):
     assert "Heat & mass balance <check>" in page["text"]
     assert docsdb._page_range("2-", 4) == [2, 3, 4] and docsdb._page_range("-2", 4) == [1, 2]
     assert docsdb._page_range("x,3", 4) == [3]
+
+
+def test_document_titles_prefer_descriptive_file_names():
+    from pathlib import Path
+    stale = docsdb._good_title("CO2 Capture from Syngas for IGCC Using MEA",
+                               Path("CO2 capture from flue gas using CESAR1 solvent.pdf"))
+    assert stale == "CO2 capture from flue gas using CESAR1 solvent"
+    assert docsdb._good_title("Accelerating the net-zero economy", Path("1-s2.0-S2542435124000035-main.pdf")) \
+        == "Accelerating the net-zero economy"
+    assert docsdb._good_title("", Path("notes.md")) == "notes"
+    assert docsdb._good_title("Untitled", Path("Kim2024.pdf")) == "Kim2024"
+    assert docsdb._good_title("x", Path("ENRTL-RK_Rate_Based_MEA_Model.pdf")) == "ENRTL-RK Rate Based MEA Model"

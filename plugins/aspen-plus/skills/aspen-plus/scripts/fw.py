@@ -10,12 +10,20 @@ Run `python fw.py <command> -h` for details. Commands:
   help-toc     list books, or show one book's table of contents
   docs-index   build/continue the library index (PDF/DOCX/TXT/MD/HTML)
   docs-search  search the library;   docs-read: print pages;   docs-list: list documents
+  examples-index   build/continue the index of a model library (the Aspen Plus examples)
+  examples-search  find example models by topic, block type, method, component or feature
+  examples-show    one example's structure, files and raw input sections; examples-list: folders
   sim-scan     summarise simulation folders (one folder per model version)
-  his          digest of an Aspen Plus .his file (model, messages, convergence, block results, lint)
+  his          digest of an Aspen Plus .his file (model, messages, convergence, block results, lint);
+               --inp writes the run's input as an .inp file
   his-diff     what changed in the input between two .his files
   bkp          structure summary of an Aspen Plus .bkp file
   rep          read a report export (.rep): status, convergence, blocks, stream tables
   cpm          read a Control Panel export (.cpm): progress, loops, messages, error summary
+  inp-check    check an input file (.inp) before opening it in Aspen Plus
+  inp-find     how a block or paragraph is written, taken from your own runs (.his/.inp)
+  comp-find    databank alias of a component (the COMPONENTS line), from the example models
+  check        balances, charge, apparent/true basis and metrics from a .rep or a pasted stream table
 
 Only the Python standard library is required (PDF text needs pypdf or PyMuPDF).
 Nothing is uploaded: indexes live in ~/.proc-sim-agent (override with PROC_SIM_AGENT_HOME).
@@ -30,9 +38,11 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 
-from fwlib import bkp, cpm, docsdb, helpdb, his, madcap, rep, sims  # noqa: E402
-from fwlib.common import (APP_TITLE, DEFAULT_HELP_GLOBS, PRODUCTS, config_path, data_home,  # noqa: E402
-                          expand_globs, fts5_available, load_config, print_json, save_config, setup_io)
+from fwlib import bkp, check, cpm, docsdb, examples, helpdb, his, inp, madcap, rep, sims  # noqa: E402
+from fwlib.common import (APP_TITLE, DEFAULT_EXAMPLES_GLOBS, DEFAULT_HELP_GLOBS, PRODUCTS,  # noqa: E402
+                          config_path, data_home,
+                          expand_globs, fts5_available, load_config, natural_key, print_json, save_config,
+                          setup_io)
 
 EXIT_INCOMPLETE = 3
 
@@ -93,6 +103,10 @@ def cmd_setup(a):
         if not found:
             print("No help found in the default AspenTech locations; pass --help-root explicitly.")
         roots += found
+        ex = [p for p in expand_globs(DEFAULT_EXAMPLES_GLOBS) if Path(p).is_dir()]
+        if ex and not a.examples:
+            a.examples = [max(ex, key=natural_key)]  # newest release
+            print(f"examples found: {a.examples[0]}")
     for r in roots:
         info = _register_help(cfg, r)
         print(f"help: {info['title']} {info['version']}  ->  {info['root']}")
@@ -111,9 +125,16 @@ def cmd_setup(a):
         if p not in cfg["simulations"]["folders"]:
             cfg["simulations"]["folders"].append(p)
             changed = True
+    for f in a.examples or []:
+        p = str(Path(f).expanduser().resolve())
+        if not Path(p).exists():
+            print(f"warning: examples folder not found: {p}")
+        if p not in cfg["examples"]["folders"]:
+            cfg["examples"]["folders"].append(p)
+            changed = True
     for f in a.remove or []:
         forms = {f, str(Path(f).expanduser().resolve())}
-        for sec in ("library", "simulations"):
+        for sec in ("library", "simulations", "examples"):
             for x in forms & set(cfg[sec]["folders"]):
                 cfg[sec]["folders"].remove(x)
                 changed = True
@@ -126,8 +147,10 @@ def cmd_setup(a):
     _print_config(cfg)
     if any(not Path(v["db"]).exists() for v in cfg["help"].values()):
         print("\nNext: python fw.py help-index   (repeat until it says 'complete')")
-    if cfg["library"]["folders"] and not docsdb.db_path().exists():
+    if (cfg["library"]["folders"] or cfg["examples"]["folders"]) and not docsdb.db_path().exists():
         print("Next: python fw.py docs-index   (repeat until it says 'complete')")
+    if cfg["examples"]["folders"] and not examples.db_path().exists():
+        print("Next: python fw.py examples-index   (repeat until it says 'complete')")
 
 
 def _print_config(cfg):
@@ -145,6 +168,8 @@ def _print_config(cfg):
         print(f"  library      {f}")
     for f in cfg["simulations"]["folders"]:
         print(f"  simulations  {f}")
+    for f in cfg["examples"]["folders"]:
+        print(f"  examples     {f}")
 
 
 def cmd_status(a):
@@ -161,6 +186,9 @@ def cmd_status(a):
         from collections import Counter
         c = Counter(d["status"] for d in lib)
         print(f"  library: {len(lib)} documents ({', '.join(f'{n} {s}' for s, n in c.items())})")
+    ex = examples.status()
+    if ex["exists"]:
+        print(f"  examples: {ex['models']} models ({'complete' if ex['complete'] else 'partial'})")
     if a.json:
         print_json({"config": cfg, "help": {k: helpdb.status(Path(v['db'])) for k, v in cfg['help'].items()}})
 
@@ -295,7 +323,8 @@ def cmd_help_toc(a):
 
 def cmd_docs_index(a):
     cfg = load_config()
-    folders = cfg["library"]["folders"]
+    # example folders are indexed too, so their PDF guides are searchable with docs-search
+    folders = list(dict.fromkeys(cfg["library"]["folders"] + cfg["examples"]["folders"]))
     if not folders:
         _die("No library folder registered. Run: python fw.py setup --library \"<folder with your PDFs>\"")
     if not docsdb.pdf_backend():
@@ -372,9 +401,188 @@ def _pick_his(path: str) -> Path:
     return p
 
 
+def cmd_examples_index(a):
+    cfg = load_config()
+    roots = cfg["examples"]["folders"]
+    if not roots:
+        _die("No examples folder registered. Run:\n  python fw.py setup --examples \"<folder with example models>\"\n"
+             "(the Aspen Plus examples are in the installation, e.g. ...\\Aspen Plus V15.0\\GUI\\Examples, or any "
+             "copy of them)")
+    res = examples.build(roots, max_seconds=a.max_seconds, rebuild=a.rebuild)
+    print(json.dumps(res, ensure_ascii=False))
+    if res["complete"]:
+        print("complete")
+        if not docsdb.db_path().exists():
+            print("Tip: python fw.py docs-index also makes the PDF guides of the examples searchable.")
+    else:
+        print("INCOMPLETE - run the same command again to continue")
+        sys.exit(EXIT_INCOMPLETE)
+
+
+def _need_examples():
+    if not examples.db_path().exists():
+        _die("Examples not indexed yet. Run: python fw.py setup --examples \"<folder>\" then python fw.py examples-index")
+
+
+def _csv_list(vals):
+    out = []
+    for v in vals or []:
+        out += [x.strip() for x in v.split(",") if x.strip()]
+    return out
+
+
+def cmd_examples_search(a):
+    _need_examples()
+    res = examples.search(a.query or "", limit=a.limit, block=_csv_list(a.block), method=_csv_list(a.method),
+                          component=_csv_list(a.component), has=_csv_list(a.has), folder=a.folder)
+    if a.json:
+        print_json(res)
+        return
+    print(examples.render_search(res))
+
+
+def cmd_examples_show(a):
+    _need_examples()
+    d = examples.resolve(a.ref)
+    if not d:
+        _die(f"No example matches {a.ref!r}. Use examples-search first.", 1)
+    if a.chemistry_inp:
+        print(examples.chemistry_as_inp(d))
+        return
+    if a.section:
+        print(examples.section_text(d, a.section, max_chars=a.max_chars))
+        return
+    if a.json:
+        print_json(d)
+        return
+    print(examples.render_show(d))
+
+
+def cmd_examples_list(a):
+    _need_examples()
+    rows = examples.folders()
+    if a.json:
+        print_json(rows)
+        return
+    for r in rows:
+        print(f"{r['models']:4d}  {r['folder']}" + (f"   [{', '.join(r['features'])}]" if r["features"] else ""))
+
+
+def cmd_comp_find(a):
+    _need_examples()
+    rows = examples.find_components(a.text, limit=a.limit)
+    if a.json:
+        print_json(rows)
+        return
+    print(examples.render_components(rows, a.text))
+
+
+def cmd_inp_check(a):
+    p = Path(a.file).expanduser()
+    if not p.exists():
+        _die(f"File not found: {p}")
+    if p.suffix.lower() == ".his":
+        text = inp.from_his(his.parse(p), source=p.name)
+    else:
+        text = inp.read(p)
+    res = inp.check(text)
+    if a.json:
+        print_json(res)
+    else:
+        print(inp.render(res, str(p)))
+    if res["counts"]["error"]:
+        sys.exit(1)
+
+
+def _input_files(paths, max_files=400):
+    """.his/.inp files under the given paths (newest first); default: the registered simulation folders."""
+    roots = [Path(x).expanduser() for x in paths] if paths else [Path(f) for f in load_config()["simulations"]["folders"]]
+    files = []
+    for r in roots:
+        if r.is_file():
+            files.append(r)
+        elif r.is_dir():
+            files += [f for f in r.rglob("*") if f.suffix.lower() in (".his", ".inp") and f.is_file()]
+    files = sorted(set(files), key=lambda f: f.stat().st_mtime, reverse=True)
+    return files[:max_files], roots
+
+
+def cmd_inp_find(a):
+    files, roots = _input_files(a.paths)
+    if not files:
+        _die("No .his or .inp files to look in. Pass a folder or file, or register your simulation folders:\n"
+             "  python fw.py setup --sims \"<folder with your model versions>\"")
+    res = inp.find_examples(files, a.keyword, limit=a.limit)
+    if a.json:
+        print_json(res)
+        return
+    if not res:
+        print(f"No {a.keyword.upper()} in {len(files)} input files. Find the syntax in the help "
+              f"(help-search \"{a.keyword} input language\"), in an example (examples-search --block ...; "
+              "examples-show <id> --section ...), or export a model that has it (File > Export > Input file).")
+        return
+    print(f"# {a.keyword.upper()} as written in your runs ({len(files)} input files searched)")
+    for r in res:
+        print(f"\n## {r['file']} (input line {r['line']})\n```\n{r['text']}\n```")
+
+
+def cmd_check(a):
+    p = Path(a.file).expanduser()
+    if p.is_dir():
+        cands = sorted(p.glob("*.rep"), key=lambda f: f.stat().st_mtime)
+        if not cands:
+            _die(f"No .rep file in {p}")
+        p = cands[-1]
+    if not p.exists():
+        _die(f"File not found: {p}")
+    try:
+        streams = check.load(p)
+    except ValueError as e:
+        _die(str(e), 1)
+    if a.streams:
+        want = {s.strip().upper() for s in a.streams.split(",")}
+        streams = type(streams)((k, v) for k, v in streams.items() if k.upper() in want)
+    aliases = {}
+    src = a.model
+    if not src and p.suffix.lower() == ".rep":  # a .his next to the report gives the component formulas
+        his_files = sorted(p.parent.glob("*.his"), key=lambda f: f.stat().st_mtime)
+        src = str(his_files[-1]) if his_files else None
+    if src:
+        try:
+            aliases = check.aliases_from(src)
+            if not a.json:
+                print(f"(component formulas from {Path(src).name})")
+        except Exception as e:  # pragma: no cover - unreadable model file
+            print(f"(could not read component formulas from {src}: {e})")
+    overrides = {}
+    for f in a.formula or []:
+        if "=" in f:
+            k, v = f.split("=", 1)
+            overrides[k.strip()] = v.strip()
+    metrics = []
+    for m in a.metric or []:
+        if "=" not in m:
+            _die(f"--metric needs NAME=EXPRESSION, got {m!r}")
+        k, v = m.split("=", 1)
+        metrics.append((k.strip(), v.strip()))
+    res = check.analyse(streams, elements=_csv_list(a.elements), aliases=aliases, overrides=overrides,
+                        metrics=metrics)
+    if a.json:
+        print_json(res)
+    else:
+        print(check.render(res))
+
+
 def cmd_his(a):
     p = _pick_his(a.file)
     d = his.parse(p)
+    if a.inp:
+        out = Path(a.inp).expanduser()
+        if out.exists() and not a.force:
+            _die(f"{out} exists; pass --force to overwrite")
+        out.write_text(inp.from_his(d, source=p.name), encoding="utf-8")
+        print(f"wrote {out} ({len(d['runs'][-1]['echo'])} lines; open it in Aspen Plus with File > Open > Input Files)")
+        return
     if a.echo:
         print(his.echo_text(d))
         return
@@ -465,6 +673,8 @@ def main(argv=None):
     s.add_argument("--auto", action="store_true", help="look for installed help in the default AspenTech folders")
     s.add_argument("--library", action="append", help="folder with your PDFs/notes (repeatable)")
     s.add_argument("--sims", action="append", help="folder with simulation version folders (repeatable)")
+    s.add_argument("--examples", action="append", help="folder with example models, e.g. the Aspen Plus examples "
+                                                     "(repeatable)")
     s.add_argument("--remove", action="append", help="unregister a folder or product")
     s.set_defaults(fn=cmd_setup)
 
@@ -525,6 +735,65 @@ def main(argv=None):
     s.add_argument("--json", action="store_true")
     s.set_defaults(fn=cmd_docs_list)
 
+    s = sub.add_parser("examples-index", help="build/continue the example-model index")
+    s.add_argument("--max-seconds", type=float, default=100)
+    s.add_argument("--rebuild", action="store_true")
+    s.set_defaults(fn=cmd_examples_index)
+
+    s = sub.add_parser("examples-search", help="find example models")
+    s.add_argument("query", nargs="?", default="", help="words (topic, process, component, method ...)")
+    s.add_argument("--block", action="append", help="block type, e.g. RADFRAC (repeatable or comma-separated)")
+    s.add_argument("--method", action="append", help="property method, e.g. ENRTL-RK")
+    s.add_argument("--component", action="append", help="component ID or databank name, e.g. CO2")
+    s.add_argument("--has", action="append", help="feature: " + ", ".join(examples.FEATURE_WORDS))
+    s.add_argument("--folder", help="folder name fragment, e.g. 'Carbon Capture'")
+    s.add_argument("-n", "--limit", type=int, default=10)
+    s.add_argument("--json", action="store_true")
+    s.set_defaults(fn=cmd_examples_search)
+
+    s = sub.add_parser("examples-show", help="details of one example model")
+    s.add_argument("ref", help="id from examples-search, or a name/path fragment")
+    s.add_argument("--section", help="print the raw input sections whose name contains this, e.g. CHEMISTRY, "
+                                     "'BLOCK RADFRAC', 'CALCULATOR', 'PROPERTIES MAIN'")
+    s.add_argument("--chemistry-inp", action="store_true", help="print the example's CHEMISTRY as input language")
+    s.add_argument("--max-chars", type=int, default=8000)
+    s.add_argument("--json", action="store_true")
+    s.set_defaults(fn=cmd_examples_show)
+
+    s = sub.add_parser("examples-list", help="example folders and what they contain")
+    s.add_argument("--json", action="store_true")
+    s.set_defaults(fn=cmd_examples_list)
+
+    s = sub.add_parser("comp-find", help="databank aliases of a component, as used in the example models")
+    s.add_argument("text", help="component ID, formula/alias or databank name, e.g. MEA, C2H7NO, MONOETHANOLAMINE")
+    s.add_argument("-n", "--limit", type=int, default=15)
+    s.add_argument("--json", action="store_true")
+    s.set_defaults(fn=cmd_comp_find)
+
+    s = sub.add_parser("inp-check", help="check an input file (.inp, or the input of a .his)")
+    s.add_argument("file")
+    s.add_argument("--json", action="store_true")
+    s.set_defaults(fn=cmd_inp_check)
+
+    s = sub.add_parser("inp-find", help="examples of a block model, paragraph or statement from your own runs")
+    s.add_argument("keyword", help="e.g. RADFRAC, HEATX, DESIGN-SPEC, CHEMISTRY, COL-SPECS")
+    s.add_argument("paths", nargs="*", help="files or folders (default: the registered simulation folders)")
+    s.add_argument("-n", "--limit", type=int, default=3)
+    s.add_argument("--json", action="store_true")
+    s.set_defaults(fn=cmd_inp_find)
+
+    s = sub.add_parser("check", help="balances and metrics from a .rep or a pasted stream table")
+    s.add_argument("file", help=".rep file, a folder (newest .rep), or a text file with a copied stream table")
+    s.add_argument("--elements", action="append", help="element balances, e.g. C,NA,CL")
+    s.add_argument("--model", help=".his, .inp or .bkp to read component formulas from (default: newest .his "
+                                   "next to a .rep)")
+    s.add_argument("--formula", action="append", help="override a formula, e.g. MEA=C2H7NO (repeatable)")
+    s.add_argument("--metric", action="append", help="NAME=EXPRESSION, e.g. "
+                                                     "\"recovery=flow(CO2-GAS, CO2)/elem(FEED, C)\" (repeatable)")
+    s.add_argument("--streams", help="only these streams (comma-separated)")
+    s.add_argument("--json", action="store_true")
+    s.set_defaults(fn=cmd_check)
+
     s = sub.add_parser("sim-scan", help="summarise simulation folders")
     s.add_argument("paths", nargs="*")
     s.add_argument("--depth", type=int, default=5)
@@ -535,6 +804,8 @@ def main(argv=None):
     s.add_argument("file")
     s.add_argument("--fortran", action="store_true", help="include calculator Fortran")
     s.add_argument("--echo", action="store_true", help="print the input echo (.inp text) only")
+    s.add_argument("--inp", help="write the input of the last run to this .inp file")
+    s.add_argument("--force", action="store_true", help="overwrite the --inp file if it exists")
     s.add_argument("--json", action="store_true")
     s.set_defaults(fn=cmd_his)
 

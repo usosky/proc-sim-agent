@@ -15,7 +15,7 @@ from collections import OrderedDict
 from pathlib import Path
 from typing import List
 
-from .common import ENGINE_TO_RELEASE, read_text_any
+from .common import BLOCK_MODELS, ENGINE_TO_RELEASE, read_text_any
 
 _TOKEN = re.compile(r'"(?:[^"\\]|\\.)*"|<[^<>\s]*>|[()\\/;=?]|[^\s()\\/;=?"]+')
 
@@ -113,9 +113,43 @@ def parse_sections(text: str) -> "OrderedDict[str, List[dict]]":
     return sections
 
 
+# Objects hidden with Hide/Reveal (a calculation sequence, design specs, convergence blocks ...)
+# are stored in front of the input tree as buffers:
+#   '? HIDE_BUFFER "DESIGN-SPEC" ? PASTE_ITEMS ? 2 ... \@? "DESIGN-SPEC" X ? ... \@END_HIDEBUF'
+#   '? HIDE_BUFFER CONVERGENCE ? PASTE_ITEMS ? 1 ... \ END_HIDEBUF'   (no '@' before the end)
+# Their unpaired '?' marks would shift every later section header, so they are cut out first.
+_HIDE_RX = re.compile(r"\?\s*HIDE_BUFFER\b.*?END_HIDEBUF", re.S)
+_HIDDEN_KIND_RX = re.compile(r'\?\s*HIDE_BUFFER\s+("[^"]*"|[^\s?]+)')
+# Ionic component IDs end in a charge: NA+, CL-, CO3-2, CO3--, H3O+, DGAH+ (not N-MET-02).
+ION_RX = re.compile(r"(?:\+{1,3}|-{1,3}|[+-][1-9])$")
+
+
+def charge_of(cid: str) -> int:
+    """Charge encoded at the end of a component ID (0 when it does not look like an ion)."""
+    m = ION_RX.search(cid or "")
+    if not m:
+        return 0
+    s = m.group(0)
+    if s[-1].isdigit():
+        return int(s[-1]) * (1 if s[0] == "+" else -1)
+    return len(s) * (1 if s[0] == "+" else -1)
+
+
+def decode(raw: bytes) -> str:
+    for enc in ("utf-8-sig", "cp1252", "latin-1"):
+        try:
+            return raw.decode(enc).replace("\r\n", "\n").replace("\r", "\n")
+        except UnicodeDecodeError:
+            continue
+    return raw.decode("latin-1", errors="replace")
+
+
 def parse(path) -> dict:
-    text = read_text_any(Path(path))
-    out = OrderedDict(file=str(path))
+    return parse_text(read_text_any(Path(path)), str(path))
+
+
+def parse_text(text: str, name: str = "") -> dict:
+    out = OrderedDict(file=name)
     m = re.match(r'\s*MM\s+"([\d.]+)".*?VERSION\s+"([\d.]+)"\s+DATETIME\s+"([^"]*)"', text)
     if m:
         out["engine"] = m.group(2)
@@ -126,35 +160,96 @@ def parse(path) -> dict:
     if k < 0:
         k = input_part.find("? SETUP")
     serial = input_part[k:].replace("\n", "") if k >= 0 else ""
+    # kinds of objects hidden with Hide/Reveal: kept in the file, but not part of the problem
+    out["hidden"] = list(OrderedDict.fromkeys(_unq(m.group(1)) for m in _HIDDEN_KIND_RX.finditer(serial)))
+    serial = _HIDE_RX.sub(" ", serial)
     secs = parse_sections(serial)
     out["sections"] = list(secs.keys())
+    out["user_sequence"] = any(s == "SEQUENCE" or s.startswith("SEQUENCE ") for s in secs)
+    run_class = ""
+    for rec in secs.get("SETUP MAIN", []):
+        if rec.get("RUN-CLASS"):
+            run_class = rec["RUN-CLASS"]
+    out["run_class"] = run_class
+    desc = []
+    for rec in secs.get("SETUP DESCRIPTION", []):
+        v = rec.get("DESCRIP")
+        desc += v if isinstance(v, list) else ([v] if v else [])
+    out["description"] = re.sub(r"\s+", " ", " ".join(desc)).strip()
     # components
     comps = []
     for rec in secs.get("COMPONENTS MAIN", []):
         if rec["_kw"] == "COMPONENTS" and rec.get("CID"):
             comps.append({"id": rec["CID"], "alias": rec.get("ANAME", ""),
-                          "databank_name": rec.get("DBNAME1", "")})
+                          "databank_name": rec.get("DBNAME1", ""), "type": rec.get("TYPE", "")})
     out["components"] = comps
-    # property method
-    meths = []
-    for rec in secs.get("PROPERTIES MAIN", []):
-        for key in ("GOPSETNAME", "GBASEOPSET"):
-            if rec.get(key) and rec[key] not in meths:
-                meths.append(rec[key])
+    out["ions"] = [c["id"] for c in comps if charge_of(c["id"])]
+    henry = OrderedDict()
+    for sname, recs in secs.items():
+        if sname.startswith("COMPONENTS HENRY-COMPS"):
+            hid = sname[len("COMPONENTS HENRY-COMPS"):].strip() or "GLOBAL"
+            for rec in recs:
+                v = rec.get("CID")
+                henry.setdefault(hid, []).extend(v if isinstance(v, list) else ([v] if v else []))
+    out["henry"] = henry
+    # property method and electrolyte options
+    meths, popts = [], OrderedDict()
+    # global method first, then those of hierarchy blocks ('PROPERTIES C2HIER.MAIN')
+    prop_secs = ["PROPERTIES MAIN"] + [k for k in secs if k.startswith("PROPERTIES ") and k.endswith(".MAIN")]
+    for sname in prop_secs:
+        for rec in secs.get(sname, []):
+            for key in ("GOPSETNAME", "GBASEOPSET"):
+                if rec.get(key) and rec[key] not in meths:
+                    meths.append(rec[key])
+            if sname != "PROPERTIES MAIN":
+                continue
+            for key, label in (("GCHEMISTRY", "chemistry"), ("GHEN", "henry"), ("GTRUE-COMPS", "true_comps"),
+                               ("GFREE-WATER", "free_water")):
+                if rec.get(key):
+                    popts[label] = rec[key]
     out["property_methods"] = meths
-    # blocks and connectivity
+    out["property_options"] = popts
+    chem = OrderedDict()
+    for sname, recs in secs.items():
+        if sname.startswith("CHEMISTRY "):
+            cid = sname[len("CHEMISTRY "):].strip()
+            reac = {r.get("REACNO") for r in recs if r["_kw"] == "STOIC" and r.get("REACNO")}
+            chem[cid] = {"equilibria": len(reac),
+                         "dissociations": len({r.get("ELECID") for r in recs if r["_kw"] == "DISS"}),
+                         "salts": len({r.get("SALTID") for r in recs if r["_kw"] == "SALT"})}
+    out["chemistry"] = chem
+    out["reactions"] = [s[len("REACTIONS "):] for s in secs if s.startswith("REACTIONS ")]
+    # blocks and connectivity (main flowsheet, flowsheet sections and hierarchy blocks)
     blocks = OrderedDict()
-    for rec in secs.get("FLOWSHEET GLOBAL", []):
-        if rec["_kw"] == "BLOCK" and rec.get("BLKID"):
-            ins = rec.get("IN", []) if isinstance(rec.get("IN"), list) else []
-            outs = rec.get("OUT", []) if isinstance(rec.get("OUT"), list) else []
-            blocks[rec["BLKID"]] = {"model": rec.get("MDLTYPE") or rec.get("BLKTYPE", ""),
-                                    "in": _streams(ins), "out": _streams(outs)}
-    for name in secs:
-        mm = re.match(r"^BLOCK (\S+) (\S+)$", name)
+    for sname, recs in secs.items():
+        if not sname.startswith("FLOWSHEET "):
+            continue
+        fs = sname[len("FLOWSHEET "):].strip()
+        hier = fs[: -len(".GLOBAL")] if fs.upper().endswith(".GLOBAL") else ""
+        section = "" if (fs.upper() == "GLOBAL" or hier) else fs
+        for rec in recs:
+            if rec["_kw"] == "BLOCK" and rec.get("BLKID"):
+                ins = rec.get("IN", []) if isinstance(rec.get("IN"), list) else []
+                outs = rec.get("OUT", []) if isinstance(rec.get("OUT"), list) else []
+                bid = (hier + "." if hier else "") + rec["BLKID"]
+                btype = (rec.get("BLKTYPE") or rec.get("MDLTYPE") or "").upper()
+                blocks[bid] = {"model": rec.get("MDLTYPE") or BLOCK_MODELS.get(btype, rec.get("BLKTYPE", "")),
+                               "type": btype,
+                               "in": _streams(ins), "out": _streams(outs), "section": section,
+                               "hierarchy": hier}
+    for sname in secs:
+        mm = re.match(r"^BLOCK (\S+) (\S+)$", sname)
         if mm and mm.group(2) not in blocks:
-            blocks[mm.group(2)] = {"model": mm.group(1), "in": [], "out": []}
+            bid = mm.group(2)
+            btype = mm.group(1).upper()
+            blocks[bid] = {"model": BLOCK_MODELS.get(btype, mm.group(1)), "type": btype, "in": [], "out": [],
+                           "section": "", "hierarchy": bid.rsplit(".", 1)[0] if "." in bid else ""}
     out["blocks"] = blocks
+    subs = set()
+    for sname, recs in secs.items():
+        if sname.startswith("STREAM MATERIAL "):
+            subs.update(r.get("SSID", "") for r in recs if r["_kw"] == "SUBSTREAM")
+    out["substreams"] = sorted(s for s in subs if s)
     # flowsheet objects
     def names(prefix):
         return [s[len(prefix) + 1:] for s in secs if s.startswith(prefix + " ")]
@@ -234,9 +329,35 @@ def render_markdown(d: dict) -> str:
         L.append(f"- Contains results of a run on {run.get('last_run', '?')}")
     else:
         L.append("- No results stored (saved before running, or results removed)")
-    L.append(f"- Property method(s): {', '.join(d['property_methods']) or '-'}")
+    if d.get("run_class") and d["run_class"].upper() != "FLOWSHEET":
+        L.append(f"- Run type: {d['run_class']} (no flowsheet calculation)")
+    if d.get("description"):
+        L.append(f"- Description: {d['description'][:400]}")
+    po = d.get("property_options") or {}
+    extra = []
+    if po.get("chemistry"):
+        extra.append(f"chemistry {po['chemistry']}")
+    if po.get("henry"):
+        extra.append(f"Henry components {po['henry']}")
+    if po.get("true_comps"):
+        extra.append("true-component approach" if po["true_comps"].upper() == "YES" else "apparent-component approach")
+    L.append(f"- Property method(s): {', '.join(d['property_methods']) or '-'}"
+             + (f" ({', '.join(extra)})" if extra else ""))
     comps = ", ".join(c["id"] + (f" ({c['databank_name']})" if c["databank_name"] else "") for c in d["components"])
     L.append(f"- Components ({len(d['components'])}): {comps}")
+    for cid, c in (d.get("chemistry") or {}).items():
+        L.append(f"- Chemistry {cid}: {c['equilibria']} equilibria, {c['dissociations']} complete dissociations, "
+                 f"{c['salts']} salts")
+    for hid, comps_ in (d.get("henry") or {}).items():
+        L.append(f"- Henry components {hid}: {' '.join(comps_)}")
+    if d.get("reactions"):
+        L.append(f"- Reaction sets: {', '.join(d['reactions'])}")
+    if d.get("substreams") and set(d["substreams"]) - {"MIXED"}:
+        L.append(f"- Substreams: {', '.join(d['substreams'])}")
+    if d.get("user_sequence"):
+        L.append("- A user-defined calculation sequence is specified")
+    if d.get("hidden"):
+        L.append(f"- Hidden objects (Hide/Reveal; not part of the calculation): {', '.join(d['hidden'])}")
     L.append("")
     L.append(f"## Blocks ({len(d['blocks'])})")
     L.append("| Block | Model | In -> Out |")

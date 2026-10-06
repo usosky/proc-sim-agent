@@ -18,7 +18,10 @@ In Claude Code:
 ```
 
 Restart Claude Code if the skill does not appear (`/plugin` lists installed plugins).
-Updates: `/plugin marketplace update proc-sim-agent`.
+Updates: `/plugin marketplace update proc-sim-agent`, then `/plugin` shows the new version.
+The repository was first published as `usosky/modelaide`; GitHub redirects the old address, but if
+you added it under that name, remove it (`/plugin marketplace remove proc-sim-agent`) and add
+`usosky/proc-sim-agent` again.
 
 ## 3. Register and index the help
 
@@ -58,9 +61,25 @@ python fw.py sim-scan
 
 Suggested model layout: one folder per model, one subfolder per version, with the `.bkp` and the
 `.his`, `.rep` (File > Export > Report) and `.cpm` (File > Export > Run Messages) of the last run,
-plus a short `notes.md` saying what changed.
+plus a short `notes.md` saying what changed. When you build a model with Claude, a `BUILD.md` in
+the model folder keeps the plan, checkpoints and baseline.
 
-## 5. Where data is stored
+## 5. Optional: the example library
+
+Aspen Plus installs a few hundred example models (`File > Open > Open Local Example`). Indexing
+them lets Claude find how AspenTech modelled a similar process (property method, chemistry,
+blocks, convergence):
+
+```bash
+python fw.py setup --examples "C:\Program Files\AspenTech\Aspen Plus V15.0\GUI\Examples"
+python fw.py examples-index
+python fw.py docs-index      # optional: also indexes the examples' PDF guides
+```
+
+`setup --auto` registers the newest installed examples folder by itself. The index stays on
+your computer like the help index.
+
+## 6. Where data is stored
 
 `%USERPROFILE%\.proc-sim-agent\` (Windows) or `~/.proc-sim-agent/`: `config.json` and the SQLite indexes.
 Set the environment variable `PROC_SIM_AGENT_HOME` to use another folder. Delete the folder to start

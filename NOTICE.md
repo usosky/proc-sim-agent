@@ -10,9 +10,12 @@ work with.
 
 ## No vendor content
 
-This repository contains no AspenTech help topics, manuals, databanks, executables or indexes of
-them. The tools build their search index on the user's computer, from help files installed with
-the user's own licensed copy, and keep it there. `references/help-map.md` lists only the names of
+This repository contains no AspenTech help topics, manuals, databanks, example models,
+executables or indexes of them. The tools build their search indexes on the user's computer, from
+the help files and example models installed with the user's own licensed copy, and keep them
+there. The input files in `plugins/aspen-plus/skills/aspen-plus/templates/` were written for this
+project (MIT); the equilibrium constants in the electrolyte template are the published values that
+Aspen Plus also uses for these reactions. `references/help-map.md` lists only the names of
 the help's books and their table-of-contents headings, to help users narrow a search.
 
 Message texts quoted in `references/messages.md` are short excerpts of program output, used to

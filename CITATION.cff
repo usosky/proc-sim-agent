@@ -5,15 +5,16 @@ type: software
 abstract: >-
   Claude Code plugins that ground answers about process simulation software in the user's own
   locally installed product help, simulation files and literature. The first plugin covers
-  Aspen Plus: full-text index of the local help, run-history, report and Control Panel parsers,
-  inline-Fortran checks, model review and version comparison, and a curated knowledge base of
-  run messages and calculator practice.
+  Aspen Plus: full-text index of the local help and of the example-model library, run-history,
+  report and Control Panel parsers, stream balance and KPI checks, an input-file writer workflow
+  with a checker, staged model building, inline-Fortran checks, model review and version
+  comparison, and a curated knowledge base of run messages and calculator practice.
 authors:
   - family-names: Usosky
     given-names: Denis
     orcid: "https://orcid.org/0000-0002-6245-5110"
-version: 0.1.0
-date-released: 2026-10-03
+version: 0.2.0
+date-released: 2026-10-06
 license: MIT
 repository-code: "https://github.com/usosky/proc-sim-agent"
 keywords:

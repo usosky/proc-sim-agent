@@ -1,6 +1,7 @@
 # Workflows
 
 `fw` below means `python "${CLAUDE_SKILL_DIR}/scripts/fw.py"` (see SKILL.md for Windows).
+Building a new model with the user is in build-mode.md; writing input files in input-language.md.
 
 ## 1. Troubleshoot a run
 
@@ -40,7 +41,8 @@
 3. Predict the result before running (hand balance, the calculator code run in Python/gfortran
    with the "value read" numbers).
 4. Run (Reinitialize when the change affects convergence or initial values), export .rep and .cpm.
-5. Compare: `fw his-diff`, `fw rep` key results, messages that appeared or disappeared.
+5. Compare: `fw his-diff`, `fw rep` key results, messages that appeared or disappeared; `fw check`
+   for balances and KPIs.
 6. Only then start the next change.
 
 ## 4. Verify a model against a reference (paper, SI, datasheet, previous version)
@@ -75,6 +77,10 @@
   problems", "troubleshooting design specifications", "diagnosing design specification convergence".
 
 ## 6. Choosing a property method (first pass; confirm with the Methods Assistant)
+
+See how AspenTech's examples model the same system first: `fw examples-search "<system>"
+--has electrolyte` or `--method <METHOD>`, then `fw examples-show <id>` (examples.md).
+
 
 | System | Usual choice | Watch |
 |---|---|---|

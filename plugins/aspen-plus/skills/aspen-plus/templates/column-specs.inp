@@ -1,0 +1,55 @@
+; proc-sim-agent template (MIT): methanol-water column. RadFrac with internal
+; specifications (distillate purity and methanol recovery, varying reflux
+; ratio and D:F) inside a design spec that sets the feed rate for a methanol
+; product rate.
+; Open in Aspen Plus: File > Open, Files of type: Input Files (*.inp). Then
+; Run.
+; Databank names are those of Aspen Plus V15 (APV150); other releases: see
+; input-language.md.
+TITLE 'Methanol-water column'
+IN-UNITS MET PRESSURE=bar TEMPERATURE=C DELTA-T=C PDROP=bar
+DEF-STREAMS CONVEN ALL
+DATABANKS 'APV150 PURE41' / 'APV150 AQUEOUS' / 'APV150 SOLIDS' &
+         / 'APV150 INORGANIC' / NOASPENPCD
+PROP-SOURCES 'APV150 PURE41' / 'APV150 AQUEOUS' / 'APV150 SOLIDS' &
+         / 'APV150 INORGANIC'
+COMPONENTS
+    METHANOL CH4O /
+    WATER H2O
+PROPERTIES NRTL
+FLOWSHEET
+    BLOCK FEEDPUMP IN=FEED OUT=F1
+    BLOCK PREHEAT IN=F1 OUT=F2
+    BLOCK COLUMN IN=F2 OUT=DIST BTMS
+    BLOCK COOLER IN=BTMS OUT=BTMS-C
+STREAM FEED
+    SUBSTREAM MIXED TEMP=25. PRES=1. MOLE-FLOW=100.
+    MOLE-FRAC METHANOL 0.3 / WATER 0.7
+BLOCK FEEDPUMP PUMP
+    PARAM PRES=2.
+; saturated liquid feed
+BLOCK PREHEAT HEATER
+    PARAM VFRAC=0. PRES=0
+BLOCK COLUMN RADFRAC
+    PARAM NSTAGE=20
+    COL-CONFIG CONDENSER=TOTAL
+    FEEDS F2 12
+    PRODUCTS DIST 1 L / BTMS 20 L
+    P-SPEC 1 1.013
+    COL-SPECS D:F=0.3 MOLE-RR=1.5
+    SPEC 1 MOLE-FRAC 0.995 COMPS=METHANOL STREAMS=DIST
+    VARY 1 MOLE-RR 0.5 10.
+    SPEC 2 MOLE-RECOV 0.99 COMPS=METHANOL STREAMS=DIST BASE-STREAMS=F2
+    VARY 2 D:F 0.2 0.4
+BLOCK COOLER HEATER
+    PARAM TEMP=40. PRES=0
+; feed rate for 25 kmol/hr of methanol in the distillate
+DESIGN-SPEC DS-1
+    DEFINE DMEOH MOLE-FLOW STREAM=DIST SUBSTREAM=MIXED COMPONENT=METHANOL  &
+        UOM="kmol/hr"
+    SPEC "DMEOH" TO "25."
+    TOL-SPEC "0.01"
+    VARY STREAM-VAR STREAM=FEED SUBSTREAM=MIXED VARIABLE=MOLE-FLOW  &
+        UOM="kmol/hr"
+    LIMITS "50" "150"
+STREAM-REPOR MOLEFLOW MOLEFRAC

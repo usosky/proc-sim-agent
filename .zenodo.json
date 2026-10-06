@@ -1,7 +1,7 @@
 {
   "title": "proc-sim-agent: Claude Code plugins for chemical process simulation",
   "upload_type": "software",
-  "description": "<p>Claude Code plugins that ground answers about process simulation software in the user's own locally installed product help, simulation files and literature. The first plugin covers Aspen Plus: full-text index of the local help, run-history, report and Control Panel parsers, inline-Fortran checks, model review and version comparison, and a curated knowledge base of run messages and calculator practice. No vendor content is distributed.</p>",
+  "description": "<p>Claude Code plugins that ground answers about process simulation software in the user's own locally installed product help, simulation files and literature. The first plugin covers Aspen Plus: full-text index of the local help and of the example-model library, run-history, report and Control Panel parsers, stream balance and KPI checks, an input-file writer workflow with a checker, staged model building, inline-Fortran checks, model review and version comparison, and a curated knowledge base of run messages and calculator practice. No vendor content is distributed.</p>",
   "creators": [
     {
       "name": "Usosky, Denis",

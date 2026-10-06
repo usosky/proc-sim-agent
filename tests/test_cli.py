@@ -8,6 +8,8 @@ import pytest
 
 from conftest import SCRIPTS
 
+import samples
+
 FW = SCRIPTS / "fw.py"
 
 
@@ -78,3 +80,49 @@ def test_relative_paths_are_stored_absolute(tmp_path):
                          text=True, timeout=120)
     assert "complete" in out.stdout
     assert "Wegstein" in run(["docs-search", "Wegstein"], home).stdout
+
+
+def test_examples_commands(tmp_path):
+    home = tmp_path / "home"
+    root = samples.make_example_library(tmp_path / "Examples")
+    assert "examples-index" in run(["setup", "--examples", root], home).stdout
+    assert "complete" in run(["examples-index"], home).stdout
+    out = run(["examples-search", "brine", "--has", "electrolyte"], home).stdout
+    assert "brine_absorber" in out and "guide: brine_absorber.pdf" in out
+    hits = json.loads(run(["examples-search", "--block", "RADFRAC", "--json"], home).stdout)
+    assert {h["name"] for h in hits} == {"methanol_column", "packed_column"}
+    assert "HB.P1" in run(["examples-show", "brine"], home).stdout
+    assert "DISS NACL NA+ 1. / CL- 1." in run(["examples-show", "brine", "--chemistry-inp"], home).stdout
+    assert "PARAM TEMP=25." in run(["examples-show", "brine", "--section", "BLOCK FLASH2"], home).stdout
+    assert "Carbon Capture/Brine absorber" in run(["examples-list"], home).stdout
+    assert "examples: 3 models (complete)" in run(["status"], home).stdout
+    run(["examples-show", "nothing-like-this"], home, ok=(1,))
+
+
+def test_examples_without_index_explains_setup(tmp_path):
+    p = run(["examples-search", "x"], tmp_path / "home", ok=(2,))
+    assert "setup --examples" in p.stderr
+
+
+def test_inp_check_exit_codes_and_his_export(tmp_path, run_files):
+    home = tmp_path / "home"
+    good = samples.write(tmp_path / "good.inp", samples.INP_FLASH)
+    assert "0 errors" in run(["inp-check", good], home).stdout
+    bad = samples.write(tmp_path / "bad.inp", samples.INP_BAD)
+    assert "ERROR" in run(["inp-check", bad], home, ok=(1,)).stdout
+    out_inp = tmp_path / "demo.inp"
+    assert "File > Open" in run(["his", run_files["his"], "--inp", out_inp], home).stdout
+    assert "FRAC RECYCLE 0.3" in out_inp.read_text(encoding="utf-8")
+    run(["his", run_files["his"], "--inp", out_inp], home, ok=(2,))          # exists and no --force
+    run(["his", run_files["his"], "--inp", out_inp, "--force"], home)
+    assert "0 errors" in run(["inp-check", run_files["his"]], home).stdout    # a .his is checked via its input
+
+
+def test_check_command(tmp_path):
+    home = tmp_path / "home"
+    t = samples.write(tmp_path / "table.txt", samples.STREAM_TABLE)
+    out = run(["check", t, "--elements", "C", "--metric", "recovery=flow(GAS, CO2)/elem(FEED, C)"], home).stdout
+    assert "recovery = 0.2" in out
+    res = json.loads(run(["check", t, "--json", "--streams", "FEED,GAS"], home).stdout)
+    assert list(res["streams"]) == ["FEED", "GAS"]
+    run(["check", t, "--metric", "no-equals-sign"], home, ok=(2,))

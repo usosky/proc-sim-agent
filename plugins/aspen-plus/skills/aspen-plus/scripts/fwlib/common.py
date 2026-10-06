@@ -34,12 +34,45 @@ DEFAULT_HELP_GLOBS = [
     "C:/Program Files (x86)/AspenTech/*/HtmlHelp",
 ]
 
+# Where the example library lives: File > Open > Open Local Example shows GUI\Examples (help topic
+# "Accessing the Examples Library"); the tutorials name Favorites\Examples.
+DEFAULT_EXAMPLES_GLOBS = [
+    "C:/Program Files/AspenTech/Aspen Plus V*/GUI/Examples",
+    "C:/Program Files/AspenTech/Aspen Plus V*/Favorites/Examples",
+    "C:/Program Files (x86)/AspenTech/Aspen Plus V*/GUI/Examples",
+]
+
 # Aspen Plus engine version (first line of .bkp, VERSION line of .his) -> release name.
 # Engine version printed in .bkp/.his/.rep headers -> release name.
 # Engines not listed are shown by their number; add them here when they are confirmed.
 ENGINE_TO_RELEASE = {
     "34.0": "V8.8", "35.0": "V9", "36.0": "V10", "37.0": "V11", "38.0": "V12",
     "39.0": "V12.1", "40.0": "V14", "41.0": "V15",
+}
+
+
+# Unit-operation model keywords (input language / .bkp BLKTYPE) -> the name the GUI shows.
+BLOCK_MODELS = {
+    "MIXER": "Mixer", "FSPLIT": "FSplit", "SSPLIT": "SSplit", "SEP": "Sep", "SEP2": "Sep2",
+    "HEATER": "Heater", "FLASH2": "Flash2", "FLASH3": "Flash3", "DECANTER": "Decanter",
+    "HEATX": "HeatX", "MHEATX": "MHeatX", "HXFLUX": "HXFlux", "HETRAN": "HeTran", "AEROTRAN": "AeroTran",
+    "HTRIXIST": "HTRIXIST", "PLATEX": "PlateX",
+    "DSTWU": "DSTWU", "DISTL": "Distl", "SCFRAC": "SCFrac", "RADFRAC": "RadFrac", "MULTIFRAC": "MultiFrac",
+    "PETROFRAC": "PetroFrac", "CONSEP": "ConSep", "BATCHSEP": "BatchSep", "EXTRACT": "Extract",
+    "RSTOIC": "RStoic", "RYIELD": "RYield", "REQUIL": "REquil", "RGIBBS": "RGibbs", "RCSTR": "RCSTR",
+    "RPLUG": "RPlug", "RBATCH": "RBatch",
+    "PUMP": "Pump", "COMPR": "Compr", "MCOMPR": "MCompr", "VALVE": "Valve", "PIPE": "Pipe",
+    "PIPELINE": "Pipeline",
+    "MULT": "Mult", "DUPL": "Dupl", "CLCHNG": "ClChng", "SELECTOR": "Selector", "QTVEC": "QTVec",
+    "ANALYZER": "Analyzer", "CHARGEBAL": "ChargeBal",
+    "CRYSTALLIZER": "Crystallizer", "CRUSHER": "Crusher", "SCREEN": "Screen", "FABFL": "FabFl",
+    "CYCLONE": "Cyclone", "VSCRUB": "VScrub", "ESP": "ESP", "HYCYC": "HyCyc", "CFUGE": "CFuge",
+    "FILTER": "Filter", "SWASH": "SWash", "CCD": "CCD", "DRYER": "Dryer", "FLUIDBED": "FluidBed",
+    "GRANULATOR": "Granulator", "CLASSIFIER": "Classifier", "AGGLOMERATOR": "Agglomerator",
+    "CRYSTALLIZER2": "Crystallizer", "SOLIDSEP": "SolidSep",
+    "USER": "User", "USER2": "User2", "USER3": "User3", "ACM": "ACM", "CAPE-OPEN": "CAPE-OPEN",
+    "HIERARCHY": "Hierarchy", "ELECTROLYZER": "Electrolyzer", "BATCHOP": "BatchOp", "MAKEUP": "MakeUp",
+    "ACMMODEL": "ACM model",
 }
 
 
@@ -78,6 +111,7 @@ def load_config() -> dict:
     cfg.setdefault("help", {})
     cfg.setdefault("library", {"folders": []})
     cfg.setdefault("simulations", {"folders": []})
+    cfg.setdefault("examples", {"folders": []})
     return cfg
 
 

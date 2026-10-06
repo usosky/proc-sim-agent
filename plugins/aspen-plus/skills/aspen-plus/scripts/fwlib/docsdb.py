@@ -115,6 +115,41 @@ def _pdf_pages(path: Path, backend: str) -> Tuple[List[str], str, str]:
     return [], "", "no-pdf-backend"
 
 
+def pdf_first_pages(path: Path, n: int = 2, backend: str = None) -> Tuple[List[str], str]:
+    """Text of the first n pages and the PDF title (cheap: does not read the whole file)."""
+    backend = backend or pdf_backend()
+    try:
+        if backend == "pymupdf":
+            import fitz
+            doc = fitz.open(str(path))
+            if doc.needs_pass and not doc.authenticate(""):
+                return [], ""
+            title = (doc.metadata or {}).get("title") or ""
+            pages = [doc[i].get_text("text") for i in range(min(n, doc.page_count))]
+            doc.close()
+            return pages, title
+        if backend == "pypdf":
+            import pypdf
+            r = pypdf.PdfReader(str(path))
+            if r.is_encrypted and not r.decrypt(""):
+                return [], ""
+            title = ""
+            try:
+                title = (r.metadata.title or "") if r.metadata else ""
+            except Exception:
+                pass
+            return [(p.extract_text() or "") for p in r.pages[:n]], title
+        if backend == "pdftotext":
+            res = subprocess.run(["pdftotext", "-layout", "-enc", "UTF-8", "-f", "1", "-l", str(n), str(path), "-"],
+                                 capture_output=True, timeout=120)
+            if res.returncode != 0:
+                return [], ""
+            return res.stdout.decode("utf-8", "replace").split("\f")[:n], ""
+    except Exception:
+        return [], ""
+    return [], ""
+
+
 def _docx_text(path: Path) -> str:
     with zipfile.ZipFile(str(path)) as z:
         xml = z.read("word/document.xml").decode("utf-8", "replace")
@@ -153,10 +188,14 @@ def extract(path: Path, backend: str):
 
 
 def _good_title(t: str, path: Path) -> str:
+    """The document's title metadata, unless the file name says more. Metadata is often stale: a
+    guide made from another guide's template keeps that guide's title."""
     t = (t or "").strip()
-    if not t or len(t) < 4 or re.match(r"^(untitled|microsoft word|document\d*|title)\b", t, re.I) \
+    stem = path.stem.replace("_", " ").strip()
+    descriptive = len(re.findall(r"[A-Za-z]{3,}", stem)) >= 4 and not re.search(r"\d{5,}", stem)
+    if descriptive or not t or len(t) < 4 or re.match(r"^(untitled|microsoft word|document\d*|title)\b", t, re.I) \
             or t.lower().endswith((".doc", ".docx", ".pdf", ".dvi", ".tex")):
-        return path.stem
+        return stem if descriptive else path.stem
     return t
 
 

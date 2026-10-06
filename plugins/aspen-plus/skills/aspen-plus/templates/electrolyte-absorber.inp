@@ -1,0 +1,62 @@
+; proc-sim-agent template (MIT): CO2 absorption into caustic soda in an
+; equilibrium-stage absorber. True-component electrolyte chemistry (water,
+; carbonate, bicarbonate, NaOH), Henry components, liquid pH reported, and a
+; sensitivity study on the NaOH feed.
+; Open in Aspen Plus: File > Open, Files of type: Input Files (*.inp). Then
+; Run.
+; Databank names are those of Aspen Plus V15 (APV150); other releases: see
+; input-language.md.
+; K-STOIC values: the Aspen Plus electrolyte databank values for these
+; reactions.
+TITLE 'CO2 into NaOH, equilibrium absorber'
+IN-UNITS MET PRESSURE=bar TEMPERATURE=C DELTA-T=C PDROP=bar
+DEF-STREAMS CONVEN ALL
+DATABANKS 'APV150 PURE41' / 'APV150 AQUEOUS' / 'APV150 SOLIDS' &
+         / 'APV150 INORGANIC' / NOASPENPCD
+PROP-SOURCES 'APV150 PURE41' / 'APV150 AQUEOUS' / 'APV150 SOLIDS' &
+         / 'APV150 INORGANIC'
+COMPONENTS
+    H2O H2O /
+    CO2 CO2 /
+    N2 N2 /
+    NAOH NAOH /
+    H3O+ H3O+ /
+    OH- OH- /
+    HCO3- HCO3- /
+    CO3-2 CO3-2 /
+    NA+ NA+
+HENRY-COMPS GLOBAL CO2 N2
+CHEMISTRY C-1
+    STOIC 1 H2O -2. / H3O+ 1. / OH- 1.
+    STOIC 2 CO2 -1. / H2O -2. / HCO3- 1. / H3O+ 1.
+    STOIC 3 HCO3- -1. / H2O -1. / CO3-2 1. / H3O+ 1.
+    K-STOIC 1 A=132.899 B=-13445.9 C=-22.4773
+    K-STOIC 2 A=231.465 B=-12092.1 C=-36.7816
+    K-STOIC 3 A=216.049 B=-12431.7 C=-35.4819
+    DISS NAOH NA+ 1. / OH- 1.
+PROPERTIES ELECNRTL CHEMISTRY=C-1 HENRY-COMPS=GLOBAL TRUE-COMPS=YES
+FLOWSHEET
+    BLOCK ABS IN=LIQ-IN GAS-IN OUT=GAS-OUT LIQ-OUT
+STREAM GAS-IN
+    SUBSTREAM MIXED TEMP=40. PRES=1.1 MOLE-FLOW=100.
+    MOLE-FRAC CO2 0.12 / N2 0.85 / H2O 0.03
+STREAM LIQ-IN
+    SUBSTREAM MIXED TEMP=40. PRES=1.2
+    MOLE-FLOW H2O 1000. / NAOH 20.
+; no condenser, no reboiler: gas in at the bottom stage, liquid in at the top
+BLOCK ABS RADFRAC
+    PARAM NSTAGE=10
+    COL-CONFIG CONDENSER=NONE REBOILER=NONE
+    FEEDS LIQ-IN 1 / GAS-IN 10 ON-STAGE
+    PRODUCTS GAS-OUT 1 V / LIQ-OUT 10 L
+    P-SPEC 1 1.05
+PROP-SET PHSET PH SUBSTREAM=MIXED PHASE=L
+; CO2 left in the gas against the NaOH feed rate
+SENSITIVITY S-NAOH
+    DEFINE CO2OUT MOLE-FLOW STREAM=GAS-OUT SUBSTREAM=MIXED COMPONENT=CO2  &
+        UOM="kmol/hr"
+    TABULATE 1 "CO2OUT"
+    VARY MOLE-FLOW STREAM=LIQ-IN SUBSTREAM=MIXED COMPONENT=NAOH  &
+        UOM="kmol/hr"
+    RANGE OPT-LIST=RANGE LOWER="5" UPPER="30" INCR="5"
+STREAM-REPOR MOLEFLOW MOLEFRAC PROPERTIES=PHSET
