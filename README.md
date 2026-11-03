@@ -1,5 +1,8 @@
 # proc-sim-agent
 
+[![validate](https://github.com/usosky/proc-sim-agent/actions/workflows/validate.yml/badge.svg)](https://github.com/usosky/proc-sim-agent/actions/workflows/validate.yml)
+[![Licence: MIT](https://img.shields.io/badge/licence-MIT-blue)](LICENSE)
+
 <p>
   <img src="assets/auspire-logo.png" alt="AuSpire" height="44">
   &nbsp;&nbsp;&nbsp;

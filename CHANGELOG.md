@@ -4,6 +4,15 @@ All notable changes are listed here. Versions follow [Semantic Versioning](https
 bump `version` in `plugins/<plugin>/.claude-plugin/plugin.json` (the only place it is set) with
 every release, or installed copies will not update.
 
+## [Unreleased]
+
+### Tests
+- Shared helpers: number formatting, ANSI/UTF-8 files with CRLF line ends, safe names,
+  sizes, natural sort, and the config file (defaults, atomic save, damaged file).
+- Search without SQLite FTS5 for the help and library indexes, query terms, and help topic
+  lookups by path, F1 id, topic id and part of the title.
+- PDFs in the library: metadata title, search by page, page ranges, encrypted files.
+
 ## [0.2.0] - 2026-10-06
 
 Build models, not only answer questions.
