@@ -592,6 +592,33 @@ def minimal_pdf(text: str) -> bytes:
     return out
 
 
+def pdf_document(pages, title: str = "") -> bytes:
+    """A valid PDF with one line of text per page and an optional /Title (enough for pypdf).
+    Keep parentheses and backslashes out of the texts."""
+    page_ids = [5 + 2 * k for k in range(len(pages))]
+    objs = {
+        1: b"<< /Type /Catalog /Pages 2 0 R >>",
+        2: b"<< /Type /Pages /Kids [" + b" ".join(b"%d 0 R" % i for i in page_ids)
+           + b"] /Count %d >>" % len(pages),
+        3: b"<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>",
+        4: b"<< /Title (" + title.encode("latin-1") + b") >>",
+    }
+    for pid, text in zip(page_ids, pages):
+        content = ("BT /F1 12 Tf 72 720 Td (" + text + ") Tj ET").encode("latin-1")
+        objs[pid] = (b"<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Contents %d 0 R "
+                     b"/Resources << /Font << /F1 3 0 R >> >> >>" % (pid + 1))
+        objs[pid + 1] = b"<< /Length %d >>\nstream\n" % len(content) + content + b"\nendstream"
+    out, offsets = b"%PDF-1.4\n", {}
+    for i in sorted(objs):
+        offsets[i] = len(out)
+        out += b"%d 0 obj\n" % i + objs[i] + b"\nendobj\n"
+    xref, size = len(out), max(objs) + 1
+    out += b"xref\n0 %d\n0000000000 65535 f \n" % size
+    for i in range(1, size):
+        out += b"%010d 00000 n \n" % offsets[i]
+    return out + b"trailer\n<< /Size %d /Root 1 0 R /Info 4 0 R >>\nstartxref\n%d\n%%%%EOF\n" % (size, xref)
+
+
 def make_example_library(root: Path) -> Path:
     """Three models in topic folders, like the Aspen Plus example library."""
     import zipfile
