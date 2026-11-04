@@ -56,6 +56,26 @@ it plainly: Import variables can only be read; Export and Tear variables can be 
 - Keep only fitted constants and physical constants in the code. Process conditions (T, P,
   compositions, flows) are read from streams or blocks; scenario values are Parameters. Then the
   model reacts to flowsheet changes instead of hiding inputs in code.
+- Names that start with I-N are INTEGER unless declared: `KRATE = 0.5D0` stores 0. Use names
+  starting A-H or O-Z for real values, or declare them REAL*8 in the Declarations sheet.
+
+### Fortran as a file
+
+Keep each calculator's code in a plain-text file per model version, `<MODEL>_vX.Y_fortran.txt`,
+made from `templates/fortran-calculator.txt`: a header of comment lines (name, version, purpose,
+the Define table with import/export, type and units, Parameters with their Init block,
+declarations, the rules), then the code. The whole file pastes into the Fortran sheet as plain
+text; the header becomes comments. Check it before handing it over:
+
+```text
+fw fortran-check "<MODEL>_v1.03_fortran.txt"
+```
+
+It reports fixed-form problems (columns 7-72, C comments in column 1, labels in columns 2-5, the
+continuation mark in column 6, tabs), names starting with I-N that hold real values, and names
+neither in the Define table nor set in the code. When `gfortran` is on PATH it also compiles the
+code in a harness with `-ffixed-form -Wall` (Define variables as double-precision arguments);
+otherwise it says the code was not compiled.
 
 ## 3. Sequence sheet
 
@@ -79,6 +99,8 @@ the blocks/streams it imports from and before those that read its exports.
 
 ## 4. Parameters
 
+- Scenario choices (a target recovery, a derating factor, a case switch) are Parameters, not
+  numbers typed in the code.
 - A Parameter is a numbered flowsheet variable (Define row type Parameter, number, Init value).
 - Give the Init value in **one active** block. If the only Init sits in a deactivated block,
   Aspen uses a missing-value placeholder (about 1E35): enormous flows, mass imbalances, conversions
@@ -95,7 +117,11 @@ the blocks/streams it imports from and before those that read its exports.
   inside a Fortran expression can then be misread; compute such expressions on the Fortran sheet.
 - To change the Target from a Sensitivity block (or a case study), make the Target a Parameter.
 - Vary: only block inputs or feed-stream variables (or a Parameter); not integer inputs such as a
-  feed stage. The value already entered on the block/stream form is the first guess.
+  feed stage. The value already entered on the block/stream form is the first guess. **Vary a feed,
+  not an intermediate stream** (a block outlet: Aspen warns "YOU ARE VARYING A VARIABLE OF AN
+  INTERMEDIATE STREAM" and the outlet is overwritten when the block runs).
+- When the plant is scaled, **scale the vary limits with it**; a start value scaled without its
+  limits stops the spec (ABNDCK.1, messages.md "Run lessons").
 - Give realistic Lower/Upper limits. If the answer lies outside them, Aspen stops at the limit
   that comes closest and the spec is not met: check the spec's results, not only the run status.
 - Optional step sizes are fractions of (upper - lower); Secant defaults are 0.01 and 1, with
@@ -110,6 +136,9 @@ the blocks/streams it imports from and before those that read its exports.
 - To use a deactivated spec: right-click > Activate, then Reinitialize, then Run.
 - In true-species electrolyte models, varying the flow of an electrolyte component often fails;
   vary a pure-component stream that is mixed in, or use the apparent approach.
+- In a true-component run, a calculator writes **apparent** acids and bases to feed streams (for
+  example the total CO2 or the total amine as molecules) and reads the **ions** from the outlets:
+  Aspen speciates the feed, and the outlets hold the true species.
 
 ## 6. Streams written by calculators
 

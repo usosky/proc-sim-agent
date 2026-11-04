@@ -1,0 +1,9 @@
+# Expected values of one version: fw check "<model.rep>" --expect "expected.csv"
+# source: a metric expression (flow, massflow, elem, mole, mass), temp(S), pres(S), vfrac(S),
+#   block(BLOCK, RESULT LABEL) or balance(MASS|MOLE|ENTHALPY), in the units of the report.
+# tol_abs or tol_rel (a fraction, or a percentage such as 3%); with neither, 0.1 %.
+item,source,expected,tol_abs,tol_rel,unit,note
+Overall mass balance,balance(MASS),0,1e-4,,,relative difference
+CO2 captured,"1 - flow(GAS-OUT, CO2)/flow(GAS-IN, CO2)",0.90,0.005,,,capture rate
+Reboiler duty,"block(STRIP, REBOILER DUTY)",9237420,,3%,CAL/SEC,check model
+Product temperature,temp(PROD),40,0.5,,C,

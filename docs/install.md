@@ -61,8 +61,8 @@ python fw.py sim-scan
 
 Suggested model layout: one folder per model, one subfolder per version, with the `.bkp` and the
 `.his`, `.rep` (File > Export > Report) and `.cpm` (File > Export > Run Messages) of the last run,
-plus a short `notes.md` saying what changed. When you build a model with Claude, a `BUILD.md` in
-the model folder keeps the plan, checkpoints and baseline.
+plus a short `notes.md` saying what changed. When you build a model with the agent, a build guide
+and a `STATUS.md` in the model folder keep the plan, the check values and the history.
 
 ## 5. Optional: the example library
 

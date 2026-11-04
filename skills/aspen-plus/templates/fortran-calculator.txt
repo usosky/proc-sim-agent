@@ -1,0 +1,27 @@
+C =====================================================================
+C Calculator: KPI                 Version: v1.03
+C Purpose: specific reboiler duty, GJ per tonne of CO2 captured
+C Model: <model name>
+C Paste everything into Calculator KPI > Calculate (Fortran), as
+C plain text: the header lines are comments. File name:
+C <MODEL>_v1.03_fortran.txt, one file per version.
+C
+C Define (name | import/export | type | definition | units on the row):
+C   QREB  | import | Block-Var | BLOCK=STRIP VARIABLE=QCALC | kW
+C   FCO2  | import | Mole-Flow | STREAM=CO2PROD COMPONENT=CO2 | kmol/hr
+C   SRD   | export | Parameter | 1 | GJ/t
+C Parameters (Init in exactly one active block): SRD, Init 0 in KPI
+C Declarations (Declarations sheet): none
+C Rules: statements in columns 7-72, C comments in column 1, labels
+C   in columns 2-5, continuation mark in column 6, no tabs. Names that
+C   start with I-N are INTEGER unless declared. Units are those of the
+C   Define rows: write them next to each use. Copy imports to local
+C   names before changing them. Check: fw fortran-check "<this file>"
+C =====================================================================
+C     ---- local copies of the imports
+      Q = QREB
+      F = FCO2
+C     ---- guard the division (no CO2 product on a first pass)
+      IF (F .LT. 1.0D-12) F = 1.0D-12
+C     ---- kW = kJ/s: Q*3600/1D6 GJ/h; F*44.01/1000 t/h
+      SRD = (Q * 3.6D-3) / (F * 44.01D-3)

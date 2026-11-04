@@ -22,6 +22,7 @@ Run `python fw.py <command> -h` for details. Commands:
   cpm          read a Control Panel export (.cpm): progress, loops, messages, error summary
   inp-check    check an input file (.inp) before opening it in Aspen Plus
   inp-diff     which input paragraphs changed between two .inp files (or the inputs of two .his)
+  fortran-check  lint a calculator's Fortran kept as a .txt file; compile it with gfortran if present
   inp-find     how a block or paragraph is written, taken from your own runs (.his/.inp)
   comp-find    databank alias of a component (the COMPONENTS line), from the example models
   check        balances, charge, apparent/true basis and metrics from a .rep or a pasted stream table;
@@ -49,7 +50,7 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 
-from fwlib import bkp, check, com, cpm, docsdb, examples, freshness, helpdb, his, inp, madcap, rep, sims  # noqa: E402
+from fwlib import bkp, check, com, cpm, docsdb, examples, fortran, freshness, helpdb, his, inp, madcap, rep, sims  # noqa: E402
 from fwlib.common import (APP_TITLE, DEFAULT_EXAMPLES_GLOBS, DEFAULT_HELP_GLOBS, PRODUCTS,  # noqa: E402
                           config_path, data_home,
                           FileBusy, expand_globs, fts5_available, load_config, natural_key, os_path, print_json,
@@ -538,6 +539,19 @@ def cmd_inp_diff(a):
         print(inp.render_diff(res, Path(a.a).name, Path(a.b).name))
 
 
+def cmd_fortran_check(a):
+    p = Path(a.file).expanduser()
+    if not os.path.exists(os_path(p)):
+        _die(f"File not found: {p}")
+    res = fortran.check_file(p, gfortran=a.gfortran, compile_code=not a.no_compile)
+    if a.json:
+        print_json(res)
+    else:
+        print(fortran.render(res))
+    if fortran.failed(res):
+        sys.exit(1)
+
+
 def _input_files(paths, max_files=400):
     """.his/.inp files under the given paths (newest first); default: the registered simulation folders."""
     roots = [Path(x).expanduser() for x in paths] if paths else [Path(f) for f in load_config()["simulations"]["folders"]]
@@ -927,6 +941,13 @@ def build_parser() -> argparse.ArgumentParser:
     s.add_argument("file")
     s.add_argument("--json", action="store_true")
     s.set_defaults(fn=cmd_inp_check)
+
+    s = sub.add_parser("fortran-check", help="lint (and compile with gfortran) a calculator's Fortran .txt file")
+    s.add_argument("file", help="the .txt with the header and code (templates/fortran-calculator.txt)")
+    s.add_argument("--no-compile", action="store_true", help="lint only")
+    s.add_argument("--gfortran", help="compiler to use (default: gfortran on PATH)")
+    s.add_argument("--json", action="store_true")
+    s.set_defaults(fn=cmd_fortran_check)
 
     s = sub.add_parser("inp-diff", help="paragraph-level differences between two input files (.inp or .his)")
     s.add_argument("a", help="older .inp (or .his: the input of its last run)")

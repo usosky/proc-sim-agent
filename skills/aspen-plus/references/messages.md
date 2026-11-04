@@ -43,6 +43,10 @@ The `his` digest groups repeats, marks iteration-0-only warnings and lists the I
 | Property parameter bounds, odd vapour pressure, formula/MW mismatch | LCLIMS.3, LCLIMS.4, LCCHCK.1, LOADMW.5, PCMNAT.1, PCESSR.1 |
 | "INCONSISTENT PROPERTIES DETECTED" | PRPCHK.1 |
 | "NRTL BINARY PARAMETERS ... ARE ZERO" | GM05I.1 |
+| Components land in a Sep outlet that has specifications; charge balance or Henry errors; nonsense KPIs | "Run lessons" below: blank rows in a Sep outlet |
+| Machine power about 20 % off, very hot compressor stages, product pressure off target | "Run lessons": efficiencies, Compr specifications |
+| No *Report Files* type in File > Export | "Run lessons": no results in the session |
+| Errors only in the first row of a sensitivity, or only in the first passes of a loop | "Run lessons": first-row and first-pass messages |
 
 ## Flowsheet-analysis messages printed without an ID
 
@@ -58,6 +62,8 @@ CONVERGENCE BLOCK $OLVERnn WILL BE DELETED.`** (error)
 - Fix: on that calculator's Sequence sheet choose *Use import/export variables* and keep the
   Parameter as an Import on its Define sheet. Reinitialize, run, and check the new computation
   order: the calculator now sits inside the spec's loop, before the blocks it writes.
+- Second cause: there is no path at all, because a recycle that should carry the varied variable
+  to the sampled one is not connected (the stream ends as a product). Fix the connectivity first.
 
 **`YOUR PROBLEM WILL NOT RUN BECAUSE OF ERRORS FOUND DURING FLOWSHEET ANALYSIS.`** - always the
 consequence of an earlier flowsheet-analysis error; fix that one.
@@ -117,6 +123,9 @@ final pass (it disappears when you run again without Reinitialize).
 Simulation, warning. Part of the compressor feed is liquid, typically a stage fed straight from an
 intercooler with water- or condensable-saturated gas. Add a knock-out drum (Flash2 at the cooler
 outlet conditions) before each stage and route the condensate away.
+Related: `UPC02I.3 LIQUID PHASE EXISTS ...` and `CMSTIN.8 FEED STREAM IS BELOW DEW POINT ...` on
+Compr or MCompr: liquid in the machine's feed or inside a stage. Put a knock-out drum ahead of the
+machine; where liquid is real, set the valid phases to Vapor-Liquid.
 
 ### CONVI.1 - `CONVERGENCE BLOCK $OLVERnn NOT CONVERGED IN <n> ITERATIONS`
 Simulation, warning. Before raising Maximum iterations, read the history of max err/tol:
@@ -216,6 +225,9 @@ stages are enough), and optionally liquid and vapour composition estimates.
 Simulation, warning. First pass after Reinitialize with an empty tear stream: every block downstream
 of the tear is bypassed once. Harmless if they do not recur in the final pass. A tear estimate
 (Streams > tear stream > Input) avoids them.
+In the final pass the upstream outlet is really empty: a flash operated above the bubble pressure of
+its feed, a knock-out drum with nothing to knock out, or wrong wiring. Fix the wiring or the
+upstream pressure.
 
 ### UHE02I.6 - `TUBESIDE STREAM HAS ZERO FLOW ... SPECIFIED U-OPTION NOT ALLOWED - CHANGED TO "CONSTANT"`
 Results generation, warning. Symptom of a zero-flow or failed run; fix that first.
@@ -236,6 +248,29 @@ section 7); leaving about 0.1 % unreacted avoids the zero-flow trigger.
 ### WEGSTN2.1 - `VALUE IS MISSING FOR VARIABLE <n>. THIS MAY BE CAUSED BY A ZERO-FLOW STREAM. THE PREVIOUS VALUE OF THE VARIABLE WILL BE USED.`
 Simulation, warning, usually first iteration. A tear variable had no value because a stream in the
 loop had zero flow. Harmless alone; it points at the zero-flow stream.
+
+## Run lessons (message or symptom -> cause -> fix)
+
+From V15 build sessions; general patterns, placeholders for names.
+
+| Message or symptom | Cause | Fix |
+|---|---|---|
+| Components land in a Sep outlet that has specifications; `BALCHG.1 ... NOT IN CHARGE BALANCE`; nonsense KPIs; Henry-parameter errors for new components | Blank component rows in a Sep outlet with specifications are not zero: Aspen sends those components there (V15) | Type split fraction 0 for every component that must not go there |
+| `FORTRAN WRITE-VAR ... IS WRITING TO AN OUTLET STREAM VARIABLE` | A Define row meant to be read is set to Export | Set it to Import |
+| `UFL01.1 FLASH CALCULATIONS FAILED TO CONVERGE`, then `SNSTVI.4 SOME ROWS COMPLETED WITH ERRORS` | A flash fed a tiny vapour-only stream and asked to flash lower | Feed the next stage with the right phase; check the wiring |
+| `ANPSH.4 NET POSITIVE SUCTION HEAD IS LESS THAN ZERO` | Dissolved gases make the feed's bubble pressure exceed the suction pressure | Informational with gas-saturated liquids; otherwise check the suction pressure |
+| Mixer outlet at vacuum and two-phase | Mixer pressure left at 0 (the lowest inlet pressure) | Type the outlet pressure |
+| Stage outlets at 220-320 C on a liquid-ring or near-isothermal machine | The calculation is adiabatic | An artefact if the power is right (the aftercooler carries the heat); otherwise fix the specification |
+| Product pressure off target, very hot stages | Compr specified with a pressure increase instead of a discharge pressure | Setup > Specifications: discharge pressure |
+| Absurd flash temperature, most of the liquid boiled off | A pressure typed in the wrong units (an mbar value in a bar field) | Check the units of every typed value |
+| No *Report Files* type in File > Export | No results in the session | Run first: after opening a `.bkp`, after any input change, after a Report Options change |
+| Machine power about 20 % off the expected value | Efficiency left blank: Compr and MCompr then use 0.72 | Type every stage's efficiency |
+| `... YOU ARE VARYING A VARIABLE OF AN INTERMEDIATE STREAM` | The design spec varies a block outlet | Vary a feed stream |
+| `GM08.1 ... ELECNRTL WITHOUT A SOLVENT`, `URE07.8 ... ALL COMPONENTS ARE DEFINED AS HENRY COMPONENTS` | Gas-only streams in an electrolyte run (first passes of a loop) | Harmless if only in first passes; otherwise a non-electrolyte section for the gas-only parts |
+| A spec converges but a make-up is several times the expected value | A recovered stream ends nowhere (it is a product) | Check every recovered stream's From and To in the stream table |
+| `MODSEC.9 ... NOT MONOTONIC`, `ASTREM.9 TOTAL FLOW ... BECAME ZERO`, `USP01I.3 ... DOES NOT CONVERGE`, once each in the first row of a sensitivity | Start-up of the first case | Harmless when only in first passes; otherwise check the bounds |
+| `ABNDCK.1 INITIAL VALUE FOR DESIGN SPEC VARIABLE ... ABOVE UPPER BOUND` | The start value was scaled with the plant, the limits were not | Scale the vary limits too |
+| Total work low by one machine | A work stream left as a product outside the Mixer that sums the work | Connect every work stream |
 
 ## Adding entries
 

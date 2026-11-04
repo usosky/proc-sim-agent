@@ -32,7 +32,7 @@ Plus installation, on your computer; your models, results and library never leav
 | "Check my calculator code" | extracts the inline Fortran and lints it (column 72, tabs, undefined names, assigned imports, unused imports) |
 | "Compare the reboiler duty with Table S15 of the paper" | reads the report, converts units, builds the comparison table |
 | "What does my library say about formic acid / NRTL binaries?" | full-text search of your PDFs and notes, with document and page |
-| "Let's build a model of this process from scratch" | plans the build in stages with pass criteria, keeps a BUILD.md log, checks each run (balances, KPIs) before the next step |
+| "Let's build a model of this process from scratch" | frames the job, keeps a data card, gives expected values from a check model before each run, plans versions and gates in a build guide, reviews every run against the expected values and keeps a STATUS.md |
 | "Write it as an input file" | writes the model as an `.inp`, checks it (`inp-check`), you open it with File > Open and run |
 | "Run this case for five feed temperatures" | on Windows with pywin32, runs copies of the model through Aspen's automation interface: one run per point, a CSV with the status of each; reads values with units, adds blocks and streams; your file is never changed |
 | "How does AspenTech model MEA capture?" | searches the example library on your computer by process, block, property method, component; shows the chemistry and block setup |
@@ -87,7 +87,7 @@ your .his .rep .cpm .bkp -----------parsers----------------+          |
 - `skills/aspen-plus/SKILL.md`: when and how Claude uses the tool, the answer style, privacy rules.
 - `skills/aspen-plus/references/`: curated knowledge (messages and fixes, calculator and Fortran
   rules, workflows, build mode, input language, example library, GUI paths, file types, help map).
-- `skills/aspen-plus/templates/`: a BUILD.md plan template and starting input files.
+- `skills/aspen-plus/templates/`: build guide, status, data card, expected values and Fortran calculator templates, and starting input files.
 - `skills/aspen-plus/scripts/fw.py`: standard-library Python, no network access.
 
 ## Commands

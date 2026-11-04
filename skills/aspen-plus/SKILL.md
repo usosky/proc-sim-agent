@@ -90,7 +90,7 @@ anything. Ask only for what the files cannot tell you.
 
 | Request | Do this | Read |
 |---|---|---|
-| Build a model | frame the job, stage plan with pass criteria, check every run | build-mode.md |
+| Build a model | frame the job, data card, expected values from a check model, versions and gates, review every run | build-mode.md |
 | Write the model as a file | an `.inp` from a template, the user's `.his` or an example; `inp-check`; the user opens it | input-language.md |
 | Add blocks to an existing model | Route A (export *Input File with Graphics*, add paragraphs, `inp-diff`, `inp-check`, open), Route B (section `.inp` saved as `.bkp`, File > Import) or Route C (`com-edit` on a copy); never edit a `.bkp` or `.apw` as text | input-language.md, file-types.md, automation.md |
 | Run, sweep or read a model by automation | `com-check --start`; paths from `com-tree`; `com-get`, `com-run`, `com-sweep` on copies, never the user's file | automation.md |
@@ -99,7 +99,7 @@ anything. Ask only for what the files cannot tell you.
 | Review a run against expected values | `check --expect` (pass, fail, missing per item); the file contract above | build-mode.md, file-types.md |
 | "How do I ... in Aspen?" | `help-search` the GUI terms, `help-read` the best 1-3 topics, then click paths | gui-navigation.md, answer-style.md |
 | Error, warning, "run failed" | `his` (or `cpm`, or the pasted text): root cause, fix steps | messages.md, workflows.md section 1 |
-| Calculator, Fortran, design spec, Parameter | `his --fortran` (Define rows, sequence, code, lint); `bkp` when there is no .his | calculators.md |
+| Calculator, Fortran, design spec, Parameter | `his --fortran` (Define rows, sequence, code, lint); `bkp` when there is no .his; `fortran-check` for a code file | calculators.md |
 | "Look at my model / folder" | `sim-scan`, then `bkp`, `his`, `rep` of the latest version | workflows.md section 2, file-types.md |
 | What changed between versions | `his-diff "<old.his>" "<new.his>"`, `inp-diff` by paragraph, `rep` key results of both | workflows.md section 3 |
 | Compare with a paper or datasheet | `rep --block/--streams/--find`, `docs-search` for the reference values | workflows.md section 4 |
@@ -127,6 +127,7 @@ fw docs-read "<doc>" --pages 12-14
 fw examples-search "CO2 capture MEA" --block RADFRAC --has electrolyte
 fw examples-show <id> --section "CHEMISTRY"
 fw his "<run.his>" --inp "<base.inp>"
+fw fortran-check "<MODEL>_v1.03_fortran.txt"
 fw inp-check "<model.inp>"
 fw inp-find RADFRAC "<folder>"
 fw comp-find MEA
@@ -138,7 +139,8 @@ fw com-run "<model.bkp>" --out "<new folder>" --set "\Data\Blocks\B1\Input\TEMP=
 fw com-sweep "<model.bkp>" --out "<new folder>" --vary "<input path>=30,40,50" --read "<result path>"
 ```
 
-`templates/` holds a BUILD.md template and starting input files. `references/help-map.md` maps
+`templates/` holds the build-mode files (`build-guide.md`, `status.md`, `data-card.md`,
+`expected.csv`, `fortran-calculator.txt`) and starting input files. `references/help-map.md` maps
 help books to topics (use `--book` to narrow a search).
 
 ## Proactive checks
@@ -158,10 +160,10 @@ Raise these without being asked when the files show them:
 
 | Request | Deliverable |
 |---|---|
-| Build a model | BUILD.md plan in the model folder (after the user agrees), staged steps with checks |
+| Build a model | build guide, STATUS.md and data card in the model folder (after the user agrees); per-version `expected.csv`; steps with check values |
 | After a run | run review: what passed, the `check --expect` table *Item / Expected / Model / Verdict*, numbered fixes, what to send next time |
 | Write the model | `.inp` file plus the `inp-check` report |
-| Calculator code | Fortran as a separate plain-text file, linted (`his --fortran` shows the lint) |
+| Calculator code | Fortran as a separate plain-text file per version (`templates/fortran-calculator.txt`), checked with `fortran-check` |
 | Automation | a new folder with `.bkp`, `.rep`, `.cpm`, `.inp` and `automation-log.json`; for sweeps the CSV |
 | Troubleshoot | root cause, numbered fix steps, which messages are harmless |
 
@@ -196,7 +198,8 @@ from AspenTech's example library on your own installation or from public, licens
 - The user's models, results and notes never go into commits, issues, public places or test
   fixtures. Paths of their files may be shown to them, never written into anything shared.
 - Do not write into the user's folders unless asked; put generated files where they say. In build
-  mode, BUILD.md and input files go into the model folder the user named, after they agree.
+  mode, the build guide, STATUS.md, data card and input files go into the model folder the user
+  named, after they agree.
 
 ## How to answer
 
@@ -217,7 +220,7 @@ tight.
 | references/gui-navigation.md | V12-V15 ribbon and navigation-pane paths |
 | references/file-types.md | Aspen file types, exports, the file contract and run stamps, engine versions, temp files, privacy |
 | references/help-map.md | help books and what they cover |
-| references/build-mode.md | building a model with the user: stages, pass criteria, checks, baseline, BUILD.md |
+| references/build-mode.md | building a model with the user: framing, data card, check model, versions and gates, run review, STATUS.md |
 | references/input-language.md | writing and checking .inp files: rules, verified paragraphs, the cycle |
 | references/examples.md | the example-library index: setup, search, reading and using examples |
 | references/automation.md | COM automation: when to use it, the com-* commands, safety rules, node paths, units, status flags |
