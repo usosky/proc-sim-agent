@@ -67,9 +67,10 @@ anything. Ask only for what the files cannot tell you.
 1. The user saves the `.bkp` and exports the `.rep` with the same name into the version folder;
    when the run fails, also the `.cpm` (File > Export > Run Messages). They say which folder and
    file, the steps done, any deviation and why, and their questions.
-2. Read the files yourself. `his`, `rep`, `cpm` and `check` print a `WARNING:` line first when the
-   file comes from an older run than another file of the case (run stamps inside the files, never
-   file times). Then say so and ask for "run, save, then File > Export > Report" before reviewing.
+2. Read the files yourself. `his`, `rep`, `cpm`, `bkp` and `check` print a `WARNING:` line first
+   when the file comes from an older run than another file of the case (run stamps inside the
+   files, never file times): say so and ask for "run, save, then File > Export > Report" before
+   reviewing. "Run stamps agree" means one run: a `.his` started before the `.rep` was written.
 3. Answer with: what passed; the run-review table from `fw check "<model.rep>" --expect
    "<expected.csv>"` (*Item / Expected / Model / Verdict*); numbered fixes, each with its root
    cause (your own earlier mistakes stated plainly); the harmless messages; the next run's steps
