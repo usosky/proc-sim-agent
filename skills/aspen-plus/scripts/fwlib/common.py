@@ -158,9 +158,89 @@ def mtime_str(p: Path) -> str:
         return "?"
 
 
+class FileBusy(OSError):
+    """A file that cannot be read now: Aspen Plus holds it, or it is being written."""
+
+
+def os_path(path) -> str:
+    """The path as the operating system needs it. On Windows a path of 248 characters or more gets
+    the \\\\?\\ prefix, so it opens even where long paths are not enabled."""
+    s = str(path)
+    if os.name != "nt" or len(s) < 248 or s.startswith("\\\\?\\"):
+        return s
+    s = os.path.abspath(s)
+    if s.startswith("\\\\"):                       # \\server\share\... -> \\?\UNC\server\share\...
+        return "\\\\?\\UNC\\" + s[2:]
+    return "\\\\?\\" + s
+
+
+def _busy_message(path, err) -> str:
+    return (f"{Path(path).name}: cannot read it now ({type(err).__name__}: {err}). Aspen Plus may hold it "
+            "(a run in progress, or the case open with this file locked) or a sync tool may be writing it. "
+            "Wait for the run to finish or close the case, then try again.")
+
+
+def open_shared(path, retries: int = 1, wait: float = 1.0):
+    """Open a file for reading, as other programs may have it open. Python opens files with read and
+    write sharing on Windows, so a file Aspen Plus keeps open can be read; a file it locks raises
+    PermissionError: wait once and retry, then raise FileBusy with a clear message."""
+    import time
+    for attempt in range(retries + 1):
+        try:
+            return open(os_path(path), "rb")
+        except PermissionError as e:
+            if attempt == retries:
+                raise FileBusy(_busy_message(path, e)) from e
+            time.sleep(wait)
+
+
+def read_bytes(path, retries: int = 1, wait: float = 1.0) -> bytes:
+    """Whole file as bytes (see open_shared). A file that changes size while it is read is being
+    written (an export or a sync in progress): read it again once, then raise FileBusy."""
+    import time
+    for attempt in range(retries + 1):
+        with open_shared(path, retries, wait) as fh:
+            raw = fh.read()
+        try:
+            same = os.stat(os_path(path)).st_size == len(raw)
+        except OSError:
+            same = True
+        if same:
+            return raw
+        if attempt == retries:
+            raise FileBusy(_busy_message(path, OSError("the file changed while it was read")))
+        time.sleep(wait)
+    return raw  # pragma: no cover
+
+
+# Files in a model folder that are never the model: engine working files of an open or crashed
+# session, recovery copies, and the copies sync clients (OneDrive, Dropbox, Proton Drive,
+# Nextcloud, Syncthing, Google Drive) make when two versions of a file collide.
+ENGINE_FILE_RX = re.compile(r"^_[0-9a-z]{7}\.", re.I)
+RECOVERY_RX = re.compile(r"^\$.*\$backup\.[a-z]{2}\$$", re.I)
+CONFLICT_RX = re.compile(
+    r"edit[ _-]?conflict"                                  # "(Edit conflict ...)"
+    r"|conflicted copy"                                    # Dropbox, Nextcloud
+    r"|\.sync-conflict-"                                   # Syncthing
+    r"|\([^)]*\b(?:conflict|konflikt|conflicto|conflit)\b[^)]*\)"   # "(Conflict 1)" and the like
+    r"|-(?:DESKTOP|LAPTOP)-[A-Z0-9]{5,}$",                 # OneDrive adds the computer name
+    re.I)
+
+
+def side_file(name: str) -> str:
+    """Why a file is not a model or a run file of its own: 'engine', 'recovery', 'conflict' or ''."""
+    if ENGINE_FILE_RX.match(name):
+        return "engine"
+    if RECOVERY_RX.match(name):
+        return "recovery"
+    if CONFLICT_RX.search(Path(name).stem):
+        return "conflict"
+    return ""
+
+
 def read_text_any(path: Path) -> str:
     """Read a text file whatever its encoding (Aspen writes ANSI/cp1252)."""
-    raw = Path(path).read_bytes()
+    raw = read_bytes(path)
     for enc in ("utf-8-sig", "cp1252", "latin-1"):
         try:
             return raw.decode(enc).replace("\r\n", "\n").replace("\r", "\n")

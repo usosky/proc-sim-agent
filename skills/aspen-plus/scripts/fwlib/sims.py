@@ -17,7 +17,8 @@ from collections import OrderedDict
 from pathlib import Path
 from typing import List
 
-from .common import ENGINE_TO_RELEASE, human_size, mtime_str, natural_key
+from .common import (ENGINE_FILE_RX, ENGINE_TO_RELEASE, RECOVERY_RX, human_size, mtime_str, natural_key,
+                     open_shared, side_file)
 
 FILE_TYPES = OrderedDict([
     (".apw", "document (binary quick-restart file, version-specific)"),
@@ -53,8 +54,7 @@ FILE_TYPES = OrderedDict([
 NEVER_READ = {".def", ".scr"}  # may hold the Windows user name / install paths
 MODEL_EXT = {".apw", ".apwz", ".bkp"}
 RUN_EXT = {".his", ".rep", ".cpm", ".inp", ".sum"}
-TEMP_RX = re.compile(r"^_[0-9a-z]{7}\.", re.I)
-RECOVERY_RX = re.compile(r"^\$.*\$backup\.[a-z]{2}\$$", re.I)
+TEMP_RX = ENGINE_FILE_RX  # engine working files _xxxxxxx.* (name kept for callers)
 
 
 def _his_quick(path: Path) -> dict:
@@ -62,7 +62,7 @@ def _his_quick(path: Path) -> dict:
     info = {}
     try:
         size = path.stat().st_size
-        with open(path, "rb") as fh:
+        with open_shared(path) as fh:
             if size <= (8 << 20):
                 raw = fh.read()
             else:  # long histories (up to the 500 MB limit): header and the end are enough here
@@ -102,8 +102,8 @@ def _his_quick(path: Path) -> dict:
 
 def _bkp_engine(path: Path) -> str:
     try:
-        with open(path, "r", encoding="cp1252", errors="replace") as fh:
-            head = fh.read(200)
+        with open_shared(path) as fh:
+            head = fh.read(200).decode("cp1252", errors="replace")
     except OSError:
         return ""
     m = re.search(r'VERSION\s+"([\d.]+)"', head)
@@ -156,10 +156,14 @@ def _summarise_folder(p: Path, files: List[Path], root: Path) -> dict:
         entry = {"name": f.name, "type": FILE_TYPES.get(ext, ext or "file"), "size": human_size(size),
                  "modified": mtime_str(f)}
         d["files"].append(entry)
-        if RECOVERY_RX.match(f.name):
+        kind = side_file(f.name)
+        if kind == "recovery":
             d.setdefault("recovery", []).append(f.name)
             continue
-        if TEMP_RX.match(f.name):
+        if kind == "conflict":                 # a sync client's copy: never read as the model
+            d.setdefault("conflicts", []).append(f.name)
+            continue
+        if kind == "engine":
             d.setdefault("temp_files", 0)
             d["temp_files"] += 1
             if ext == ".his":
@@ -232,7 +236,8 @@ def render_markdown(folders: List[dict]) -> str:
     temps = [(d["rel"], t) for d in folders for t in d["temp_runs"]]
     rec = [(d["rel"], d["recovery"]) for d in folders if d.get("recovery")]
     tmpc = [(d["rel"], d["temp_files"]) for d in folders if d.get("temp_files")]
-    if notes or runid or temps or rec or tmpc:
+    conf = [(d["rel"], d["conflicts"]) for d in folders if d.get("conflicts")]
+    if notes or runid or temps or rec or tmpc or conf:
         L.append("")
         L.append("## Notes")
         for rel, n in notes:
@@ -244,6 +249,9 @@ def render_markdown(folders: List[dict]) -> str:
         for rel, n in tmpc:
             L.append(f"- {rel}: {n} engine working files (_xxxxxxx.*) - the case is open in Aspen, or Aspen closed "
                      "abnormally; normally they disappear when the case is closed")
+        for rel, names in conf:
+            L.append(f"- {rel}: sync-conflict copies, not read: {', '.join(names)}. A sync client kept two "
+                     "versions of the same file; open both in Aspen, keep the right one and delete the other")
         for rel, names in rec:
             L.append(f"- {rel}: backup copies {', '.join(names)} (appear while a case is open; keep them until the "
                      "main file opens and runs)")

@@ -41,8 +41,8 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))
 from fwlib import bkp, check, cpm, docsdb, examples, helpdb, his, inp, madcap, rep, sims  # noqa: E402
 from fwlib.common import (APP_TITLE, DEFAULT_EXAMPLES_GLOBS, DEFAULT_HELP_GLOBS, PRODUCTS,  # noqa: E402
                           config_path, data_home,
-                          expand_globs, fts5_available, load_config, natural_key, print_json, save_config,
-                          setup_io)
+                          FileBusy, expand_globs, fts5_available, load_config, natural_key, os_path, print_json,
+                          save_config, setup_io, side_file)
 
 EXIT_INCOMPLETE = 3
 
@@ -388,17 +388,25 @@ def cmd_sim_scan(a):
         print(sims.render_markdown(res))
 
 
-def _pick_his(path: str) -> Path:
+def _pick(path: str, ext: str) -> Path:
+    """A file, or the newest `ext` file of a folder. Engine working files (_xxxxxxx.*), recovery
+    copies and sync-conflict copies are never picked."""
     p = Path(path).expanduser()
-    if p.is_dir():
-        cands = [f for f in p.glob("*.his") if not sims.TEMP_RX.match(f.name)] or list(p.glob("*.his"))
+    if os.path.isdir(os_path(p)):
+        every = sorted(p.glob("*" + ext))
+        cands = [f for f in every if not side_file(f.name)]
         if not cands:
-            _die(f"No .his file in {p}")
+            others = f" (only {', '.join(f.name for f in every)}: working or conflict copies)" if every else ""
+            _die(f"No {ext} file in {p}{others}")
         p = max(cands, key=lambda f: f.stat().st_mtime)
         print(f"(using {p.name})\n")
-    if not p.exists():
+    if not os.path.exists(os_path(p)):
         _die(f"File not found: {p}")
     return p
+
+
+def _pick_his(path: str) -> Path:
+    return _pick(path, ".his")
 
 
 def cmd_examples_index(a):
@@ -479,7 +487,7 @@ def cmd_comp_find(a):
 
 def cmd_inp_check(a):
     p = Path(a.file).expanduser()
-    if not p.exists():
+    if not os.path.exists(os_path(p)):
         _die(f"File not found: {p}")
     if p.suffix.lower() == ".his":
         text = inp.from_his(his.parse(p), source=p.name)
@@ -527,14 +535,7 @@ def cmd_inp_find(a):
 
 
 def cmd_check(a):
-    p = Path(a.file).expanduser()
-    if p.is_dir():
-        cands = sorted(p.glob("*.rep"), key=lambda f: f.stat().st_mtime)
-        if not cands:
-            _die(f"No .rep file in {p}")
-        p = cands[-1]
-    if not p.exists():
-        _die(f"File not found: {p}")
+    p = _pick(a.file, ".rep")
     try:
         streams = check.load(p)
     except ValueError as e:
@@ -545,7 +546,8 @@ def cmd_check(a):
     aliases = {}
     src = a.model
     if not src and p.suffix.lower() == ".rep":  # a .his next to the report gives the component formulas
-        his_files = sorted(p.parent.glob("*.his"), key=lambda f: f.stat().st_mtime)
+        his_files = sorted((f for f in p.parent.glob("*.his") if not side_file(f.name)),
+                           key=lambda f: f.stat().st_mtime)
         src = str(his_files[-1]) if his_files else None
     if src:
         try:
@@ -602,7 +604,7 @@ def cmd_his_diff(a):
 
 def cmd_bkp(a):
     p = Path(a.file).expanduser()
-    if not p.exists():
+    if not os.path.exists(os_path(p)):
         _die(f"File not found: {p}")
     d = bkp.parse(p)
     if a.json:
@@ -612,14 +614,7 @@ def cmd_bkp(a):
 
 
 def cmd_rep(a):
-    p = Path(a.file).expanduser()
-    if p.is_dir():
-        cands = sorted(p.glob("*.rep"), key=lambda f: f.stat().st_mtime)
-        if not cands:
-            _die(f"No .rep file in {p}")
-        p = cands[-1]
-    if not p.exists():
-        _die(f"File not found: {p}")
+    p = _pick(a.file, ".rep")
     d = rep.parse(p)
     if a.csv:
         rep.write_csv(d, a.csv)
@@ -648,14 +643,7 @@ def cmd_rep(a):
 
 
 def cmd_cpm(a):
-    p = Path(a.file).expanduser()
-    if p.is_dir():
-        cands = sorted(p.glob("*.cpm"), key=lambda f: f.stat().st_mtime)
-        if not cands:
-            _die(f"No .cpm file in {p}")
-        p = cands[-1]
-    if not p.exists():
-        _die(f"File not found: {p}")
+    p = _pick(a.file, ".cpm")
     d = cpm.parse(p)
     if a.json:
         print_json({k: v for k, v in d.items() if k != "messages"})
@@ -663,8 +651,7 @@ def cmd_cpm(a):
     print(cpm.render_markdown(d))
 
 
-def main(argv=None):
-    setup_io()
+def build_parser() -> argparse.ArgumentParser:
     ap = argparse.ArgumentParser(prog="fw.py", description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     sub = ap.add_subparsers(dest="cmd", required=True)
 
@@ -836,9 +823,23 @@ def main(argv=None):
     s.add_argument("--json", action="store_true")
     s.set_defaults(fn=cmd_cpm)
 
-    a = ap.parse_args(argv)
+    return ap
+
+
+def commands() -> list:
+    """Names of every subcommand (for the -h smoke tests)."""
+    ap = build_parser()
+    action = next(x for x in ap._actions if isinstance(x, argparse._SubParsersAction))
+    return list(action.choices)
+
+
+def main(argv=None):
+    setup_io()
+    a = build_parser().parse_args(argv)
     try:
         a.fn(a)
+    except FileBusy as e:
+        _die(str(e), 2)
     except BrokenPipeError:  # output piped into head/less that closed early
         try:
             sys.stdout = open(os.devnull, "w")
