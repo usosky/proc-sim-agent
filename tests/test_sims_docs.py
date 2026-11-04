@@ -20,7 +20,7 @@ def test_sim_scan_versions_temp_and_private_files(tmp_path):
     samples.write(v2 / "_0001abc.his", samples.HIS)
     (v2 / "$Plant$backup.bk$").write_text("x", encoding="latin-1")
     (v2 / "aspen.def").write_text("USERNAME=SECRETUSER\n", encoding="latin-1")
-    # make the .bkp of 1.0 newer than its .his -> stale-results note
+    # a .his with an older file time than its .bkp is not stale: file times are never used
     old = time.time() - 3600
     os.utime(v1 / "Plant.his", (old, old))
 
@@ -35,8 +35,8 @@ def test_sim_scan_versions_temp_and_private_files(tmp_path):
     assert new["recovery"] == ["$Plant$backup.bk$"]
     md = sims.render_markdown(folders)
     assert "SECRETUSER" not in md
-    assert any("may be stale" in n for n in by_rel["Plant/1.0 base"]["notes"])
-    assert any("no .rep export" in n for n in by_rel["Plant/1.0 base"]["notes"])
+    assert not any("stale" in n for n in by_rel["Plant/1.0 base"]["notes"] + by_rel["Plant/1.0 base"]["warnings"])
+    assert "Plant/1.0 base/Plant: no .rep export" in by_rel["Plant/1.0 base"]["notes"][0]
 
 
 def test_library_index_search_read_duplicates(tmp_path, mahome):

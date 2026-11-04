@@ -15,6 +15,7 @@ column errors. It does not replace a run: Aspen Plus remains the judge of the in
 """
 from __future__ import annotations
 
+import difflib
 import re
 from collections import OrderedDict
 from pathlib import Path
@@ -646,4 +647,70 @@ def render(res: dict, path: str = "") -> str:
     else:
         L.append("\nNo problems found. Open it in Aspen Plus (File > Open > Input Files *.inp) and run it; the run "
                  "decides the rest.")
+    return "\n".join(L)
+
+
+# ---------------------------------------------------------------------------
+# paragraph-level differences between two inputs
+# ---------------------------------------------------------------------------
+_NAMED = {"BLOCK", "STREAM", "CALCULATOR", "DESIGN-SPEC", "SENSITIVITY", "CONVERGENCE", "TRANSFER", "BALANCE",
+          "PRES-RELIEF", "CASE-STUDY", "OPTIMIZATION", "CONSTRAINT", "DATA-FIT", "REGRESSION", "PROP-SET",
+          "REACTIONS", "CHEMISTRY", "HIERARCHY", "UTILITY", "MEASUREMENT", "STREAM-PRICE", "FLOWSHEET",
+          "PROP-DATA"}     # paragraphs whose second word is a name (BLOCK B1 ...); others are keyed by the first
+
+
+def _identity(header: str) -> str:
+    toks = header.split()
+    if not toks:
+        return ""
+    key = toks[0].upper()
+    if key in _NAMED and len(toks) > 1 and "=" not in toks[1]:
+        return f"{key} {toks[1].upper()}"
+    return key
+
+
+def diff_paragraphs(text_a: str, text_b: str) -> dict:
+    """Which paragraphs were added, removed or changed between two input texts (.inp or the input
+    echo of a .his). Comments and continuation layout are ignored."""
+    def index(text):
+        _, pars = _paragraphs_with_lines(text)
+        out, seen = OrderedDict(), {}
+        for p in pars:
+            ident = _identity(p["header"])
+            seen[ident] = seen.get(ident, 0) + 1
+            key = ident if seen[ident] == 1 else f"{ident} #{seen[ident]}"
+            body = [re.sub(r"\s+", " ", p["header"]).strip()] + [re.sub(r"\s+", " ", s).strip()
+                                                                for s in p["statements"]]
+            out[key] = {"header": p["header"], "line": p["line"], "body": body}
+        return out
+    a, b = index(text_a), index(text_b)
+    res = {"changed": [], "added": [], "removed": [], "unchanged": 0}
+    for k, pa in a.items():
+        pb = b.get(k)
+        if pb is None:
+            res["removed"].append({"paragraph": k, "line_a": pa["line"], "text": pa["body"]})
+        elif [x.upper() for x in pa["body"]] != [x.upper() for x in pb["body"]]:
+            res["changed"].append({"paragraph": k, "header_b": pb["header"], "line_a": pa["line"],
+                                   "line_b": pb["line"],
+                                   "diff": list(difflib.unified_diff(pa["body"], pb["body"], lineterm="", n=1))[2:]})
+        else:
+            res["unchanged"] += 1
+    for k, pb in b.items():
+        if k not in a:
+            res["added"].append({"paragraph": k, "line_b": pb["line"], "text": pb["body"]})
+    return res
+
+
+def render_diff(res: dict, name_a: str, name_b: str) -> str:
+    L = [f"# Input differences: {name_a} -> {name_b}",
+         f"- {len(res['changed'])} paragraphs changed, {len(res['added'])} added, {len(res['removed'])} removed, "
+         f"{res['unchanged']} unchanged."]
+    for c in res["changed"]:
+        L += ["", f"## Changed: {c['header_b']} (line {c['line_a']} -> {c['line_b']})", "```diff"]
+        L += [x for x in c["diff"] if not x.startswith("@@")] + ["```"]
+    for kind, line in (("added", "line_b"), ("removed", "line_a")):
+        for p in res[kind]:
+            L += ["", f"## {kind.capitalize()}: {p['text'][0]} (line {p[line]})", "```text"] + p["text"] + ["```"]
+    if not (res["changed"] or res["added"] or res["removed"]):
+        L.append("\nNo differences in the input paragraphs.")
     return "\n".join(L)

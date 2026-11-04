@@ -21,12 +21,13 @@ Building a new model with the user is in build-mode.md; writing input files in i
 
 ## 2. Review a model (or get up to speed on one)
 
-1. `fw sim-scan <folder>`: versions, file types, last run status, stale or missing exports,
-   leftover engine files, the notes column.
+1. `fw sim-scan <folder>`: versions, file types, last run status, files from an older run (run
+   stamps inside the files, see file-types.md), missing exports, leftover engine files, notes.
 2. `fw bkp <model.bkp>`: components, property methods, blocks and connectivity, calculators,
    design specs (active or not), tears, convergence options.
 3. `fw his <model.his>`: messages, loops, block results; `fw his-diff old.his new.his` shows what
-   changed in the input between two versions.
+   changed in the input between two versions, `fw inp-diff old.inp new.inp` the same by paragraph
+   (blocks, streams, calculators added, removed or changed; a `.his` works too).
 4. `fw rep <model.rep>`: run status, overall balance, key block results (duties, powers),
    `--streams A,B` for stream tables, `--block NAME` for one block, `--find TEXT`.
 5. Report: status, what the model represents, inactive objects (deactivated blocks, disabled
@@ -41,8 +42,8 @@ Building a new model with the user is in build-mode.md; writing input files in i
 3. Predict the result before running (hand balance, the calculator code run in Python/gfortran
    with the "value read" numbers).
 4. Run (Reinitialize when the change affects convergence or initial values), export .rep and .cpm.
-5. Compare: `fw his-diff`, `fw rep` key results, messages that appeared or disappeared; `fw check`
-   for balances and KPIs.
+5. Compare: `fw his-diff` or `fw inp-diff`, `fw rep` key results, messages that appeared or
+   disappeared; `fw check` for balances and KPIs, `fw check --expect` for the expected values.
 6. Only then start the next change.
 
 ## 4. Verify a model against a reference (paper, SI, datasheet, previous version)

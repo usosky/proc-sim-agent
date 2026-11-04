@@ -121,3 +121,32 @@ def test_joule_input_extracts_and_checks():
     unused = [m for m in _msgs(res, "warning") if "no PROPERTIES statement uses it" in m]
     assert len(unused) == 2
     assert len(res["summary"]["blocks"]) == 18
+
+
+def test_inp_diff_by_paragraph():
+    a = samples.INP_FLASH
+    b = (a.replace("BLOCK FL1 FLASH2\n    PARAM TEMP=80. PRES=1.", "BLOCK FL1 FLASH2\n    PARAM TEMP=75. PRES=1.")
+          .replace("PROPERTIES NRTL", "PROPERTIES UNIQUAC")
+          .replace("STREAM-REPOR MOLEFLOW", "BLOCK HX2 HEATER\n    PARAM TEMP=30. PRES=0\n\nSTREAM-REPOR MOLEFLOW"))
+    res = inp.diff_paragraphs(a, b)
+    assert [c["paragraph"] for c in res["changed"]] == ["PROPERTIES", "BLOCK FL1"]
+    assert [p["paragraph"] for p in res["added"]] == ["BLOCK HX2"] and not res["removed"]
+    md = inp.render_diff(res, "a.inp", "b.inp")
+    assert "-PARAM TEMP=80. PRES=1.\n+PARAM TEMP=75. PRES=1." in md
+    assert "2 paragraphs changed, 1 added, 0 removed" in md
+    assert "No differences" in inp.render_diff(inp.diff_paragraphs(a, a + "\n; a comment\n"), "a", "a")
+
+
+def test_inp_diff_cli_on_two_his(tmp_path, run_files):
+    import json
+    import os
+    import subprocess
+    import sys
+    env = dict(os.environ, PROC_SIM_AGENT_HOME=str(tmp_path / "home"), PYTHONIOENCODING="utf-8")
+    p = subprocess.run([sys.executable, str(SCRIPTS / "fw.py"), "inp-diff", str(run_files["his"]),
+                        str(run_files["his_v2"]), "--json"], capture_output=True, text=True, encoding="utf-8",
+                       env=env, timeout=120)
+    assert p.returncode == 0, p.stderr
+    res = json.loads(p.stdout)
+    assert [c["paragraph"] for c in res["changed"]] == ["BLOCK SPLIT"]
+    assert "+FRAC RECYCLE 0.4" in res["changed"][0]["diff"]

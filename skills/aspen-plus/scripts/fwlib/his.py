@@ -46,14 +46,13 @@ def parse(path) -> dict:
         e = starts[k + 1] if k + 1 < len(starts) else len(lines)
         runs.append(_parse_run(lines, s, e))
     last = runs[-1]
-    summaries = [r["error_summary"] for r in runs if r["error_summary"]]
     return {
         "file": str(path),
         "header": header,
         "n_runs": len(runs),
         "runs": runs,
         "model": last["model"],
-        "error_summary": summaries[-1] if summaries else None,
+        "error_summary": last["error_summary"],      # of the last run only: an older run's table misleads
         "status": _overall_status(runs),
     }
 
@@ -140,6 +139,9 @@ def _parse_echo(lines, s, e):
             if mm:
                 meta["run_type"] = mm.group(1)
                 meta["date"] = re.sub(r"\s+", " ", mm.group(2)).strip()
+            mm = re.match(r"^\s*(\d{1,2}:\d{2}:\d{2}\s*[AP]\.M\.)", l)
+            if mm and "run_type" in meta and "time" not in meta:
+                meta["time"] = mm.group(1)
             mm = re.match(r"^\s*INPUT FILE:\s*(\S+)", l)
             if mm:
                 meta["input_file"] = mm.group(1)
@@ -711,9 +713,13 @@ def render_markdown(d: dict, fortran: bool = False, max_blocks: int = 60) -> str
     L = []
     rel = f"Aspen Plus {h.get('release') or ''} (engine {h.get('engine', '?')}, build {h.get('build', '?')})".replace("  ", " ")
     L.append(f"# Run digest: {Path(d['file']).name}")
-    L.append(f"- {rel}; run {h.get('date', meta.get('date', '?'))} {h.get('time', '')}".rstrip())
-    L.append(f"- Runid: {m.get('runid') or '?'}; input file: {meta.get('input_file', '?')}"
-             + (f"; runs in file: {d['n_runs']}" if d["n_runs"] > 1 else ""))
+    when = (f"{meta['date']} {meta.get('time', '')}".strip() if meta.get("date")
+            else f"{h.get('date', '?')} {h.get('time', '')}".strip())
+    L.append(f"- {rel}; run {when}".rstrip())
+    if d["n_runs"] > 1:
+        L.append(f"- This file holds {d['n_runs']} runs; the digest describes the last one "
+                 f"({meta.get('run_type', 'run').lower()} {d['n_runs']} of {d['n_runs']}, {when})")
+    L.append(f"- Runid: {m.get('runid') or '?'}; input file: {meta.get('input_file', '?')}")
     L.append(f"- Status: {d['status']}")
     es = d["error_summary"]
     if es and not es.get("none"):

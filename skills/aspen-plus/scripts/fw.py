@@ -21,9 +21,14 @@ Run `python fw.py <command> -h` for details. Commands:
   rep          read a report export (.rep): status, convergence, blocks, stream tables
   cpm          read a Control Panel export (.cpm): progress, loops, messages, error summary
   inp-check    check an input file (.inp) before opening it in Aspen Plus
+  inp-diff     which input paragraphs changed between two .inp files (or the inputs of two .his)
   inp-find     how a block or paragraph is written, taken from your own runs (.his/.inp)
   comp-find    databank alias of a component (the COMPONENTS line), from the example models
-  check        balances, charge, apparent/true basis and metrics from a .rep or a pasted stream table
+  check        balances, charge, apparent/true basis and metrics from a .rep or a pasted stream table;
+               --expect compares results with expected values (the run-review table)
+
+his, rep, cpm, bkp and check warn at the top when the file describes an older run than another file
+of the same case (run stamps inside the files; file times are never used).
 
 Only the Python standard library is required (PDF text needs pypdf or PyMuPDF).
 Nothing is uploaded: indexes live in ~/.proc-sim-agent (override with PROC_SIM_AGENT_HOME).
@@ -38,7 +43,7 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 
-from fwlib import bkp, check, cpm, docsdb, examples, helpdb, his, inp, madcap, rep, sims  # noqa: E402
+from fwlib import bkp, check, cpm, docsdb, examples, freshness, helpdb, his, inp, madcap, rep, sims  # noqa: E402
 from fwlib.common import (APP_TITLE, DEFAULT_EXAMPLES_GLOBS, DEFAULT_HELP_GLOBS, PRODUCTS,  # noqa: E402
                           config_path, data_home,
                           FileBusy, expand_globs, fts5_available, load_config, natural_key, os_path, print_json,
@@ -388,9 +393,10 @@ def cmd_sim_scan(a):
         print(sims.render_markdown(res))
 
 
-def _pick(path: str, ext: str) -> Path:
-    """A file, or the newest `ext` file of a folder. Engine working files (_xxxxxxx.*), recovery
-    copies and sync-conflict copies are never picked."""
+def _pick(path: str, ext: str, quiet: bool = False) -> Path:
+    """A file, or the `ext` file of a folder with the newest run stamp inside (file times are never
+    used: sync clients rewrite them). Engine working files (_xxxxxxx.*), recovery copies and
+    sync-conflict copies are never picked."""
     p = Path(path).expanduser()
     if os.path.isdir(os_path(p)):
         every = sorted(p.glob("*" + ext))
@@ -398,15 +404,25 @@ def _pick(path: str, ext: str) -> Path:
         if not cands:
             others = f" (only {', '.join(f.name for f in every)}: working or conflict copies)" if every else ""
             _die(f"No {ext} file in {p}{others}")
-        p = max(cands, key=lambda f: f.stat().st_mtime)
-        print(f"(using {p.name})\n")
+        p = max(cands, key=freshness.sort_key)
+        more = f"; {len(cands)} {ext} files here, pass the file to choose another" if len(cands) > 1 else ""
+        print(f"(using {p.name}{more})\n", file=sys.stderr if quiet else sys.stdout)
     if not os.path.exists(os_path(p)):
         _die(f"File not found: {p}")
     return p
 
 
-def _pick_his(path: str) -> Path:
-    return _pick(path, ".his")
+def _freshness(p: Path, quiet: bool = False) -> dict:
+    """Compare the file with the other files of its case; print the warning lines unless quiet."""
+    res = freshness.check_case(p)
+    lines = freshness.warning_lines(p, res)
+    if lines and not quiet:
+        print("\n".join(lines) + "\n")
+    return res
+
+
+def _pick_his(path: str, quiet: bool = False) -> Path:
+    return _pick(path, ".his", quiet)
 
 
 def cmd_examples_index(a):
@@ -502,6 +518,20 @@ def cmd_inp_check(a):
         sys.exit(1)
 
 
+def cmd_inp_diff(a):
+    texts = []
+    for f in (a.a, a.b):
+        p = Path(f).expanduser()
+        if not os.path.exists(os_path(p)):
+            _die(f"File not found: {p}")
+        texts.append(inp.input_text_of(p))
+    res = inp.diff_paragraphs(*texts)
+    if a.json:
+        print_json(res)
+    else:
+        print(inp.render_diff(res, Path(a.a).name, Path(a.b).name))
+
+
 def _input_files(paths, max_files=400):
     """.his/.inp files under the given paths (newest first); default: the registered simulation folders."""
     roots = [Path(x).expanduser() for x in paths] if paths else [Path(f) for f in load_config()["simulations"]["folders"]]
@@ -535,20 +565,32 @@ def cmd_inp_find(a):
 
 
 def cmd_check(a):
-    p = _pick(a.file, ".rep")
+    p = _pick(a.file, ".rep", quiet=a.json)
+    expect = None
+    if a.expect:
+        try:
+            expect = check.load_expected(Path(a.expect).expanduser())
+        except (OSError, ValueError) as e:
+            _die(f"Cannot read the expected values: {e}")
+    report = None
     try:
-        streams = check.load(p)
+        if p.suffix.lower() == ".rep":
+            report = rep.parse(p)
+            streams = check.from_rep(p, report)
+        else:
+            streams = check.load(p)
     except ValueError as e:
         _die(str(e), 1)
+    fresh = _freshness(p, quiet=a.json) if p.suffix.lower() == ".rep" else None
     if a.streams:
         want = {s.strip().upper() for s in a.streams.split(",")}
         streams = type(streams)((k, v) for k, v in streams.items() if k.upper() in want)
     aliases = {}
     src = a.model
-    if not src and p.suffix.lower() == ".rep":  # a .his next to the report gives the component formulas
-        his_files = sorted((f for f in p.parent.glob("*.his") if not side_file(f.name)),
-                           key=lambda f: f.stat().st_mtime)
-        src = str(his_files[-1]) if his_files else None
+    if not src and p.suffix.lower() == ".rep":  # the .his of the same case gives the component formulas
+        his_files = [f for f in freshness.siblings(p) if f.suffix.lower() == ".his"] or \
+                    [f for f in p.parent.glob("*.his") if not side_file(f.name)]
+        src = str(max(his_files, key=freshness.sort_key)) if his_files else None
     if src:
         try:
             aliases = check.aliases_from(src)
@@ -568,15 +610,19 @@ def cmd_check(a):
         k, v = m.split("=", 1)
         metrics.append((k.strip(), v.strip()))
     res = check.analyse(streams, elements=_csv_list(a.elements), aliases=aliases, overrides=overrides,
-                        metrics=metrics)
+                        metrics=metrics, expect=expect, report=report)
+    if fresh is not None:
+        res["freshness"] = fresh
     if a.json:
         print_json(res)
     else:
         print(check.render(res))
+    if expect is not None and any(r["verdict"] != "pass" for r in res["expect"]):
+        sys.exit(1)
 
 
 def cmd_his(a):
-    p = _pick_his(a.file)
+    p = _pick_his(a.file, quiet=a.json or a.echo)
     d = his.parse(p)
     if a.inp:
         out = Path(a.inp).expanduser()
@@ -588,9 +634,11 @@ def cmd_his(a):
     if a.echo:
         print(his.echo_text(d))
         return
+    fresh = _freshness(p, quiet=a.json)
     if a.json:
         slim = dict(d)
         slim["runs"] = [{k: v for k, v in r.items() if k != "echo"} for r in d["runs"]]
+        slim["freshness"] = fresh
         print_json(slim)
         return
     print(his.render_markdown(d, fortran=a.fortran))
@@ -607,15 +655,18 @@ def cmd_bkp(a):
     if not os.path.exists(os_path(p)):
         _die(f"File not found: {p}")
     d = bkp.parse(p)
+    fresh = _freshness(p, quiet=a.json)
     if a.json:
+        d["freshness"] = fresh
         print_json(d)
     else:
         print(bkp.render_markdown(d))
 
 
 def cmd_rep(a):
-    p = _pick(a.file, ".rep")
+    p = _pick(a.file, ".rep", quiet=a.json)
     d = rep.parse(p)
+    fresh = _freshness(p, quiet=a.json or bool(a.csv))
     if a.csv:
         rep.write_csv(d, a.csv)
         print(f"wrote {a.csv} ({len(d['streams'])} streams)")
@@ -637,16 +688,20 @@ def cmd_rep(a):
         slim = {k: v for k, v in d.items() if k != "_sections"}
         for b in slim["blocks"].values():
             b.pop("lines", None)
+        slim["freshness"] = fresh
         print_json(slim)
         return
     print(rep.render_markdown(d))
 
 
 def cmd_cpm(a):
-    p = _pick(a.file, ".cpm")
+    p = _pick(a.file, ".cpm", quiet=a.json)
     d = cpm.parse(p)
+    fresh = _freshness(p, quiet=a.json)
     if a.json:
-        print_json({k: v for k, v in d.items() if k != "messages"})
+        out = {k: v for k, v in d.items() if k != "messages"}
+        out["freshness"] = fresh
+        print_json(out)
         return
     print(cpm.render_markdown(d))
 
@@ -762,6 +817,12 @@ def build_parser() -> argparse.ArgumentParser:
     s.add_argument("--json", action="store_true")
     s.set_defaults(fn=cmd_inp_check)
 
+    s = sub.add_parser("inp-diff", help="paragraph-level differences between two input files (.inp or .his)")
+    s.add_argument("a", help="older .inp (or .his: the input of its last run)")
+    s.add_argument("b", help="newer .inp (or .his)")
+    s.add_argument("--json", action="store_true")
+    s.set_defaults(fn=cmd_inp_diff)
+
     s = sub.add_parser("inp-find", help="examples of a block model, paragraph or statement from your own runs")
     s.add_argument("keyword", help="e.g. RADFRAC, HEATX, DESIGN-SPEC, CHEMISTRY, COL-SPECS")
     s.add_argument("paths", nargs="*", help="files or folders (default: the registered simulation folders)")
@@ -778,6 +839,10 @@ def build_parser() -> argparse.ArgumentParser:
     s.add_argument("--metric", action="append", help="NAME=EXPRESSION, e.g. "
                                                      "\"recovery=flow(CO2-GAS, CO2)/elem(FEED, C)\" (repeatable)")
     s.add_argument("--streams", help="only these streams (comma-separated)")
+    s.add_argument("--expect", help="CSV or JSON of expected values: item, source, expected, tol_abs or tol_rel "
+                                    "(source: a metric expression, temp(S), pres(S), vfrac(S), block(B, RESULT), "
+                                    "balance(MASS)); prints | Item | Expected | Model | Verdict | and exits 1 "
+                                    "when a check fails or is missing")
     s.add_argument("--json", action="store_true")
     s.set_defaults(fn=cmd_check)
 

@@ -61,6 +61,19 @@ In a model folder, read its `STATUS.md` or build guide and the newest version's 
 (`fw sim-scan "<folder>"`, then `bkp`, `his`, `rep` of the newest version) before asking the user
 anything. Ask only for what the files cannot tell you.
 
+## File contract (after every run)
+
+1. The user saves the `.bkp` and exports the `.rep` with the same name into the version folder;
+   when the run fails, also the `.cpm` (File > Export > Run Messages). They say which folder and
+   file, the steps done, any deviation and why, and their questions.
+2. Read the files yourself. `his`, `rep`, `cpm` and `check` print a `WARNING:` line first when the
+   file comes from an older run than another file of the case (run stamps inside the files, never
+   file times). Then say so and ask for "run, save, then File > Export > Report" before reviewing.
+3. Answer with: what passed; the run-review table from `fw check "<model.rep>" --expect
+   "<expected.csv>"` (*Item / Expected / Model / Verdict*); numbered fixes, each with its root
+   cause (your own earlier mistakes stated plainly); the harmless messages; the next run's steps
+   with expected values; the "what to send next time" list.
+
 ## Modes
 
 | Mode | When | Read |
@@ -79,11 +92,12 @@ anything. Ask only for what the files cannot tell you.
 | Write the model as a file | an `.inp` from a template, the user's `.his` or an example; `inp-check`; the user opens it | input-language.md |
 | "How is X usually modelled?" | `examples-search`, `examples-show`, the guide via `docs-search`; never name examples from memory | examples.md |
 | Results table or .rep: balances, pH/charge, KPIs | `check` (mass, element, charge balance; apparent vs true basis; `--metric`) | build-mode.md |
+| Review a run against expected values | `check --expect` (pass, fail, missing per item); the file contract above | build-mode.md, file-types.md |
 | "How do I ... in Aspen?" | `help-search` the GUI terms, `help-read` the best 1-3 topics, then click paths | gui-navigation.md, answer-style.md |
 | Error, warning, "run failed" | `his` (or `cpm`, or the pasted text): root cause, fix steps | messages.md, workflows.md section 1 |
 | Calculator, Fortran, design spec, Parameter | `his --fortran` (Define rows, sequence, code, lint); `bkp` when there is no .his | calculators.md |
 | "Look at my model / folder" | `sim-scan`, then `bkp`, `his`, `rep` of the latest version | workflows.md section 2, file-types.md |
-| What changed between versions | `his-diff "<old.his>" "<new.his>"`, `rep` key results of both | workflows.md section 3 |
+| What changed between versions | `his-diff "<old.his>" "<new.his>"`, `inp-diff` by paragraph, `rep` key results of both | workflows.md section 3 |
 | Compare with a paper or datasheet | `rep --block/--streams/--find`, `docs-search` for the reference values | workflows.md section 4 |
 | Convergence trouble | loop history from `his`/`cpm`, then the fixes | workflows.md section 5, calculators.md |
 | Property method, block model | `help-search`, the Methods Assistant, data checks | workflows.md section 6 |
@@ -98,6 +112,7 @@ fw help-read "Secant Method"
 fw help-toc --book converge --depth 2
 fw his "<model.his or folder>" --fortran
 fw his-diff "<old.his>" "<new.his>"
+fw inp-diff "<old.inp or .his>" "<new.inp or .his>"
 fw bkp "<model.bkp>"
 fw rep "<model.rep or folder>" --streams S1,S2
 fw rep "<model.rep>" --block B1
@@ -112,6 +127,7 @@ fw inp-check "<model.inp>"
 fw inp-find RADFRAC "<folder>"
 fw comp-find MEA
 fw check "<model.rep or table.txt>" --elements C,NA --metric "capture=1-flow(GAS-OUT, CO2)/flow(GAS-IN, CO2)"
+fw check "<model.rep>" --expect "<expected.csv>"
 ```
 
 `templates/` holds a BUILD.md template and starting input files. `references/help-map.md` maps
@@ -121,7 +137,8 @@ help books to topics (use `--book` to narrow a search).
 
 Raise these without being asked when the files show them:
 
-1. A `.his` or `.rep` older than the model's last run: the digest describes an older run.
+1. A `.his`, `.rep` or `.bkp` from an older run than another file of the case (the `WARNING:`
+   line): the digest describes that older run.
 2. Blank component rows in a Sep outlet that has specifications: blank is not zero, Aspen sends
    those components there.
 3. A Compr or MCompr efficiency left blank: Aspen uses 0.72, so powers are off by about 20 %.
@@ -134,7 +151,7 @@ Raise these without being asked when the files show them:
 | Request | Deliverable |
 |---|---|
 | Build a model | BUILD.md plan in the model folder (after the user agrees), staged steps with checks |
-| After a run | run review: what passed, a table *Where / Expected / Model / Verdict*, numbered fixes |
+| After a run | run review: what passed, the `check --expect` table *Item / Expected / Model / Verdict*, numbered fixes, what to send next time |
 | Write the model | `.inp` file plus the `inp-check` report |
 | Calculator code | Fortran as a separate plain-text file, linted (`his --fortran` shows the lint) |
 | Troubleshoot | root cause, numbered fix steps, which messages are harmless |
@@ -189,7 +206,7 @@ tight.
 | references/calculators.md | Calculator/Design Spec/Parameter rules, Fortran rules, testing code outside Aspen |
 | references/workflows.md | troubleshooting, review, versioning, verification, convergence, property methods, starting values |
 | references/gui-navigation.md | V12-V15 ribbon and navigation-pane paths |
-| references/file-types.md | Aspen file types, exports, engine versions, temp files, privacy before sharing |
+| references/file-types.md | Aspen file types, exports, the file contract and run stamps, engine versions, temp files, privacy |
 | references/help-map.md | help books and what they cover |
 | references/build-mode.md | building a model with the user: stages, pass criteria, checks, baseline, BUILD.md |
 | references/input-language.md | writing and checking .inp files: rules, verified paragraphs, the cycle |

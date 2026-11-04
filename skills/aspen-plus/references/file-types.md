@@ -27,15 +27,44 @@ UTF-8 save makes it unreadable to Aspen) and keep the original.
 | `.cpm` run messages | File > Export > Save as type *Run Messages (\*.cpm)*; must be exported, it is not kept otherwise | what the Control Panel showed: progress, loop iterations, RadFrac iteration tables, messages **without IDs**, summary of simulation errors | `fw cpm` |
 | `.rep` report | File > Export > *Report files (\*.rep)*; content set in Setup > Report Options | run control, flowsheet balance, convergence and design-spec results, every block's inputs/results, stream tables | `fw rep` |
 | `.inp` input file | File > Export > *Aspen Plus Input Files*, *Input Files with Graphics* or *Input and Graphics Data File* (.inp + .apmbd); every .his starts with the input of its run | the whole input as text, no results; opens with File > Open > Input Files; the engine runs it with `aspen <runid>` | `fw inp-check`, `his --inp`, `inp-find` (input-language.md) |
-| `.sum` summary | File > Export > Summary | results for programs | `sim-scan` only |
+| `.sum` summary | File > Export > Summary | results for programs; the same RUN-STATUS records as the results section of a `.bkp` | run stamp only (freshness); no digest yet |
 
 Diagnostic detail of the .his and the Control Panel is set separately: globally in
 Setup > Specifications > Diagnostics, per block in the block's Block Options > Diagnostics. For
 heavy diagnostics raise the history level, not the Control Panel level (faster runs). The .his
 has a size limit (Setup > Calculation Options > Limits, 500 MB by default).
 
-Recommended habit: after each meaningful run export `.rep` and `.cpm` next to the `.bkp`, with the
-same name, in that version's folder. Then the run can be reviewed without opening Aspen.
+## The file contract: one run, one set of files
+
+After each run the user:
+
+1. saves the `.bkp` and exports the `.rep` with the same name into the version folder;
+2. when the run fails, also exports the `.cpm` (File > Export > Run Messages);
+3. says which folder and file, the steps done and any deviation (and why), and their questions.
+
+The agent then reads the files itself (no pasted tables) and first checks that the `.his`, `.rep`
+and `.bkp` come from the same run. Sync clients (OneDrive, Proton Drive) and copies rewrite file
+times, so the check reads the run stamps inside the files and never the file times:
+
+| File | Stamp read | Means |
+|---|---|---|
+| `.his` | header of the last run (ORIGINAL, EDIT or RESTART RUN, date, time; `RUN ID`) | start of the last run in the file |
+| `.bkp` | results section (`$_SUMMARY_FILE`): `RUN-STATUS` date, time and input file; line 1 `DATETIME` | results of a run on ...; when the file was saved |
+| `.sum` | the same `RUN-STATUS` records | as the `.bkp` |
+| `.rep` | first-page header (date and time) or the page-header date; `INPUT FILE NAME` | report written at the end of the run |
+| `.cpm` | the last control-panel event (`<< Report exported 23:03:03 Fri Oct 2, 2026>>`) | latest event; never marks the others stale |
+
+A file is **stale** when it describes an earlier run than another file of the same case (same
+name in one folder): a different run ID (another session) and older by more than a minute; a
+`.rep`, `.bkp` or `.cpm` stamped before the start of the last run in the `.his`; otherwise more
+than 12 hours older than the newest stamp (one long run can put the `.rep` hours after the start).
+`his`, `rep`, `cpm` and `check` print a `WARNING:` line first when the file read is stale, and
+`sim-scan` lists stale files at the top. The fix: run, save, then File > Export > Report.
+A `.bkp` saved without results after the run gets a note: its input may differ from the run's.
+
+A `.his` keeps several runs when the case was run more than once in a session (EDIT RUN); the
+digests describe the last run and say how many the file holds. `.apw` files are binary: their
+run time cannot be read.
 
 ## Engine versions
 

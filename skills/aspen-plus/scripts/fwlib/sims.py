@@ -4,9 +4,10 @@ Recommended layout (any depth works):
   <project>/<model>/<version folder>/  model.bkp  model.apw(z)  model.his  model.rep  model.cpm  notes.md ...
 
 For every folder that contains Aspen files the scan reports: the files by type,
-engine version, last run status (from the .his summary of errors), whether the
-.his is older than the model file (results may be stale), missing exports, and
-temporary run files (_xxxxxxx.*) mapped to their model through the Runid line.
+engine version, last run status (from the .his summary of errors of the last run),
+whether the .bkp, .his, .rep and .cpm describe the same run (from the run stamps
+inside the files, see freshness.py; file times are never used), missing exports,
+and temporary run files (_xxxxxxx.*) mapped to their model through the Runid line.
 The .def file (engine settings) holds the Windows user name and install path; it
 is listed but never read.
 """
@@ -17,6 +18,7 @@ from collections import OrderedDict
 from pathlib import Path
 from typing import List
 
+from . import freshness
 from .common import (ENGINE_FILE_RX, ENGINE_TO_RELEASE, RECOVERY_RX, human_size, mtime_str, natural_key,
                      open_shared, side_file)
 
@@ -58,24 +60,30 @@ TEMP_RX = ENGINE_FILE_RX  # engine working files _xxxxxxx.* (name kept for calle
 
 
 def _his_quick(path: Path) -> dict:
-    """Read only what sim-scan needs from a .his: engine, Runid, error summary."""
+    """Read only what sim-scan needs from a .his: engine, Runid, the error summary of the last run."""
     info = {}
     try:
         size = path.stat().st_size
+        marks = freshness._find_all(path, freshness.RUN_MARK)
+        start = marks[-1] if marks else 0
         with open_shared(path) as fh:
-            if size <= (8 << 20):
-                raw = fh.read()
-            else:  # long histories (up to the 500 MB limit): header and the end are enough here
-                raw = fh.read(2 << 20)
+            head = fh.read(64 << 10)
+            fh.seek(start)
+            if size - start <= (8 << 20):
+                body = fh.read()
+            else:  # long histories (up to the 500 MB limit): start and end of the last run are enough
+                body = fh.read(2 << 20)
                 fh.seek(size - (4 << 20))
-                raw += b"\n" + fh.read()
-        text = raw.decode("cp1252", errors="replace")
+                body += b"\n" + fh.read()
+        head_text = head.decode("cp1252", errors="replace")
+        text = body.decode("cp1252", errors="replace")      # the last run only
     except OSError:
         return info
-    m = re.search(r"VERSION:\s*([\d.]+)\s+Build", text)
+    info["runs"] = max(1, len(marks))
+    m = re.search(r"VERSION:\s*([\d.]+)\s+Build", head_text)
     if m:
         info["engine"] = m.group(1)
-    m = re.search(r";Directory\s*.*?Runid\s+(.+)", text)
+    m = re.search(r";Directory\s*.*?Runid\s+(.+)", text) or re.search(r";Directory\s*.*?Runid\s+(.+)", head_text)
     if m:
         info["runid"] = m.group(1).strip()
     tabs = list(re.finditer(r"\*\*\* SUMMARY OF ERRORS \*\*\*", text))
@@ -134,7 +142,7 @@ def scan(roots: List[str], max_depth: int = 5) -> List[dict]:
 
 def _summarise_folder(p: Path, files: List[Path], root: Path) -> dict:
     d = {"path": str(p), "rel": p.relative_to(root).as_posix() if p != root else ".", "files": [],
-         "models": OrderedDict(), "temp_runs": [], "notes": [], "version_note": ""}
+         "models": OrderedDict(), "temp_runs": [], "notes": [], "warnings": [], "version_note": ""}
     for cand in ("notes.md", "NOTES.md", "notes.txt", "README.md", "CHANGES.md", "changes.txt"):
         nf = p / cand
         if nf.is_file():
@@ -176,7 +184,8 @@ def _summarise_folder(p: Path, files: List[Path], root: Path) -> dict:
                                              "status": ""})
             if ext in MODEL_EXT:
                 m["name"] = f.stem
-            m["files"][ext] = {"modified": entry["modified"], "mtime": f.stat().st_mtime if f.exists() else 0}
+            m["files"][ext] = {"modified": entry["modified"]}
+            m.setdefault("paths", []).append(f)
             if ext == ".bkp" and not m["engine"]:
                 m["engine"] = _bkp_engine(f)
             if ext == ".his":
@@ -210,18 +219,43 @@ def _summarise_folder(p: Path, files: List[Path], root: Path) -> dict:
                 m["runid_note"] = f"his Runid is {h['runid']} (file was renamed or saved under another name)"
         else:
             m["status"] = "no .his in this folder (never run here, or history not kept)"
-        model_times = [v["mtime"] for e, v in exts.items() if e in MODEL_EXT]
-        if ".his" in exts and model_times and max(model_times) > exts[".his"]["mtime"] + 60:
-            d["notes"].append(f"{stem}: model saved after the last .his - results in .his may be stale")
+        where = _where(d["rel"], stem)
+        if h.get("runs", 1) > 1:
+            m["status"] += f" (last of {h['runs']} runs in the .his)"
+        run_files = [f for f in m.pop("paths", []) if f.suffix.lower() in freshness.RUN_EXTS]
+        fr = freshness.compare([freshness.stamp(f) for f in run_files]) if run_files else {
+            "verdict": "unknown", "files": {}, "stale": [], "notes": []}
+        m["freshness"] = fr
+        his_name = next((n for n, r in fr["files"].items() if r["ext"] == ".his"), "")
+        if his_name in fr["stale"]:
+            r = fr["files"][his_name]
+            m["status"] += f" - from a stale .his ({r['older_by']} older than the run in {r['than']})"
+        if fr["stale"]:
+            d["warnings"].append(f"{where}: {freshness.describe(fr)}. Fix: {freshness.FIX}.")
+        for n in fr["notes"]:
+            d["notes"].append(f"{where}: {n}")
         if exts.keys() & MODEL_EXT and ".rep" not in exts:
-            d["notes"].append(f"{stem}: no .rep export (File > Export > Report Files) - stream results unavailable")
+            d["notes"].append(f"{where}: no .rep export (File > Export > Report Files) - stream results unavailable")
     return d
+
+
+def _where(rel: str, stem: str) -> str:
+    """'v1.03/model' for a note on one case; just the folder when the case is named after it."""
+    if rel == ".":
+        return stem
+    norm = lambda x: re.sub(r"[^a-z0-9]", "", x.lower())
+    return rel if norm(rel.split("/")[-1]) == norm(stem) else f"{rel}/{stem}"
 
 
 def render_markdown(folders: List[dict]) -> str:
     if not folders:
         return "No folders with Aspen files found."
     L = ["# Simulation folders", ""]
+    warn = [w for d in folders for w in d.get("warnings", [])]
+    if warn:
+        L.append("## Warnings: files from an older run")
+        L += [f"- {w}" for w in warn]
+        L.append("")
     L.append("| Folder | Model | Release | Files | Last run status | Version note |")
     L.append("|---|---|---|---|---|---|")
     for d in folders:
@@ -231,8 +265,9 @@ def render_markdown(folders: List[dict]) -> str:
             exts = " ".join(sorted(m["files"].keys()))
             L.append(f"| {d['rel']} | {m['name']} | {m['release'] or '?'} | {exts} | {m['status']} | "
                      f"{d['version_note']} |")
-    notes = [(d["rel"], n) for d in folders for n in d["notes"]]
-    runid = [(d["rel"], m["name"], m["runid_note"]) for d in folders for m in d["models"].values() if m.get("runid_note")]
+    notes = [n for d in folders for n in d["notes"]]
+    runid = [(_where(d["rel"], m["name"]), m["runid_note"]) for d in folders for m in d["models"].values()
+             if m.get("runid_note")]
     temps = [(d["rel"], t) for d in folders for t in d["temp_runs"]]
     rec = [(d["rel"], d["recovery"]) for d in folders if d.get("recovery")]
     tmpc = [(d["rel"], d["temp_files"]) for d in folders if d.get("temp_files")]
@@ -240,10 +275,10 @@ def render_markdown(folders: List[dict]) -> str:
     if notes or runid or temps or rec or tmpc or conf:
         L.append("")
         L.append("## Notes")
-        for rel, n in notes:
-            L.append(f"- {rel}: {n}")
-        for rel, s, n in runid:
-            L.append(f"- {rel}/{s}: {n}")
+        for n in notes:
+            L.append(f"- {n}")
+        for where, n in runid:
+            L.append(f"- {where}: {n}")
         for rel, t in temps:
             L.append(f"- {rel}: temporary run file {t['file']} belongs to Runid {t['runid']} ({t['modified']})")
         for rel, n in tmpc:

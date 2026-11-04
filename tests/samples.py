@@ -752,3 +752,44 @@ STREAM_TABLE = "\n".join("\t".join(r) for r in [
     ["H2O", "kg/hr", "180.153", "0.72061", "179.432"],
     ["CO2", "kg/hr", "4.401", "0.88020", "3.5208"],
 ]) + "\n"
+
+
+# ---------------------------------------------------------------------------
+# v0.3: run stamps inside the files (freshness), several runs in one .his
+# ---------------------------------------------------------------------------
+def his_at(date: str, time: str, run_id: str = "_1234abc", text: str = HIS) -> str:
+    """HIS with the file header and the run header stamped `date` ('OCTOBER 2, 2026') and `time`
+    ('11:02:41 P.M.'), and another run ID."""
+    return text.replace("MARCH 3, 2026", date).replace("10:15:02 A.M.", time).replace("_1234abc", run_id)
+
+
+def rep_at(date: str, time: str, run_id: str = "_1234abc") -> str:
+    """REP with the first-page header of a real report (date and time) and another run ID."""
+    head = (" PLATFORM: WIN-X64                                       " + date + "\n"
+            " VERSION: 41.0   Build 609                               TUESDAY\n"
+            " INSTALLATION:                                           " + time + "\n\n")
+    return head + REP.replace("_1234abc", run_id)
+
+
+def bkp_at(when: str, run_id: str = "_1234abc", saved: str = "Mon Oct  5 10:00:00 2026") -> str:
+    """BKP_DEMO holding the results of a run stamped `when` ('MARCH 4, 2026  09:00:30 A.M.')."""
+    return (BKP_DEMO.replace('"OCTOBER 5, 2026  10:00:00 A.M." "_0001abc.inm"', f'"{when}" "{run_id}.inm"')
+            .replace("Mon Oct  5 10:00:00 2026", saved))
+
+
+def cpm_at(reinitialized: str, exported: str) -> str:
+    """CPM whose two control-panel events carry other times ('10:15:00 Tue Mar 3, 2026')."""
+    return (CPM.replace("Run reinitialized 10:15:00 Tue Mar 3, 2026", "Run reinitialized " + reinitialized)
+            .replace("Report exported 10:15:05 Tue Mar 3, 2026", "Report exported " + exported))
+
+
+# Two runs in one history: the original run (2 warnings), then an edit run a day later with a new
+# split fraction and no warnings. Digests must describe the last run.
+_SECOND_RUN = (HIS[HIS.index(" *** INPUT SUMMARY ***"):]
+               .replace("ORIGINAL RUN                           MARCH 3, 2026",
+                        "EDIT RUN                               MARCH 4, 2026")
+               .replace("   10:15:02 A.M.                          TUESDAY",
+                        "   09:00:00 A.M.                          WEDNESDAY")
+               .replace("FRAC RECYCLE 0.3", "FRAC RECYCLE 0.4")
+               .replace("        WARNINGS      1        0         1", "        WARNINGS      0        0         0"))
+HIS_TWO_RUNS = HIS + "\n" + _SECOND_RUN

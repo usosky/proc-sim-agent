@@ -67,12 +67,17 @@ For every stage tell the user, in this order:
 
 ## After each run
 
-1. `fw his <folder>`: converged? errors, warnings that change results (messages.md)?
+1. `fw his <folder>`: converged? errors, warnings that change results (messages.md)? A `WARNING:`
+   line at the top means the file is from an older run than another file of the case: ask for
+   "run, save, then File > Export > Report" before reading numbers (file-types.md, file contract).
 2. `fw check <rep or table> --elements <the elements that matter> --metric ...`: block mass and
    element balances, electroneutrality, apparent vs true basis, KPIs.
-3. Compare with the expectation and the pass criteria in a short table (*item | expected | model |
-   verdict*). Explain every miss before moving on; never tune an input to hit a number without
-   saying which input changed and why it is legitimate.
+3. `fw check "<model.rep>" --expect "<expected.csv>"` compares the run with the expected values
+   and their tolerances: the table *| Item | Expected | Model | Verdict |* (pass, fail, missing).
+   Rows are `item, source, expected, tol_abs` or `tol_rel` (`3%` works); `source` is a metric
+   expression, `temp(S)`, `pres(S)`, `vfrac(S)`, `block(B1, HEAT DUTY)` or `balance(MASS)`, in the
+   units of the report. Explain every miss before moving on; never tune an input to hit a number
+   without saying which input changed and why it is legitimate.
 4. Update BUILD.md: stage status, the version that passed, decisions with their reasons, open
    issues, the next action.
 

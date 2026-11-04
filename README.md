@@ -26,8 +26,9 @@ Plus installation, on your computer; your models, results and library never leav
 |---|---|
 | "How do I set a calculator to run before a block?" | searches your local help, reads the relevant topics, answers with numbered steps, click paths and why |
 | "My run fails with *SPEC ... CONVERGENCE BLOCK $OLVER02 WILL BE DELETED*" | explains the root cause and the fix (a curated table of real Aspen messages and their fixes) |
-| "Look at my model folder" | lists versions, run status, stale or missing exports, leftover engine files |
-| "What changed between 4.1 and 4.2?" | diffs the input language of two runs and compares key results |
+| "Look at my model folder" | lists versions, run status, missing exports, leftover engine files and sync-conflict copies; flags a `.his`, `.rep` or `.bkp` that comes from an older run than the files next to it (from the run stamps inside the files, not file times) |
+| "Here is run v0.04: did it pass?" | checks that `.bkp`, `.his` and `.rep` come from the same run, then compares the results with your expected values and tolerances: *Item / Expected / Model / Verdict* (`check --expect`) |
+| "What changed between 4.1 and 4.2?" | diffs the input language of two runs (line by line, or by paragraph with `inp-diff`) and compares key results |
 | "Check my calculator code" | extracts the inline Fortran and lints it (column 72, tabs, undefined names, assigned imports, unused imports) |
 | "Compare the reboiler duty with Table S15 of the paper" | reads the report, converts units, builds the comparison table |
 | "What does my library say about formic acid / NRTL binaries?" | full-text search of your PDFs and notes, with document and page |
@@ -97,12 +98,13 @@ Run `python skills/aspen-plus/scripts/fw.py <command> -h` for the options of eac
 | `setup`, `status` | register help, library and simulation folders; show index state |
 | `help-index`, `help-search`, `help-read`, `help-toc` | build and query the local help index |
 | `docs-index`, `docs-search`, `docs-read`, `docs-list` | your PDFs and notes |
-| `sim-scan` | model folders: versions, run status, stale or missing exports |
+| `sim-scan` | model folders: versions, run status, files from an older run, missing exports |
 | `his`, `his-diff` | run digest with message IDs, convergence, block results, Fortran lint; input diff |
+| `inp-diff` | which input paragraphs (blocks, streams, calculators) were added, removed or changed |
 | `rep`, `cpm`, `bkp` | report, Control Panel and backup readers |
 | `examples-index`, `examples-search`, `examples-show`, `examples-list` | the Aspen Plus example library (or any folder of models) |
 | `inp-check`, `inp-find`, `comp-find`, `his --inp` | write and check input files: lint, syntax from your own runs, databank aliases from the examples, a run's input as .inp |
-| `check` | mass, element and charge balances, apparent/true basis, KPI expressions from a .rep or a pasted stream table |
+| `check` | mass, element and charge balances, apparent/true basis, KPI expressions from a .rep or a pasted stream table; `--expect` gives the run-review table |
 
 ## Privacy
 

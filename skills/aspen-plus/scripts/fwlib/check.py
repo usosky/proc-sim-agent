@@ -4,10 +4,16 @@ basis, and user-defined metrics.
 Input is a report export (.rep) or a stream table copied from Aspen Plus (Stream Results / Stream
 Summary grid, pasted into a text file: tab-separated rows 'label <tab> unit <tab> value ...').
 The arithmetic is done here, in code, so answers do not rely on numbers retyped from a table.
+
+With expected values (--expect, a CSV or JSON file of rows item, source, expected, tol_abs or
+tol_rel) the result is the run-review table | Item | Expected | Model | Verdict |.
 """
 from __future__ import annotations
 
 import ast
+import csv
+import io
+import json
 import operator
 import re
 from collections import OrderedDict
@@ -44,8 +50,8 @@ def _new_stream():
             "mole_total": None, "mass_total": None}
 
 
-def from_rep(path) -> "OrderedDict[str, dict]":
-    d = rep.parse(path)
+def from_rep(path, report: dict = None) -> "OrderedDict[str, dict]":
+    d = report if report is not None else rep.parse(path)
     out: "OrderedDict[str, dict]" = OrderedDict()
     for name, st in d["streams"].items():
         s = _new_stream()
@@ -73,9 +79,9 @@ def from_rep(path) -> "OrderedDict[str, dict]":
                 elif ("kg" in unit or "lb" in unit) and "cum" not in unit and s["mass_total"] is None:
                     s["mass_total"] = _f(v)
                     s["mass_unit"] = s["mass_unit"] or unit
-            elif parts[0] == "MIXED" and lab.startswith("TEMP ") and s["T"] is None:
+            elif parts[0] == "MIXED" and lab.startswith(("TEMP ", "TEMPERATURE ")) and s["T"] is None:
                 s["T"] = _f(v)
-            elif parts[0] == "MIXED" and lab.startswith("PRES ") and s["P"] is None:
+            elif parts[0] == "MIXED" and lab.startswith(("PRES ", "PRESSURE ")) and s["P"] is None:
                 s["P"] = _f(v)
             elif parts[0] == "MIXED" and lab == "VFRAC" and s["VFRAC"] is None:
                 s["VFRAC"] = _f(v)
@@ -233,7 +239,8 @@ def _ions(streams) -> List[str]:
 
 
 def analyse(streams, elements: List[str] = None, aliases: Dict[str, str] = None,
-            overrides: Dict[str, str] = None, metrics: List[Tuple[str, str]] = None, rel_tol: float = 1e-4) -> dict:
+            overrides: Dict[str, str] = None, metrics: List[Tuple[str, str]] = None, rel_tol: float = 1e-4,
+            expect: List[dict] = None, report: dict = None) -> dict:
     elements = [e.upper() for e in (elements or [])]
     aliases = aliases or {}
     overrides = {k.upper(): v for k, v in (overrides or {}).items()}
@@ -319,23 +326,64 @@ def analyse(streams, elements: List[str] = None, aliases: Dict[str, str] = None,
     # metrics
     for name, expr in (metrics or []):
         try:
-            val = evaluate(expr, streams, fml)
+            val = evaluate(expr, streams, fml, report)
             res["metrics"].append({"name": name, "expr": expr, "value": val})
         except Exception as e:
             res["metrics"].append({"name": name, "expr": expr, "error": str(e)})
+    if expect is not None:
+        res["expect"] = review(expect, streams, fml, report)
     return res
 
 
-_FN_RX = re.compile(r"\b(flow|massflow|elem|mole|mass)\(([^()]*)\)", re.I)
+_FN_RX = re.compile(r"\b(flow|massflow|elem|mole|mass|temp|pres|vfrac|block|balance)\(([^()]*)\)", re.I)
 _OPS = {ast.Add: operator.add, ast.Sub: operator.sub, ast.Mult: operator.mul, ast.Div: operator.truediv,
         ast.Pow: operator.pow, ast.USub: operator.neg, ast.UAdd: operator.pos}
+_STATE = {"temp": "T", "pres": "P", "vfrac": "VFRAC"}
 
 
-def evaluate(expr: str, streams, fml) -> float:
+def _norm_label(s: str) -> str:
+    return re.sub(r"\s+", " ", s.strip().upper())
+
+
+def block_result(report: dict, block: str, label: str) -> Tuple[float, str]:
+    """A result of a block from the .rep: exact label first, then the first label that starts with or
+    contains it (case does not matter)."""
+    if not report:
+        raise ValueError("block() needs a .rep file")
+    b = next((v for k, v in report.get("blocks", {}).items() if k.upper() == block.strip().upper()), None)
+    if b is None:
+        raise ValueError(f"no block {block.strip()} in the report")
+    want = _norm_label(label)
+    rows = [(_norm_label(lab), unit, val) for lab, unit, val in b["results"]]
+    for test in (lambda l: l == want, lambda l: l.startswith(want), lambda l: want in l):
+        hit = next((r for r in rows if test(r[0])), None)
+        if hit:
+            return hit[2], hit[1]
+    raise ValueError(f"block {block.strip()} has no result {label.strip()!r} in the report")
+
+
+def flowsheet_balance(report: dict, kind: str) -> float:
+    """Relative difference of the overall flowsheet balance (MASS, MOLE or ENTHALPY) in the .rep."""
+    if not report:
+        raise ValueError("balance() needs a .rep file")
+    for k, nums in report.get("overall_balance", {}).items():
+        if k.upper().startswith(kind.strip().upper()) and nums and nums[-1] is not None:
+            return nums[-1]
+    raise ValueError(f"no {kind.strip().upper()} line in the overall flowsheet balance")
+
+
+def evaluate(expr: str, streams, fml, report: dict = None) -> float:
     """Evaluate a metric. Functions: flow(STREAM, C1 C2 ...) mole flow summed over components,
-    massflow(STREAM, C ...), elem(STREAM, C) moles of an element, mole(STREAM), mass(STREAM).
-    Example: flow(GAS-OUT, CO2) / elem(FEED, C)"""
+    massflow(STREAM, C ...), elem(STREAM, C) moles of an element, mole(STREAM), mass(STREAM),
+    temp(STREAM), pres(STREAM), vfrac(STREAM) in the units of the table; with a .rep also
+    block(BLOCK, RESULT LABEL) and balance(MASS|MOLE|ENTHALPY) (relative difference of the overall
+    flowsheet balance). Example: flow(GAS-OUT, CO2) / elem(FEED, C)"""
+    return _evaluate(expr, streams, fml, report)[0]
+
+
+def _evaluate(expr: str, streams, fml, report: dict = None) -> Tuple[float, str]:
     lut = {k.upper(): k for k in streams}
+    units = []
 
     def stream(name):
         k = lut.get(name.strip().upper())
@@ -346,19 +394,39 @@ def evaluate(expr: str, streams, fml) -> float:
     def fn(m):
         f = m.group(1).lower()
         args = [a.strip() for a in m.group(2).split(",")]
+        if f == "block":
+            if len(args) < 2:
+                raise ValueError("block() needs a block name and a result label: block(B1, HEAT DUTY)")
+            v, unit = block_result(report, args[0], ",".join(args[1:]))
+            units.append(unit)
+            return repr(float(v))
+        if f == "balance":
+            units.append("")
+            return repr(float(flowsheet_balance(report, args[0])))
         s = stream(args[0])
         comps = args[1].split() if len(args) > 1 else []
+        unit = ""
         if f == "flow":
             v = sum(_comp(s["mole"], c) for c in comps)
+            unit = s["mole_unit"]
         elif f == "massflow":
             v = sum(_comp(s["mass"], c) for c in comps)
+            unit = s["mass_unit"]
         elif f == "elem":
             e = comps[0].upper()
             v = sum(val * fml.get(c.upper(), {}).get(e, 0) for c, val in s["mole"].items())
+            unit = s["mole_unit"]
         elif f == "mole":
             v = s["mole_total"] if s["mole_total"] is not None else sum(s["mole"].values())
-        else:
+            unit = s["mole_unit"]
+        elif f == "mass":
             v = s["mass_total"] if s["mass_total"] is not None else sum(s["mass"].values())
+            unit = s["mass_unit"]
+        else:
+            v = s[_STATE[f]]
+            if v is None:
+                raise ValueError(f"no {f} for stream {args[0]} in the table")
+        units.append(unit)
         return repr(float(v))
 
     num_expr = _FN_RX.sub(fn, expr)
@@ -373,8 +441,10 @@ def evaluate(expr: str, streams, fml) -> float:
             return _OPS[type(node.op)](ev(node.left), ev(node.right))
         if isinstance(node, ast.UnaryOp) and type(node.op) in _OPS:
             return _OPS[type(node.op)](ev(node.operand))
-        raise ValueError("only numbers, + - * / ** and flow()/massflow()/elem()/mole()/mass() are allowed")
-    return float(ev(tree))
+        raise ValueError("only numbers, + - * / ** and flow()/massflow()/elem()/mole()/mass()/temp()/pres()/"
+                         "vfrac()/block()/balance() are allowed")
+    single = _FN_RX.fullmatch(expr.strip()) is not None
+    return float(ev(tree)), (units[0] if single and units else "")
 
 
 def _comp(d: Dict[str, float], c: str) -> float:
@@ -430,10 +500,108 @@ def render(res: dict) -> str:
         if res["guessed_formulas"]:
             L.append(f"\nFormulas read from the component IDs (pass --model <.his/.inp/.bkp> or --formula ID=FORMULA "
                      f"to be sure): {', '.join(res['guessed_formulas'])}")
+    if res.get("expect") is not None:
+        L.append("")
+        L.append(render_review(res["expect"]))
     if res["metrics"]:
         L.append("")
         L.append("## Metrics")
         for m in res["metrics"]:
             L.append(f"- {m['name']} = {fmt_num(m['value'], 6)}" if "value" in m else
                      f"- {m['name']}: error: {m['error']}")
+    return "\n".join(L)
+
+
+# ---------------------------------------------------------------------------
+# expected values: the run-review table
+# ---------------------------------------------------------------------------
+DEFAULT_TOL_REL = 1e-3      # 0.1 % when a row gives no tolerance
+
+
+def _tol(x) -> Optional[float]:
+    """'0.5' -> 0.5; '3%' -> 0.03; '' -> None."""
+    s = "" if x is None else str(x).strip()
+    if not s:
+        return None
+    return float(s[:-1]) / 100 if s.endswith("%") else float(s)
+
+
+def load_expected(path) -> List[dict]:
+    """Rows of expected values. CSV with a header row: item, source, expected, then tol_abs and/or
+    tol_rel (a fraction, or a percentage such as 3%), optional unit and note; lines starting with #
+    are comments. JSON: a list of objects with the same keys (or {"checks": [...]})."""
+    text = read_text_any(Path(path))
+    if Path(path).suffix.lower() == ".json":
+        data = json.loads(text)
+        rows = data.get("checks", data) if isinstance(data, dict) else data
+        if not isinstance(rows, list):
+            raise ValueError(f"{path}: expected a list of checks")
+        rows = [{str(k).strip().lower(): ("" if v is None else str(v)) for k, v in r.items()} for r in rows]
+    else:
+        lines = [l for l in text.splitlines() if l.strip() and not l.lstrip().startswith("#")]
+        reader = csv.DictReader(io.StringIO("\n".join(lines)))
+        rows = [{(k or "").strip().lower(): (v or "").strip() for k, v in r.items()} for r in reader]
+    out = []
+    for i, r in enumerate(rows, 1):
+        missing = [k for k in ("item", "source", "expected") if not r.get(k, "").strip()]
+        if missing:
+            raise ValueError(f"{Path(path).name}, check {i}: no {', '.join(missing)} "
+                             "(columns: item, source, expected, tol_abs, tol_rel)")
+        try:
+            row = {"item": r["item"].strip(), "source": r["source"].strip(), "expected": float(r["expected"]),
+                   "tol_abs": _tol(r.get("tol_abs")), "tol_rel": _tol(r.get("tol_rel")),
+                   "unit": r.get("unit", "").strip(), "note": r.get("note", "").strip()}
+        except ValueError:
+            raise ValueError(f"{Path(path).name}, check {i} ({r.get('item')}): expected and tolerances must be "
+                             "numbers (a tolerance may end in %)") from None
+        if row["tol_abs"] is None and row["tol_rel"] is None:
+            row["tol_rel"] = DEFAULT_TOL_REL
+        out.append(row)
+    return out
+
+
+def review(rows: List[dict], streams, fml, report: dict = None) -> List[dict]:
+    """Model value and verdict (pass, fail or missing) for every expected value."""
+    out = []
+    for r in rows:
+        res = dict(r)
+        try:
+            val, unit = _evaluate(r["source"], streams, fml, report)
+        except (ValueError, SyntaxError, ZeroDivisionError, KeyError, IndexError) as e:
+            res.update(model=None, verdict="missing", why=str(e) or type(e).__name__)
+            out.append(res)
+            continue
+        exp = r["expected"]
+        dev = val - exp
+        ok = ((r["tol_abs"] is not None and abs(dev) <= r["tol_abs"])
+              or (r["tol_rel"] is not None and abs(dev) <= r["tol_rel"] * abs(exp)))
+        res.update(model=val, model_unit=unit, deviation=dev, rel=(dev / exp if exp else None),
+                   verdict="pass" if ok else "fail")
+        out.append(res)
+    return out
+
+
+def _tol_text(r: dict) -> str:
+    parts = []
+    if r["tol_abs"] is not None:
+        parts.append(f"+/- {fmt_num(r['tol_abs'])}")
+    if r["tol_rel"] is not None:
+        parts.append(f"+/- {r['tol_rel'] * 100:.3g} %")
+    return " or ".join(parts)
+
+
+def render_review(rows: List[dict], title: str = "") -> str:
+    L = [f"## Run review{': ' + title if title else ''}", "",
+         "| Item | Expected | Model | Verdict |", "|---|---|---|---|"]
+    for r in rows:
+        unit = r["unit"] or r.get("model_unit", "")
+        exp = f"{fmt_num(r['expected'], 6)} {unit}".strip() + f" ({_tol_text(r)})"
+        if r["verdict"] == "missing":
+            L.append(f"| {r['item']} | {exp} | - | missing: {r['why']} |")
+            continue
+        dev = f"{r['rel'] * 100:+.2f} %" if r["rel"] is not None else f"{fmt_num(r['deviation'])}"
+        L.append(f"| {r['item']} | {exp} | {fmt_num(r['model'], 6)} {unit}".rstrip() + f" | {r['verdict']} ({dev}) |")
+    n = {k: sum(1 for r in rows if r["verdict"] == k) for k in ("pass", "fail", "missing")}
+    L.append("")
+    L.append(f"{len(rows)} checks: {n['pass']} pass, {n['fail']} fail, {n['missing']} missing.")
     return "\n".join(L)
