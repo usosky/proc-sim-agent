@@ -13,7 +13,7 @@ interfaces.
 | `agents.toml` | the command templates for each agent and for the grader (flags checked against each CLI's `--help`) |
 | `run.py` | the runner |
 | `MANUAL.md` | running the cases by hand in VS Code agent mode |
-| `results/<date>/<agent>/` | transcripts and outputs (not committed); `summary.md` and `summary.json` may be committed |
+| `results/<date>/<agent>/` | transcripts and outputs (not committed); `summary.md` and `summary.json` may be committed; a second run on the same day goes to `<date>-2` |
 
 Run from the repository root, in PowerShell or Git Bash, signed in to the agent's CLI:
 
