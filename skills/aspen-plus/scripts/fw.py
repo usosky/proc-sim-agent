@@ -422,7 +422,7 @@ def _pick(path: str, ext: str, quiet: bool = False) -> Path:
 def _freshness(p: Path, quiet: bool = False) -> dict:
     """Compare the file with the other files of its case; print the warning lines unless quiet."""
     res = freshness.check_case(p)
-    lines = freshness.warning_lines(p, res)
+    lines = freshness.warning_lines(p, res) or freshness.same_run_line(res)
     if lines and not quiet:
         print("\n".join(lines) + "\n")
     return res

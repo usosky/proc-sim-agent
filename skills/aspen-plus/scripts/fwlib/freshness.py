@@ -359,6 +359,17 @@ def warning_lines(path, res: Optional[dict] = None) -> List[str]:
     return out
 
 
+def same_run_line(res: dict) -> List[str]:
+    """When the files of a case agree: one line with their stamps, so a reader does not take the
+    normal gap between the start (.his) and the report (.rep) for two runs."""
+    known = {n: r for n, r in res["files"].items() if r["time"]}
+    if res["verdict"] != "fresh" or len(known) < 2:
+        return []
+    role = {".his": "run start", ".rep": "report", ".bkp": "results", ".sum": "results", ".cpm": "last event"}
+    parts = [f"{n} {r['time']} ({role.get(r['ext'], r['ext'])})" for n, r in known.items()]
+    return ["Run stamps agree (one run): " + "; ".join(parts) + "."]
+
+
 def sort_key(path):
     """For picking a file of a folder: newest run stamp first known, then the name (never file times)."""
     t = stamp(path).get("time")

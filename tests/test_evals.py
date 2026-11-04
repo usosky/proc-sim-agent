@@ -142,6 +142,9 @@ def test_run_end_to_end_with_a_fake_agent(tmp_path, fake_config, capsys):
     assert trig["precision"] == 1.0 and trig["recall"] == pytest.approx(tp / 10)
     md = (day / "fake" / "summary.md").read_text(encoding="utf-8")
     assert "| run-review | 1 | 1/1 | 1/1 | 1/1 | 1/1 |" in md and "## Triggers" in md and "Precision 1.00" in md
+    assert run.main(["--agent", "fake", "--config", str(fake_config), "--out", str(out), "--cases", "export-cpm",
+                     "--grader", "none"]) == 0
+    assert sorted(p.name for p in out.iterdir()) == [day.name, day.name + "-2"]      # the first run is kept
 
 
 def test_dry_run_prints_the_commands(capsys):

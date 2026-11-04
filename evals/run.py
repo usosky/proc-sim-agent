@@ -435,6 +435,10 @@ def main(argv=None) -> int:
         except (OSError, subprocess.SubprocessError, IndexError):
             version = ""
     outdir = Path(args.out) / date.today().isoformat() / args.agent
+    n = 2
+    while (outdir / "summary.json").exists():          # never overwrite an earlier run of the day
+        outdir = Path(args.out) / f"{date.today().isoformat()}-{n}" / args.agent
+        n += 1
     outdir.mkdir(parents=True, exist_ok=True)
     results = []
     for c in cases:

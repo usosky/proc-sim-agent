@@ -67,6 +67,9 @@ def test_stamps_of_each_file_type(tmp_path):
     res = freshness.check_case(h)
     assert res["verdict"] == "fresh" and not res["stale"], res
     assert freshness.warning_lines(r, res) == []
+    line = freshness.same_run_line(res)[0]
+    assert line.startswith("Run stamps agree (one run): ") and "M.his 2026-10-02 23:02:41 (run start)" in line
+    assert "m.rep 2026-10-02 23:02:44 (report)" in line
 
 
 def test_the_owners_case_bkp_run_four_days_after_his_and_rep(tmp_path):

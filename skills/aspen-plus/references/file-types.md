@@ -71,8 +71,10 @@ A file is **stale** when it describes an earlier run than another file of the sa
 name in one folder): a different run ID (another session) and older by more than a minute; a
 `.rep`, `.bkp` or `.cpm` stamped before the start of the last run in the `.his`; otherwise more
 than 12 hours older than the newest stamp (one long run can put the `.rep` hours after the start).
-`his`, `rep`, `cpm` and `check` print a `WARNING:` line first when the file read is stale, and
-`sim-scan` lists stale files at the top. The fix: run, save, then File > Export > Report.
+`his`, `rep`, `cpm`, `bkp` and `check` print a `WARNING:` line first when the file read is stale,
+and `sim-scan` lists stale files at the top. The fix: run, save, then File > Export > Report.
+When the files agree, the commands print one line with their stamps ("Run stamps agree (one
+run)"): a `.his` a few seconds or minutes before the `.rep` is one run, not two.
 A `.bkp` saved without results after the run gets a note: its input may differ from the run's.
 
 A `.his` keeps several runs when the case was run more than once in a session (EDIT RUN); the

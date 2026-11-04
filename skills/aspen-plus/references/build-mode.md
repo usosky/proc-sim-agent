@@ -54,6 +54,11 @@ Similar AspenTech examples show how a process is usually set up: `fw examples-se
 words>"`, then `examples-show <id>` and its PDF guide (examples.md). Use them to choose property
 methods, chemistry and block models, not to copy models.
 
+Do not wait for every answer before the user can start: in the same first answer, give step v0.01
+(components and property method, with chemistry and Henry components where they apply) as in
+section 6, with its click paths or input file, its check and what to send back. The open
+questions shape the later steps.
+
 ## 2. Data card
 
 A table: item | value in the model | source (paper table or figure, SI, datasheet, own calculation)
