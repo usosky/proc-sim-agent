@@ -90,6 +90,7 @@ anything. Ask only for what the files cannot tell you.
 |---|---|---|
 | Build a model | frame the job, stage plan with pass criteria, check every run | build-mode.md |
 | Write the model as a file | an `.inp` from a template, the user's `.his` or an example; `inp-check`; the user opens it | input-language.md |
+| Add blocks to an existing model | Route A (export *Input File with Graphics*, add paragraphs, `inp-diff`, `inp-check`, open) or Route B (section `.inp` saved as `.bkp`, File > Import); never edit a `.bkp` or `.apw` as text | input-language.md, file-types.md |
 | "How is X usually modelled?" | `examples-search`, `examples-show`, the guide via `docs-search`; never name examples from memory | examples.md |
 | Results table or .rep: balances, pH/charge, KPIs | `check` (mass, element, charge balance; apparent vs true basis; `--metric`) | build-mode.md |
 | Review a run against expected values | `check --expect` (pass, fail, missing per item); the file contract above | build-mode.md, file-types.md |

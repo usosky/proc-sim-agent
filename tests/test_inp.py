@@ -150,3 +150,19 @@ def test_inp_diff_cli_on_two_his(tmp_path, run_files):
     res = json.loads(p.stdout)
     assert [c["paragraph"] for c in res["changed"]] == ["BLOCK SPLIT"]
     assert "+FRAC RECYCLE 0.4" in res["changed"][0]["diff"]
+
+
+def test_route_a_heater_added_to_an_exported_model():
+    """docs/live-tests.md T4: one Heater with a new feed, its line inside the existing FLOWSHEET."""
+    base = samples.INP_FLASH
+    i = base.index("FLOWSHEET\n") + len("FLOWSHEET\n")
+    new = (base[:i] + "    BLOCK HX9 IN=T4-IN OUT=T4-OUT\n" + base[i:] +
+           "\nSTREAM T4-IN\n    SUBSTREAM MIXED TEMP=25. <C> PRES=1. <bar> MOLE-FLOW=10. <kmol/hr>\n"
+           "    MOLE-FRAC WATER 1.\n\nBLOCK HX9 HEATER\n    PARAM TEMP=40. <C> PRES=0.\n")
+    assert inp.check(new)["counts"]["error"] == 0 and inp.check(new)["counts"]["warning"] == 0
+    res = inp.diff_paragraphs(base, new)
+    assert [c["paragraph"] for c in res["changed"]] == ["FLOWSHEET"]
+    assert [a["paragraph"] for a in res["added"]] == ["STREAM T4-IN", "BLOCK HX9"]
+    assert "1 paragraph changed, 2 added" in inp.render_diff(res, "base.inp", "new.inp")
+    second = new.replace("BLOCK HX9 IN=T4-IN OUT=T4-OUT\n", "") + "\nFLOWSHEET\n    BLOCK HX9 IN=T4-IN OUT=T4-OUT\n"
+    assert any(c["paragraph"] == "FLOWSHEET #2" for c in inp.diff_paragraphs(base, second)["added"])

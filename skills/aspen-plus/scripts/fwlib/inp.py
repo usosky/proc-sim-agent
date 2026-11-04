@@ -702,8 +702,9 @@ def diff_paragraphs(text_a: str, text_b: str) -> dict:
 
 
 def render_diff(res: dict, name_a: str, name_b: str) -> str:
+    n = len(res["changed"])
     L = [f"# Input differences: {name_a} -> {name_b}",
-         f"- {len(res['changed'])} paragraphs changed, {len(res['added'])} added, {len(res['removed'])} removed, "
+         f"- {n} paragraph{'' if n == 1 else 's'} changed, {len(res['added'])} added, {len(res['removed'])} removed, "
          f"{res['unchanged']} unchanged."]
     for c in res["changed"]:
         L += ["", f"## Changed: {c['header_b']} (line {c['line_a']} -> {c['line_b']})", "```diff"]

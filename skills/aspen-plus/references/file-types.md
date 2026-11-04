@@ -4,30 +4,43 @@
 
 In the commands below, `fw` stands for `python scripts/fw.py`, run from the skill folder (see SKILL.md).
 
-| File | Format | Holds | Notes |
-|---|---|---|---|
-| `.bkp` backup | ASCII | all input and results, no intermediate convergence data | Portable across computers and **newer** versions; best for archiving and version folders. On rerun Aspen reinitializes and reconverges. |
-| `.apw` document | binary | input, results and convergence state (quick restart) | Tied to the version that wrote it. |
-| `.apwz` compound | zip | the model (a .bkp inside) plus every file it uses | Good for sending a complete case; `examples-index` reads the .bkp inside. |
-| `.apmbd` | binary | embedded objects (spreadsheets, pictures) | Keep it next to its `.bkp` (same name). |
-| `.appdf` | binary | problem-definition arrays, intermediate convergence data | Rebuilt by Aspen; not needed for archiving. |
-| `.apt` template, `.apsst` stream-summary template, `.slb` stream library | | | |
+| File | Format | Holds | Editable? (does editing it change the model) | Notes |
+|---|---|---|---|---|
+| `.inp` input file | text | the whole input, no results | **Yes, the documented way**: export, edit, File > Open (Input Files); an `.inp` cannot be imported into an open case, only opened | `fw inp-check`, `inp-find`, `his --inp` (input-language.md) |
+| `.bkp` backup | ASCII | all input and results, no intermediate convergence data | **No hand edits by this skill.** Aspen reads it on Open and on Import (File > Import > File merges it into the open case) | Portable across computers and **newer** versions; best for archiving and version folders. On rerun Aspen reinitializes and reconverges. |
+| partial `.bkp` ("insert") | ASCII | input of some objects only: no results, no components | Made by Aspen (right-click an object > Export); imported into any case to add those objects | help: "What is an Insert?", "Exporting Partial Backup Files" |
+| `.apw` document | binary | input, results and convergence state (quick restart) | No | Tied to the version that wrote it. |
+| `.apwz` compound | zip | the model (a .bkp inside) plus every file it uses | Only through the `.bkp` inside | Good for sending a complete case; `examples-index` reads the .bkp inside. |
+| `.apmbd` | binary | embedded objects (spreadsheets, pictures) | No (AspenTech: do not edit) | Keep it next to its `.bkp` or `.inp` (same name). |
+| `.appdf` | binary | problem-definition arrays, intermediate convergence data | No | Rebuilt by Aspen; not needed for archiving. |
+| `.def` | text | Export Definition file, saved with the document to keep EO variables | No | May hold the Windows user name: never read. |
+| `.for` | text | Fortran saved with the case | No | Usually empty when inline Fortran is interpreted. |
+| `.ads` | ? | appears beside saved V15 cases; not in the file-format topics | Unknown: treat as Aspen's, do not read or edit | |
+| `.apt` template, `.apsst` stream-summary template, `.slb` stream library | | | No | |
 
 To keep a simulation you need at least one of: the `.apw`, the `.apwz`, or the `.bkp` **plus**
 its `.apmbd` if there is one (Aspen help, "File Formats in Aspen Plus").
 
-The `.bkp` is readable text, but edit it only as a last resort: save it with ANSI encoding (a
-UTF-8 save makes it unreadable to Aspen) and keep the original.
+**Policy: the skill never hand-edits `.apw`, `.appdf`, `.apmbd` or `.bkp`.** It changes models
+through `.inp` files (opened in Aspen), Aspen's own Import (a section saved as `.bkp`), or
+automation; input-language.md has the routes. Each route needs Aspen Plus with a licence: the
+agent prepares text or drives Aspen, and Aspen applies the change. AspenTech does not generally
+advise editing a `.bkp` directly; when a user repairs one by hand, they work on a copy and save it
+with ANSI encoding (a UTF-8 save makes it unreadable to Aspen). The one exception in this
+repository is `tools/scrub_aspen_files.py`, which blanks identifying lines in copies for sharing.
 
 ## Run outputs (text)
+
+Run outputs are not editable: the next run or export rewrites them.
 
 | File | How to get it (V12-V15) | Holds | proc-sim-agent |
 |---|---|---|---|
 | `.his` history | written by every run; view with Home > Summary > History; save from the editor or File > Export | input echo (numbered input-language lines, inline Fortran), input-translation messages, flowsheet analysis (convergence blocks, computation order), block-by-block trace with loop iterations, message IDs, and the summary of errors written at save | `fw his`, `fw his-diff` |
 | `.cpm` run messages | File > Export > Save as type *Run Messages (\*.cpm)*; must be exported, it is not kept otherwise | what the Control Panel showed: progress, loop iterations, RadFrac iteration tables, messages **without IDs**, summary of simulation errors | `fw cpm` |
 | `.rep` report | File > Export > *Report files (\*.rep)*; content set in Setup > Report Options | run control, flowsheet balance, convergence and design-spec results, every block's inputs/results, stream tables | `fw rep` |
-| `.inp` input file | File > Export > *Aspen Plus Input Files*, *Input Files with Graphics* or *Input and Graphics Data File* (.inp + .apmbd); every .his starts with the input of its run | the whole input as text, no results; opens with File > Open > Input Files; the engine runs it with `aspen <runid>` | `fw inp-check`, `his --inp`, `inp-find` (input-language.md) |
-| `.sum` summary | File > Export > Summary | results for programs; the same RUN-STATUS records as the results section of a `.bkp` | run stamp only (freshness); no digest yet |
+| `.inp` input file | File > Export > *Aspen Plus Input Files*, *Input Files with Graphics* (object positions kept in a long comment) or *Input and Graphics Data File* (.inp + .apmbd); every .his starts with the input of its run | the whole input as text, no results; opens with File > Open > Input Files; the engine runs it with `aspen <runid>` | `fw inp-check`, `his --inp`, `inp-find`, `inp-diff` (input-language.md) |
+| `.sum` summary | File > Export > Summary | results for programs; the same RUN-STATUS records as the results section of a `.bkp`; File > Import > Summary loads results into a case | run stamp only (freshness); no digest yet |
+| `.xml` results | File > Export | results for Aspen Pinch and Icarus | not read |
 
 Diagnostic detail of the .his and the Control Panel is set separately: globally in
 Setup > Specifications > Diagnostics, per block in the block's Block Options > Diagnostics. For

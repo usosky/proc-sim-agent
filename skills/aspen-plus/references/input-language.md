@@ -38,6 +38,44 @@ drawing: expect Aspen's own arrangement of the blocks on screen; tidy it once, t
    the file), `fw rep`, `fw check` for balances and KPIs.
 6. Translation errors point at input lines: the `.his` echo numbers the lines of the file as read.
 
+## Adding blocks to an existing model
+
+Never edit the `.bkp` or `.apw` as text (file-types.md, policy). Two routes work without
+automation; both end with the user opening the result in Aspen Plus, which applies the change.
+Work in a new version folder; the previous version stays as it was.
+
+**Route A, the whole model as text** (best when the model is small or many objects change):
+
+1. The user exports the model: File > Export > *Input File with Graphics* (`.inp`, object
+   positions in a long comment at the end). Without an export, `fw his "<run.his>" --inp base.inp`
+   gives the input of the last run, but no positions.
+2. Add the paragraphs: the new BLOCK paragraphs, their lines in FLOWSHEET, new STREAM paragraphs
+   for new feeds, and anything they need (components, chemistry, a property method of a section).
+3. `fw inp-diff "base.inp" "new.inp"` to show the user exactly what changed; then
+   `fw inp-check "new.inp"`.
+4. The user opens it (File > Open > Input Files), runs it and saves it as `.bkp` in the new version
+   folder. Existing objects keep their positions from the graphics comment; Aspen places the new
+   ones (expect to move them once).
+
+**Route B, merge a section** (best for a large model: the rest of it is not retyped):
+
+1. Write a section `.inp` holding only the new blocks and streams, plus what they need to stand on
+   their own: IN-UNITS, the components they use, the property method, feeds for their inlets.
+2. The user opens it in Aspen and saves it as `.bkp` (or runs `aspen <runid> /mmbackup` in the
+   *Customize Aspen Plus* window, which writes a `.bkp` without opening the GUI).
+3. In a copy of the main model: File > Import > File, type Backup (`.bkp`). Aspen merges the
+   objects. Duplicate IDs open *Resolve ID Conflicts* (rename or replace each one). The imported
+   file's File > Options and some Setup settings replace the current ones: check Setup
+   (units, report options, run type) and File > Options afterwards.
+4. Connect the merged streams to the existing blocks in the GUI, run, save as `.bkp`.
+
+Read these help topics in the user's version before the first merge (`fw help-read "<title>"`):
+"Importing Aspen Plus Files", "Types of Files You Can Import", "What is an Insert?",
+"Exporting Partial Backup Files", "Input Files (*.inp)".
+
+An Aspen-made partial backup ("insert", right-click objects > Export) is the reverse: input of
+some objects only, no results and no components, ready to import into another case.
+
 ## Language rules (checked against V15 input echoes)
 
 - A paragraph keyword starts in column 1 (`BLOCK`, `STREAM`, `CALCULATOR` ...); its statements are
