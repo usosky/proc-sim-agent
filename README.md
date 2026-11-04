@@ -34,6 +34,7 @@ Plus installation, on your computer; your models, results and library never leav
 | "What does my library say about formic acid / NRTL binaries?" | full-text search of your PDFs and notes, with document and page |
 | "Let's build a model of this process from scratch" | plans the build in stages with pass criteria, keeps a BUILD.md log, checks each run (balances, KPIs) before the next step |
 | "Write it as an input file" | writes the model as an `.inp`, checks it (`inp-check`), you open it with File > Open and run |
+| "Run this case for five feed temperatures" | on Windows with pywin32, runs copies of the model through Aspen's automation interface: one run per point, a CSV with the status of each; reads values with units, adds blocks and streams; your file is never changed |
 | "How does AspenTech model MEA capture?" | searches the example library on your computer by process, block, property method, component; shows the chemistry and block setup |
 | "Here is my stream table - what is the recovery?" | mass, element and charge balances, apparent vs true basis, and your KPIs computed from the pasted table or the .rep |
 
@@ -105,6 +106,7 @@ Run `python skills/aspen-plus/scripts/fw.py <command> -h` for the options of eac
 | `examples-index`, `examples-search`, `examples-show`, `examples-list` | the Aspen Plus example library (or any folder of models) |
 | `inp-check`, `inp-find`, `comp-find`, `his --inp` | write and check input files: lint, syntax from your own runs, databank aliases from the examples, a run's input as .inp |
 | `check` | mass, element and charge balances, apparent/true basis, KPI expressions from a .rep or a pasted stream table; `--expect` gives the run-review table |
+| `com-check`, `com-get`, `com-tree`, `com-run`, `com-sweep`, `com-edit` | Aspen Plus automation (COM) on copies: check the set-up, read values and the data tree, run, sweep, edit the flowsheet |
 
 ## Privacy
 

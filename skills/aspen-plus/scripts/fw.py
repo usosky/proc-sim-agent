@@ -26,11 +26,17 @@ Run `python fw.py <command> -h` for details. Commands:
   comp-find    databank alias of a component (the COMPONENTS line), from the example models
   check        balances, charge, apparent/true basis and metrics from a .rep or a pasted stream table;
                --expect compares results with expected values (the run-review table)
+  com-check    is Aspen Plus automation available (Windows, pywin32, Apwn.Document)? --start tries it
+  com-get      read values (with units) from a copy of a model; com-tree: browse its data tree
+  com-run      run a copy with changed inputs; save .bkp, export .rep .cpm .inp, write a log
+  com-sweep    one copy, one run per point; CSV of results and status per point
+  com-edit     add or remove blocks and streams, connect ports, on a copy; save a new .bkp
 
 his, rep, cpm, bkp and check warn at the top when the file describes an older run than another file
 of the same case (run stamps inside the files; file times are never used).
 
-Only the Python standard library is required (PDF text needs pypdf or PyMuPDF).
+Only the Python standard library is required (PDF text needs pypdf or PyMuPDF; the com-* commands
+need pywin32 and a licensed Aspen Plus on the same Windows PC).
 Nothing is uploaded: indexes live in ~/.proc-sim-agent (override with PROC_SIM_AGENT_HOME).
 """
 from __future__ import annotations
@@ -43,7 +49,7 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 
-from fwlib import bkp, check, cpm, docsdb, examples, freshness, helpdb, his, inp, madcap, rep, sims  # noqa: E402
+from fwlib import bkp, check, com, cpm, docsdb, examples, freshness, helpdb, his, inp, madcap, rep, sims  # noqa: E402
 from fwlib.common import (APP_TITLE, DEFAULT_EXAMPLES_GLOBS, DEFAULT_HELP_GLOBS, PRODUCTS,  # noqa: E402
                           config_path, data_home,
                           FileBusy, expand_globs, fts5_available, load_config, natural_key, os_path, print_json,
@@ -706,6 +712,111 @@ def cmd_cpm(a):
     print(cpm.render_markdown(d))
 
 
+# ---------------------------------------------------------------------------
+# automation (COM): every command works on a copy
+# ---------------------------------------------------------------------------
+def _com(fn, *args, **kw):
+    try:
+        return fn(*args, **kw)
+    except com.AutomationError as e:
+        _die(str(e), 2)
+
+
+def cmd_com_check(a):
+    res = _com(com.check, start=a.start)
+    reg = res["registry"]
+    ok = res["windows"] and res["pywin32"] and reg.get("registered") and (res["start"].get("ok", True))
+    if a.json:
+        print_json(res)
+    else:
+        print(com.render_check(res))
+    if not ok:
+        sys.exit(1)
+
+
+def cmd_com_get(a):
+    res = _com(com.get, a.model, a.path)
+    if a.json:
+        print_json(res)
+    else:
+        print(com.render_values(res))
+    if not all(v["found"] for v in res["values"]):
+        sys.exit(1)
+
+
+def cmd_com_tree(a):
+    res = _com(com.tree, a.model, node=a.node, depth=a.depth, max_children=a.max_children)
+    if a.json:
+        print_json(res)
+    else:
+        print(com.render_tree(res))
+
+
+def _new_file_digests(out: Path, stem: str) -> str:
+    """What com-run and com-edit --run print after the log: the usual digests of the new files."""
+    parts = []
+    for f in sorted(out.glob("*.his")):
+        parts.append(his.render_markdown(his.parse(f)))
+    r = out / (stem + ".rep")
+    if r.is_file():
+        d = rep.parse(r)
+        parts.append(rep.render_markdown(d))
+        res = check.analyse(check.from_rep(r, d))
+        parts.append("## Stream checks (fw check)\n" + ("\n".join(f"- {x}" for x in res["flags"]) or
+                                                        "No balance or electroneutrality problems found."))
+    elif (out / (stem + ".cpm")).is_file():
+        parts.append(cpm.render_markdown(cpm.parse(out / (stem + ".cpm"))))
+    return "\n\n".join(parts)
+
+
+def _run_failed(log: dict) -> bool:
+    r = log.get("run")
+    return bool(r) and (r["status"] != "completed" or r.get("verdict") == "errors")
+
+
+def cmd_com_run(a):
+    log = _com(com.run, a.model, a.out, sets=a.set or [], reinit=a.reinit, timeout=a.timeout, visible=a.visible)
+    if a.json:
+        print_json(log)
+    else:
+        print(com.render_log(log))
+        digests = _new_file_digests(Path(log["out"]), Path(log["source"]).stem)
+        if digests:
+            print("\n" + digests)
+    if _run_failed(log):
+        sys.exit(1)
+
+
+def cmd_com_sweep(a):
+    log = _com(com.sweep, a.model, a.out, vary=a.vary, read=a.read, reinit=a.reinit, timeout=a.timeout,
+               csv_name=a.csv)
+    if a.json:
+        print_json(log)
+    else:
+        print(com.render_log(log))
+    if any(pt.get("status") != "completed" or pt.get("verdict") == "errors" for pt in log.get("points", [])):
+        sys.exit(1)
+
+
+def cmd_com_edit(a):
+    log = _com(com.edit, a.model, a.out, add_blocks=a.add_block or [], add_streams=a.add_stream or [],
+               connect=a.connect or [], disconnect=a.disconnect or [], remove_blocks=a.remove_block or [],
+               sets=a.set or [], run_after=a.run, timeout=a.timeout)
+    if a.json:
+        print_json(log)
+    else:
+        print(com.render_log(log))
+        stem = Path(log["source"]).stem
+        print(f"\nOpen {Path(log['out']) / (stem + '.bkp')} in Aspen Plus to see the change (new objects are "
+              "placed by Aspen; move them once and save).")
+        if log.get("run"):
+            digests = _new_file_digests(Path(log["out"]), stem)
+            if digests:
+                print("\n" + digests)
+    if _run_failed(log):
+        sys.exit(1)
+
+
 def build_parser() -> argparse.ArgumentParser:
     ap = argparse.ArgumentParser(prog="fw.py", description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     sub = ap.add_subparsers(dest="cmd", required=True)
@@ -845,6 +956,63 @@ def build_parser() -> argparse.ArgumentParser:
                                     "when a check fails or is missing")
     s.add_argument("--json", action="store_true")
     s.set_defaults(fn=cmd_check)
+
+    s = sub.add_parser("com-check", help="is Aspen Plus automation available on this PC?")
+    s.add_argument("--start", action="store_true", help="also start the server once (takes a licence for a few "
+                                                         "seconds), print its version and quit")
+    s.add_argument("--json", action="store_true")
+    s.set_defaults(fn=cmd_com_check)
+
+    s = sub.add_parser("com-get", help="read values and units from a copy of a model (no run, no save)")
+    s.add_argument("model", help=".bkp or .apw (a temporary copy is opened)")
+    s.add_argument("--path", action="append", required=True,
+                   help="node path, e.g. \"\\Data\\Streams\\FEED\\Output\\TEMP_OUT\\MIXED\" (repeatable)")
+    s.add_argument("--json", action="store_true")
+    s.set_defaults(fn=cmd_com_get)
+
+    s = sub.add_parser("com-tree", help="browse the data tree of a copy of a model (a text Variable Explorer)")
+    s.add_argument("model", help=".bkp or .apw (a temporary copy is opened)")
+    s.add_argument("--node", default="\\Data", help="start node (default \\Data)")
+    s.add_argument("--depth", type=int, default=2, help="levels below the start node (default 2)")
+    s.add_argument("--max-children", type=int, default=60, help="nodes listed per level (default 60)")
+    s.add_argument("--json", action="store_true")
+    s.set_defaults(fn=cmd_com_tree)
+
+    s = sub.add_parser("com-run", help="run a copy of a model with changed inputs, save and export the results")
+    s.add_argument("model", help=".bkp or .apw; never changed")
+    s.add_argument("--out", required=True, help="new or empty folder outside the model's folder")
+    s.add_argument("--set", action="append", help="\"PATH=VALUE\" in the node's units (repeatable)")
+    s.add_argument("--reinit", action="store_true", help="reinitialize before the run")
+    s.add_argument("--timeout", type=float, default=900, help="stop the run after this many seconds (default 900)")
+    s.add_argument("--visible", action="store_true", help="show the Aspen Plus window while it runs")
+    s.add_argument("--json", action="store_true")
+    s.set_defaults(fn=cmd_com_run)
+
+    s = sub.add_parser("com-sweep", help="one copy, one run per point: a CSV of results and status")
+    s.add_argument("model", help=".bkp or .apw; never changed")
+    s.add_argument("--out", required=True, help="new or empty folder outside the model's folder")
+    s.add_argument("--vary", action="append", required=True,
+                   help="\"PATH=v1,v2,...\" (repeatable; the same number of values each, taken point by point)")
+    s.add_argument("--read", action="append", required=True, help="result paths, comma-separated (repeatable)")
+    s.add_argument("--reinit", action="store_true", help="reinitialize before each point")
+    s.add_argument("--timeout", type=float, default=900, help="seconds per point (default 900)")
+    s.add_argument("--csv", default="sweep.csv", help="CSV file name in --out (default sweep.csv)")
+    s.add_argument("--json", action="store_true")
+    s.set_defaults(fn=cmd_com_sweep)
+
+    s = sub.add_parser("com-edit", help="add or remove blocks and streams and connect ports, on a copy")
+    s.add_argument("model", help=".bkp or .apw; never changed")
+    s.add_argument("--out", required=True, help="new or empty folder outside the model's folder")
+    s.add_argument("--add-block", action="append", help="NAME!TYPE, e.g. \"H1!HEATER\" (NAME=TYPE also works)")
+    s.add_argument("--add-stream", action="append", help="NAME or NAME!TYPE (MATERIAL, HEAT, WORK)")
+    s.add_argument("--connect", action="append", help="\"BLOCK:PORT=STREAM\", e.g. \"H1:F(IN)=S9\"")
+    s.add_argument("--disconnect", action="append", help="\"BLOCK:PORT=STREAM\"")
+    s.add_argument("--remove-block", action="append", help="block name")
+    s.add_argument("--set", action="append", help="\"PATH=VALUE\" after the edits (repeatable)")
+    s.add_argument("--run", action="store_true", help="run after the edits and export the results")
+    s.add_argument("--timeout", type=float, default=900)
+    s.add_argument("--json", action="store_true")
+    s.set_defaults(fn=cmd_com_edit)
 
     s = sub.add_parser("sim-scan", help="summarise simulation folders")
     s.add_argument("paths", nargs="*")

@@ -76,6 +76,10 @@ Read these help topics in the user's version before the first merge (`fw help-re
 An Aspen-made partial backup ("insert", right-click objects > Export) is the reverse: input of
 some objects only, no results and no components, ready to import into another case.
 
+**Route C, automation** (Aspen applies the edit itself): `fw com-edit "<model.bkp>" --out "<new
+folder>" --add-block "H1!HEATER" --add-stream S9 --connect "H1:F(IN)=S9"` works on a copy and
+saves a new `.bkp` and `.inp` (automation.md).
+
 ## Language rules (checked against V15 input echoes)
 
 - A paragraph keyword starts in column 1 (`BLOCK`, `STREAM`, `CALCULATOR` ...); its statements are

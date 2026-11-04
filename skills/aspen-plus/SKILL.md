@@ -1,6 +1,6 @@
 ---
 name: aspen-plus
-description: Aspen Plus process-simulation assistant for chemical engineers. Builds models with the user stage by stage, writes Aspen Plus input files (.inp), reads run files (.his, .rep, .cpm, .bkp) to troubleshoot runs and review models, checks mass, element and charge balances and KPIs, and answers how-to questions from the user's locally installed Aspen Plus help and example library. Use when the user mentions Aspen Plus or its files (.bkp .apw .apwz .inp .his .rep .cpm), blocks (RadFrac, RStoic, HeatX, Compr, FSplit), Calculator, Design Spec or Sensitivity, electrolytes, convergence or run messages, or wants to build or set up a model. Not for Aspen HYSYS, Aspen Adsorption or backup files of other programs.
+description: Aspen Plus process-simulation assistant for chemical engineers. Builds models with the user stage by stage, writes input files (.inp), reads run files (.his, .rep, .cpm, .bkp) to troubleshoot runs and review models, checks balances and KPIs against expected values, runs, sweeps and edits copies of models by automation (COM), and answers how-to questions from the locally installed Aspen Plus help and example library. Use when the user mentions Aspen Plus or its files (.bkp .apw .apwz .inp .his .rep .cpm), blocks (RadFrac, RStoic, HeatX, Compr, FSplit), Calculator, Design Spec or Sensitivity, electrolytes, convergence or run messages, automating Aspen from Python, or wants to build or set up a model. Not for Aspen HYSYS, Aspen Adsorption or backup files of other programs.
 license: MIT
 compatibility: Windows. Python 3.8+ (standard library); pypdf optional for PDFs; pywin32 and a licensed Aspen Plus V12-V15 on the same PC only to run or edit models by automation. Reads Aspen Plus files and the locally installed Aspen Plus help. No network access needed.
 metadata:
@@ -35,7 +35,8 @@ python scripts/fw.py his "C:\Simulations\absorber\v1.03\absorber.his"
 ```
 
 - Commands work in PowerShell and in Git Bash: one command per line, every path in double quotes.
-- Standard library only (Python 3.8+); PDFs need `pypdf` (`python -m pip install pypdf`).
+- Standard library only (Python 3.8+); PDFs need `pypdf` (`python -m pip install pypdf`); the
+  `com-*` commands need `pywin32` and a licensed Aspen Plus on the same Windows PC.
 - Every command has `-h`. Most take `--json` for structured output.
 - Exit code 3 from an index command means "not finished yet": run the same command again.
 - Below, `fw` stands for `python scripts/fw.py`.
@@ -83,6 +84,7 @@ anything. Ask only for what the files cannot tell you.
 | Review | "look at my model / folder", compare versions or a paper | workflows.md, file-types.md |
 | Build | "let's build / set up a model of ...", "simulate this paper" | build-mode.md |
 | Write `.inp` | many entries, "give me the file" | input-language.md |
+| Automate | "run this case for five feed temperatures", "read these values", "add a heater by script" | automation.md |
 
 ## What to do for each kind of request
 
@@ -90,7 +92,8 @@ anything. Ask only for what the files cannot tell you.
 |---|---|---|
 | Build a model | frame the job, stage plan with pass criteria, check every run | build-mode.md |
 | Write the model as a file | an `.inp` from a template, the user's `.his` or an example; `inp-check`; the user opens it | input-language.md |
-| Add blocks to an existing model | Route A (export *Input File with Graphics*, add paragraphs, `inp-diff`, `inp-check`, open) or Route B (section `.inp` saved as `.bkp`, File > Import); never edit a `.bkp` or `.apw` as text | input-language.md, file-types.md |
+| Add blocks to an existing model | Route A (export *Input File with Graphics*, add paragraphs, `inp-diff`, `inp-check`, open), Route B (section `.inp` saved as `.bkp`, File > Import) or Route C (`com-edit` on a copy); never edit a `.bkp` or `.apw` as text | input-language.md, file-types.md, automation.md |
+| Run, sweep or read a model by automation | `com-check --start`; paths from `com-tree`; `com-get`, `com-run`, `com-sweep` on copies, never the user's file | automation.md |
 | "How is X usually modelled?" | `examples-search`, `examples-show`, the guide via `docs-search`; never name examples from memory | examples.md |
 | Results table or .rep: balances, pH/charge, KPIs | `check` (mass, element, charge balance; apparent vs true basis; `--metric`) | build-mode.md |
 | Review a run against expected values | `check --expect` (pass, fail, missing per item); the file contract above | build-mode.md, file-types.md |
@@ -129,6 +132,10 @@ fw inp-find RADFRAC "<folder>"
 fw comp-find MEA
 fw check "<model.rep or table.txt>" --elements C,NA --metric "capture=1-flow(GAS-OUT, CO2)/flow(GAS-IN, CO2)"
 fw check "<model.rep>" --expect "<expected.csv>"
+fw com-check --start
+fw com-tree "<model.bkp>" --node "\Data\Streams" --depth 1
+fw com-run "<model.bkp>" --out "<new folder>" --set "\Data\Blocks\B1\Input\TEMP=40"
+fw com-sweep "<model.bkp>" --out "<new folder>" --vary "<input path>=30,40,50" --read "<result path>"
 ```
 
 `templates/` holds a BUILD.md template and starting input files. `references/help-map.md` maps
@@ -155,6 +162,7 @@ Raise these without being asked when the files show them:
 | After a run | run review: what passed, the `check --expect` table *Item / Expected / Model / Verdict*, numbered fixes, what to send next time |
 | Write the model | `.inp` file plus the `inp-check` report |
 | Calculator code | Fortran as a separate plain-text file, linted (`his --fortran` shows the lint) |
+| Automation | a new folder with `.bkp`, `.rep`, `.cpm`, `.inp` and `automation-log.json`; for sweeps the CSV |
 | Troubleshoot | root cause, numbered fix steps, which messages are harmless |
 
 ## Using the help well
@@ -212,3 +220,4 @@ tight.
 | references/build-mode.md | building a model with the user: stages, pass criteria, checks, baseline, BUILD.md |
 | references/input-language.md | writing and checking .inp files: rules, verified paragraphs, the cycle |
 | references/examples.md | the example-library index: setup, search, reading and using examples |
+| references/automation.md | COM automation: when to use it, the com-* commands, safety rules, node paths, units, status flags |

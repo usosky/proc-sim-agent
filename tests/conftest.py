@@ -41,3 +41,5 @@ def run_files(tmp_path):
 
 def pytest_configure(config):
     os.environ.setdefault("PYTHONIOENCODING", "utf-8")
+    config.addinivalue_line("markers", "aspen: needs Windows, pywin32 and a licensed Aspen Plus "
+                                       "(run with PSA_LIVE_ASPEN=1; see docs/live-tests.md)")

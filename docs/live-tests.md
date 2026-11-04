@@ -14,6 +14,72 @@ py -3 scripts\fw.py examples-search "flash" --block FLASH2 -n 5
 
 Copy it to `C:\Temp\psa-live\` and work only on copies there.
 
+## Install and automation
+
+| # | Test | Pass |
+|---|---|---|
+| L0 | Install for both agents (below); in Claude Code and in VS Code Copilot agent mode ask *"Set up proc-sim-agent for my Aspen Plus help"* | Both agents load the skill, run `setup --auto` and `help-index` |
+| L1 | `fw com-check --start` | Version printed, Aspen quits, licence released; note the "Members" and "Type library" lines |
+| L2 | `fw com-tree` on the example with `--node "\Data\Streams" --depth 1`; `fw com-get` one stream temperature | Paths, and values with units |
+| L3 | `fw com-run` on the example with one `--set` | `.bkp .rep .cpm .inp` and `automation-log.json`; `check` reads the `.rep`; the value shows in Aspen when the `.bkp` is opened |
+| L4 | `fw com-edit` adding a Heater and two streams; open the result | The new block and streams are on the flowsheet; note where Aspen placed them |
+| L5 | `fw com-sweep` with 3 points | CSV with a status per point |
+| L6 | `--timeout 5` on a larger example | Run stopped, Aspen quit, no server process left |
+
+### L0: install for both agents
+
+Claude Code reads `%USERPROFILE%\.claude\skills`; GitHub Copilot CLI 1.0.105 reads
+`%USERPROFILE%\.copilot\skills` and `%USERPROFILE%\.agents\skills`, not `.claude` (checked with
+`copilot skill list`). VS Code's personal skill folders were not checked; this test records them.
+
+```text
+py -3 tools\install_skill.py --target claude
+py -3 tools\install_skill.py --target copilot
+```
+
+Then ask each agent the set-up question in a new session. Report which agents loaded the skill.
+To see whether VS Code also reads `.claude\skills`, remove the Copilot copy
+(`py -3 tools\install_skill.py --target copilot --uninstall`), reload VS Code and check whether
+the skill is still listed.
+
+### L1-L6: commands
+
+```text
+py -3 -m pip install pywin32
+fw com-check --start
+fw com-tree "C:\Temp\psa-live\ex\<example>.bkp" --node "\Data\Streams" --depth 1
+fw com-get "C:\Temp\psa-live\ex\<example>.bkp" --path "\Data\Streams\<stream>\Output\TEMP_OUT\MIXED"
+fw com-tree "C:\Temp\psa-live\ex\<example>.bkp" --node "\Data\Streams\<feed>\Input" --depth 3
+fw com-run "C:\Temp\psa-live\ex\<example>.bkp" --out "C:\Temp\psa-live\run1" --set "<input path from com-tree>=<value>"
+fw check "C:\Temp\psa-live\run1\<example>.rep"
+fw com-edit "C:\Temp\psa-live\ex\<example>.bkp" --out "C:\Temp\psa-live\edit1" --add-stream L4-IN --add-stream L4-OUT --add-block "H1!HEATER" --connect "H1:F(IN)=L4-IN" --connect "H1:P(OUT)=L4-OUT"
+fw com-sweep "C:\Temp\psa-live\ex\<example>.bkp" --out "C:\Temp\psa-live\sweep1" --vary "<input path>=<v1>,<v2>,<v3>" --read "<result path>"
+fw com-run "C:\Temp\psa-live\ex\<larger example>.bkp" --out "C:\Temp\psa-live\slow" --timeout 5
+```
+
+Report for each: the output (text), pass or fail, and these observations:
+
+- L1: the "Members" line (Version, Engine.IsRunning) and the "Type library" line
+  (IAP_REINIT_SIMULATION, HAP_ENTERABLE, export codes).
+- L2: whether units appear next to the values (`UnitString`).
+- L3: the run time; then open `run1\<example>.bkp` and check the changed value. Also compare three
+  times, for WP4: the start of the run in `run1\<example>.his` if one was written, the
+  `RUN-STATUS` time that `fw bkp` shows, and the `.rep` header time (`fw rep`): is the `.bkp` stamp
+  the start or the end of the run?
+- L4: whether `--connect` worked (the log shows it) and where Aspen placed H1.
+- L6: whether the run was stopped, and in Task Manager whether an `AspenPlus.exe` started by the
+  command was left (the command also says so).
+
+The automated part of these checks is `tests\test_com_live.py`. In PowerShell:
+
+```text
+$env:PSA_LIVE_ASPEN = "1"
+py -3 -m pytest tests\test_com_live.py -v
+```
+
+In Git Bash: `PSA_LIVE_ASPEN=1 py -3 -m pytest tests/test_com_live.py -v`. Set
+`PSA_ASPEN_EXAMPLES` to the examples folder when `setup --auto` does not find it.
+
 ## Input files
 
 | # | Test | Pass |
