@@ -1,6 +1,6 @@
 # Workflows
 
-`fw` below means `python "${CLAUDE_SKILL_DIR}/scripts/fw.py"` (see SKILL.md for Windows).
+In the commands below, `fw` stands for `python scripts/fw.py`, run from the skill folder (see SKILL.md).
 Building a new model with the user is in build-mode.md; writing input files in input-language.md.
 
 ## 1. Troubleshoot a run

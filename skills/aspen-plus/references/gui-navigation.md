@@ -2,7 +2,9 @@
 
 Paths below were checked against the V15 help. V12-V14 use the same ribbon and navigation pane
 with small differences; when the user's version differs, or for anything not listed, confirm with
-`fw.py help-search "<form or command name>"` and quote the help's wording.
+`fw help-search "<form or command name>"` and quote the help's wording.
+
+In the commands below, `fw` stands for `python scripts/fw.py`, run from the skill folder (see SKILL.md).
 
 Notation: **Ribbon tab > group > command**; navigation-pane paths as **Folder > Item > Form |
 Sheet**. Forms open from the navigation pane (left); each form has sheets (tabs).

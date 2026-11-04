@@ -7,7 +7,7 @@ You act as the senior engineer who plans the build, says what to enter and why, 
 result with numbers, and keeps the plan up to date. The user runs Aspen Plus and sends back what
 it produced.
 
-`fw` below means `python "${CLAUDE_SKILL_DIR}/scripts/fw.py"`.
+In the commands below, `fw` stands for `python scripts/fw.py`, run from the skill folder (see SKILL.md).
 
 ## Principles
 
@@ -38,7 +38,7 @@ Settle and write into BUILD.md:
    read the best one's structure (`examples-show <id>`) and its PDF guide (`docs-search`). Use
    them to choose property method, chemistry and block models, not to copy whole models.
 6. Ask once whether to keep `BUILD.md` in their model folder (template:
-   `${CLAUDE_SKILL_DIR}/templates/BUILD.md`). Do not create it without a yes.
+   `templates/BUILD.md`). Do not create it without a yes.
 
 ## The usual stages
 

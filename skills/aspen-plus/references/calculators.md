@@ -3,7 +3,9 @@
 Flowsheeting Options > Calculator (and Design Spec, Sensitivity) use the same three pieces:
 the **Define** sheet (variables), the code (**Calculate** sheet: inline Fortran or Excel) and
 the **Sequence** sheet (when it runs). Check exact field names in your version with
-`fw.py help-search "calculator define sheet" --book hlpflwop`.
+`fw help-search "calculator define sheet" --book hlpflwop`.
+
+In the commands below, `fw` stands for `python scripts/fw.py`, run from the skill folder (see SKILL.md).
 
 ## 1. Define sheet
 
@@ -162,7 +164,7 @@ outlet down; set the outlet pressure explicitly if that is wrong for your case.
         WRITE(*,*) 'XCONV =', XCONV
         END
   ```
-  `gfortran -ffixed-form test.f && ./a.out` (or port the code to Python). Matching to 6 digits
+  `gfortran -ffixed-form -o test.exe test.f`, then `./test.exe` (or port the code to Python). Matching to 6 digits
   proves the code Aspen ran is the code you think it ran.
 - Work in a local folder, not a cloud-synced one (OneDrive, Dropbox, Google Drive): sync conflicts copy
   open .apw files. Copy the .bkp back at milestones.

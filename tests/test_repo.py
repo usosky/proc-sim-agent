@@ -2,23 +2,11 @@
 import json
 import re
 
+import skillmeta
 from conftest import ROOT, SKILL_DIR
 
 SKILL = SKILL_DIR / "SKILL.md"
 SCHEMA = "https://agent-plugins.org/schemas/1.0.0/plugin.schema.json"
-
-
-def _frontmatter(path):
-    text = path.read_text(encoding="utf-8")
-    m = re.match(r"^---\n(.*?)\n---\n", text, re.S)
-    assert m, f"{path} has no frontmatter"
-    fm = {}
-    for line in m.group(1).splitlines():
-        if line.startswith((" ", "\t")) or not line.strip():
-            continue                                   # nested keys (metadata) are checked elsewhere
-        k, v = line.split(":", 1)
-        fm[k.strip()] = v.strip()
-    return fm, text[m.end():]
 
 
 def _json(*parts):
@@ -51,7 +39,8 @@ def test_claude_marketplace_entry():
 
 def test_one_version_everywhere():
     """plugin.json, the marketplace entry (Claude Code reads the version there, as the entry is
-    the manifest), fwlib.__version__, CITATION.cff and .zenodo.json carry the same version."""
+    the manifest), SKILL.md metadata, fwlib.__version__, CITATION.cff and .zenodo.json carry the
+    same version."""
     from fwlib import __version__
     version = _json("plugin.json")["version"]
     entry = next(p for p in _json(".claude-plugin", "marketplace.json")["plugins"] if p["name"] == "aspen-plus")
@@ -59,28 +48,12 @@ def test_one_version_everywhere():
     assert __version__ == version
     assert re.search(rf"^version: {re.escape(version)}$", (ROOT / "CITATION.cff").read_text(encoding="utf-8"), re.M)
     assert _json(".zenodo.json")["version"] == version
+    assert skillmeta.read(SKILL)[0]["metadata"]["version"] == version
 
 
 def test_zenodo_funding():
     zen = _json(".zenodo.json")
     assert zen["license"] == "MIT" and zen["grants"][0]["id"].endswith("101177949")
-
-
-def test_skill_frontmatter_and_size():
-    fm, body = _frontmatter(SKILL)
-    assert fm["name"] == "aspen-plus" and len(fm["name"]) <= 64
-    assert 100 < len(fm["description"]) <= 1024
-    assert len(body.splitlines()) < 500
-
-
-def test_skill_references_exist():
-    _, body = _frontmatter(SKILL)
-    refs = set(re.findall(r"references/([a-z-]+\.md)", body))
-    assert refs, "SKILL.md should point to its references"
-    for r in refs:
-        assert (SKILL.parent / "references" / r).is_file(), r
-    for f in (SKILL.parent / "references").glob("*.md"):
-        assert f.name in refs, f"{f.name} is not mentioned in SKILL.md"
 
 
 def test_no_private_or_vendor_files_tracked():

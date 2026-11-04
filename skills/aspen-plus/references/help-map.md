@@ -1,9 +1,11 @@
 # Aspen Plus V15 help map
 
 Where things live in the Aspen Plus help (MadCap WebHelp). Use the book name with
-`fw.py help-search "..." --book <name>` or `fw.py help-toc --book <name>`. Built from the help's own
-table-of-contents file; V12-V14 are organised the same way. Run `fw.py help-toc` on your install for the
+`fw help-search "..." --book <name>` or `fw help-toc --book <name>`. Built from the help's own
+table-of-contents file; V12-V14 are organised the same way. Run `fw help-toc` on your install for the
 exact list and topic counts.
+
+In the commands below, `fw` stands for `python scripts/fw.py`, run from the skill folder (see SKILL.md).
 
 | Table-of-contents position | Books (name: what is inside) |
 |---|---|
@@ -48,5 +50,5 @@ exact list and topic counts.
 - Property methods and models (equations, parameters): `ref2`; databank parameters: `physprop`.
 - Calculator, Design Spec, Transfer forms: `hlpflwop`; how-to for these tools: `userguide3`.
 - Convergence methods and tear/sequence forms: `converge`.
-- Context-sensitive help IDs (F1) are stored as aliases: `fw.py help-read <F1 id>` works, e.g. `rstoicsetupspecificationssheet`.
+- Context-sensitive help IDs (F1) are stored as aliases: `fw help-read <F1 id>` works, e.g. `rstoicsetupspecificationssheet`.
 - Message IDs such as URE07.3 are not in the help text; search the message wording instead and check `messages.md`.

@@ -4,6 +4,8 @@ The user knows chemical engineering and may be new to Aspen Plus. Explain each s
 needed, give exact click paths and expected values, warn about the messages they will see. Be
 concise: no preamble, no recap of what you did, no filler.
 
+In the commands below, `fw` stands for `python scripts/fw.py`, run from the skill folder (see SKILL.md).
+
 ## Shape of a how-to or fix answer
 
 1. **Verdict first** (1-3 sentences): what is wrong or what to do, and the one thing that matters
@@ -48,7 +50,7 @@ concise: no preamble, no recap of what you did, no filler.
 ## Ground rules
 
 - Click paths and field names must match the user's version: confirm anything not in
-  gui-navigation.md with `fw.py help-search` and say so ("V15 help: *Calculator Input Sequence
+  gui-navigation.md with `fw help-search` and say so ("V15 help: *Calculator Input Sequence
   Sheet*"). If the help cannot confirm it, say it is unverified.
 - Numbers about their model come from their files (`his`, `rep`, `bkp`), quoted with units and the
   source. Do not guess flows, duties or settings that a file can tell you.

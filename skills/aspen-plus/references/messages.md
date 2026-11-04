@@ -3,11 +3,13 @@
 Curated from real runs (Aspen Plus V12.1-V15) and written in general terms. The quoted wording
 is Aspen's; block and stream names are placeholders.
 
+In the commands below, `fw` stands for `python scripts/fw.py`, run from the skill folder (see SKILL.md).
+
 Where to read them: the .his file prints every message with its ID (for example `URE07.3`,
 at the end of the header line or on the line below). The Control Panel and the .cpm export
 show the same text **without** the ID, so match on the wording. The help rarely documents the
 IDs; for a message not listed here search the help with a distinctive phrase of its wording
-(`fw.py help-search "temperature crossover"`).
+(`fw help-search "temperature crossover"`).
 
 Severity: ` *   WARNING`, ` **  ERROR`, `*** SEVERE ERROR`, `**** TERMINAL ERROR`; INFORMATION
 has no asterisks. The header names the phase: physical property system / input translation,

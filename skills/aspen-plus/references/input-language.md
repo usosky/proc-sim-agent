@@ -6,7 +6,7 @@ Input Files (\*.inp)**, and the engine runs one directly (`aspen <runid>` in the
 Plus V15* window). Every `.his` starts with the input of its run, so any run the user has made is
 also a correct, version-matched input file.
 
-`fw` below means `python "${CLAUDE_SKILL_DIR}/scripts/fw.py"`.
+In the commands below, `fw` stands for `python scripts/fw.py`, run from the skill folder (see SKILL.md).
 
 ## When to write a file instead of giving click paths
 
@@ -88,7 +88,7 @@ BLOCK FL1 FLASH2
 STREAM-REPOR MOLEFLOW MASSFLOW MOLEFRAC
 ```
 
-Complete files to start from are in `${CLAUDE_SKILL_DIR}/templates/`:
+Complete files to start from are in `templates/`:
 `flash-calculator-sensitivity.inp`, `column-specs.inp` (RadFrac with internal specs inside a design
 spec) and `electrolyte-absorber.inp` (true-component chemistry, Henry components, pH, sensitivity).
 Copy one into the user's folder and edit it; do not edit the templates.

@@ -5,11 +5,11 @@ hydrogen, fertilizers, solids, polymers, batch ...), most with a PDF guide. They
 AspenTech set this up?": property method and chemistry for a system, block choices, convergence,
 calculators, specs. proc-sim-agent indexes them on the user's computer; nothing is copied out.
 
-`fw` below means `python "${CLAUDE_SKILL_DIR}/scripts/fw.py"`.
+In the commands below, `fw` stands for `python scripts/fw.py`, run from the skill folder (see SKILL.md).
 
 ## Setup (once)
 
-```bash
+```text
 fw setup --examples "<folder>"     # setup --auto finds ...\Aspen Plus V15.0\GUI\Examples
 fw examples-index                  # under a minute for ~275 models; repeat if it says INCOMPLETE
 fw docs-index                      # optional: makes the PDF guides searchable with docs-search
@@ -27,7 +27,7 @@ read them, give the GUI route (**File > Open > Open Local Example**, then the to
 
 ## Finding a model
 
-```bash
+```text
 fw examples-search "CO2 capture MEA"                      # words: process, chemicals, topic
 fw examples-search --block RADFRAC --has electrolyte       # filters, combinable with words
 fw examples-search "brine" --method ELECNRTL --component NA+
@@ -42,12 +42,13 @@ reactions, fortran, user-fortran, excel, acm, properties-only, results, user-seq
 
 ## Reading one
 
-```bash
+```text
 fw examples-show <id>                          # components, method, chemistry, blocks, files, guide
 fw examples-show <id> --section "CHEMISTRY"    # raw input records of matching sections
 fw examples-show <id> --section "BLOCK RADFRAC ABSORBER"
 fw examples-show <id> --chemistry-inp          # its CHEMISTRY as input language (STOIC, K-STOIC, DISS, SALT)
-fw docs-search "<words>" ; fw docs-read <guide> --pages 1-4   # the PDF guide, once docs-indexed
+fw docs-search "<words>"                # the PDF guide, once docs-indexed
+fw docs-read "<guide>" --pages 1-4
 fw bkp "<path of the .bkp>"                     # full structure (also works on the copy in the folder)
 ```
 Section names are those of the input tree: `PROPERTIES MAIN`, `CHEMISTRY <id>`,
