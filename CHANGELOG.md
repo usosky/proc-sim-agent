@@ -1,8 +1,9 @@
 # Changelog
 
 All notable changes are listed here. Versions follow [Semantic Versioning](https://semver.org);
-bump `version` in `plugins/<plugin>/.claude-plugin/plugin.json` (the only place it is set) with
-every release, or installed copies will not update.
+set the same `version` in `plugin.json`, the marketplace entry in `.claude-plugin/marketplace.json`,
+SKILL.md `metadata.version`, `fwlib.__version__`, `CITATION.cff` and `.zenodo.json` with every release
+(`tests/test_repo.py` checks that they agree), or installed copies will not update.
 
 ## [Unreleased]
 

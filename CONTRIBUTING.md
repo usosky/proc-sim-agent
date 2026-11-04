@@ -2,12 +2,12 @@
 
 Thank you for helping. Useful contributions, roughly in order of value:
 
-1. **A message you solved**: add it to `plugins/aspen-plus/skills/aspen-plus/references/messages.md`
+1. **A message you solved**: add it to `skills/aspen-plus/references/messages.md`
    with Aspen's wording, the phase and severity, the usual cause and a fix that worked.
 2. **A correction**: a click path that differs in your version, a rule that is wrong or incomplete.
 3. **A parser fix**: a .his/.rep/.cpm/.bkp file the tools misread. Add a minimal, anonymised
    excerpt as a test fixture.
-4. **An evaluation case** in `plugins/aspen-plus/evals/` from a real question.
+4. **An evaluation case** in `evals/` from a real question.
 5. **A new product plugin** (HYSYS, Aspen Adsorption, ...), following the `aspen-plus` layout.
 
 ## Ground rules
@@ -27,11 +27,10 @@ Thank you for helping. Useful contributions, roughly in order of value:
 pip install pytest pypdf
 python -m pytest -q
 claude plugin validate --strict .
-claude plugin validate --strict plugins/aspen-plus
 python tools/scrub_aspen_files.py --check examples
 ```
 
-To try a change in Claude Code without reinstalling: `claude --plugin-dir ./plugins/aspen-plus`.
+To try a change in Claude Code without reinstalling: `claude --plugin-dir .` (the repository root is the plugin).
 
 ## Pull requests
 

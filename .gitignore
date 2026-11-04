@@ -29,7 +29,7 @@ HtmlHelp/
 *.mcwebhelp
 
 # Eval results
-plugins/*/evals/results/
+evals/results/
 
 # OS / editors
 .DS_Store

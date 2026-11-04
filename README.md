@@ -49,7 +49,7 @@ V12-V15 installed (for its help files). Optional: `pip install pypdf` to index P
 ## First run
 
 Ask Claude *"Set up proc-sim-agent for my Aspen Plus help"*, or run the commands yourself
-(`fw.py` lives in `plugins/aspen-plus/skills/aspen-plus/scripts/`):
+(`fw.py` lives in `skills/aspen-plus/scripts/`):
 
 ```bash
 python fw.py setup --auto        # finds C:\ProgramData\AspenTech\Aspen Plus V15.0\HtmlHelp (or similar)
@@ -87,6 +87,22 @@ your .his .rep .cpm .bkp -----------parsers----------------+          |
   rules, workflows, build mode, input language, example library, GUI paths, file types, help map).
 - `skills/aspen-plus/templates/`: a BUILD.md plan template and starting input files.
 - `skills/aspen-plus/scripts/fw.py`: standard-library Python, no network access.
+
+## Commands
+
+Run `python skills/aspen-plus/scripts/fw.py <command> -h` for the options of each.
+
+| Command | Purpose |
+|---|---|
+| `setup`, `status` | register help, library and simulation folders; show index state |
+| `help-index`, `help-search`, `help-read`, `help-toc` | build and query the local help index |
+| `docs-index`, `docs-search`, `docs-read`, `docs-list` | your PDFs and notes |
+| `sim-scan` | model folders: versions, run status, stale or missing exports |
+| `his`, `his-diff` | run digest with message IDs, convergence, block results, Fortran lint; input diff |
+| `rep`, `cpm`, `bkp` | report, Control Panel and backup readers |
+| `examples-index`, `examples-search`, `examples-show`, `examples-list` | the Aspen Plus example library (or any folder of models) |
+| `inp-check`, `inp-find`, `comp-find`, `his --inp` | write and check input files: lint, syntax from your own runs, databank aliases from the examples, a run's input as .inp |
+| `check` | mass, element and charge balances, apparent/true basis, KPI expressions from a .rep or a pasted stream table |
 
 ## Privacy
 

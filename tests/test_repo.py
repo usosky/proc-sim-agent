@@ -1,11 +1,11 @@
-"""Repository consistency: manifests, SKILL.md, references, privacy of tracked files."""
+"""Repository consistency: layout, manifests, one version, SKILL.md, privacy of tracked files."""
 import json
 import re
 
-from conftest import ROOT
+from conftest import ROOT, SKILL_DIR
 
-PLUGIN = ROOT / "plugins" / "aspen-plus"
-SKILL = PLUGIN / "skills" / "aspen-plus" / "SKILL.md"
+SKILL = SKILL_DIR / "SKILL.md"
+SCHEMA = "https://agent-plugins.org/schemas/1.0.0/plugin.schema.json"
 
 
 def _frontmatter(path):
@@ -14,23 +14,55 @@ def _frontmatter(path):
     assert m, f"{path} has no frontmatter"
     fm = {}
     for line in m.group(1).splitlines():
+        if line.startswith((" ", "\t")) or not line.strip():
+            continue                                   # nested keys (metadata) are checked elsewhere
         k, v = line.split(":", 1)
         fm[k.strip()] = v.strip()
     return fm, text[m.end():]
 
 
-def test_manifests_agree():
-    market = json.loads((ROOT / ".claude-plugin" / "marketplace.json").read_text(encoding="utf-8"))
-    plugin = json.loads((PLUGIN / ".claude-plugin" / "plugin.json").read_text(encoding="utf-8"))
-    entry = next(p for p in market["plugins"] if p["name"] == plugin["name"])
-    assert entry["source"] == "./plugins/aspen-plus"
-    # the version lives only in plugin.json (Claude Code docs: don't set it in both places)
-    assert "version" not in entry
+def _json(*parts):
+    return json.loads(ROOT.joinpath(*parts).read_text(encoding="utf-8"))
+
+
+def test_layout():
+    """One copy of the skill, at skills/aspen-plus; tests and evals outside it."""
+    assert SKILL.is_file()
+    assert not (ROOT / "plugins").exists(), "the old plugins/ tree must be gone"
+    assert not (SKILL_DIR / "tests").exists() and not (SKILL_DIR / "evals").exists()
+    # Claude Code reads .claude-plugin/plugin.json; with "strict": false it would conflict
+    # with the marketplace entry's skills list, so there must be none anywhere
+    assert not list(ROOT.rglob(".claude-plugin/plugin.json"))
+
+
+def test_agent_plugins_manifest():
+    plugin = _json("plugin.json")
+    assert plugin["$schema"] == SCHEMA
+    assert plugin["name"] == "proc-sim-agent" and plugin["license"] == "MIT"
+
+
+def test_claude_marketplace_entry():
+    market = _json(".claude-plugin", "marketplace.json")
+    assert market["name"] == "proc-sim-agent"
+    entry = next(p for p in market["plugins"] if p["name"] == "aspen-plus")
+    assert entry["source"] == "./" and entry["strict"] is False
+    assert entry["skills"] == ["./skills/aspen-plus"]
+
+
+def test_one_version_everywhere():
+    """plugin.json, the marketplace entry (Claude Code reads the version there, as the entry is
+    the manifest), fwlib.__version__, CITATION.cff and .zenodo.json carry the same version."""
     from fwlib import __version__
-    assert __version__ == plugin["version"]
-    cff = (ROOT / "CITATION.cff").read_text(encoding="utf-8")
-    assert f"version: {plugin['version']}" in cff
-    zen = json.loads((ROOT / ".zenodo.json").read_text(encoding="utf-8"))
+    version = _json("plugin.json")["version"]
+    entry = next(p for p in _json(".claude-plugin", "marketplace.json")["plugins"] if p["name"] == "aspen-plus")
+    assert entry["version"] == version
+    assert __version__ == version
+    assert re.search(rf"^version: {re.escape(version)}$", (ROOT / "CITATION.cff").read_text(encoding="utf-8"), re.M)
+    assert _json(".zenodo.json")["version"] == version
+
+
+def test_zenodo_funding():
+    zen = _json(".zenodo.json")
     assert zen["license"] == "MIT" and zen["grants"][0]["id"].endswith("101177949")
 
 
@@ -81,8 +113,10 @@ def test_gitignore_does_not_hide_shipped_files():
     inside = subprocess.run(["git", "rev-parse", "--is-inside-work-tree"], cwd=ROOT, capture_output=True, text=True)
     if inside.returncode != 0:
         pytest.skip("not a git checkout")
-    shipped = [str(p.relative_to(ROOT)) for d in ("plugins", "tools", "tests", "examples", "docs", ".claude-plugin")
+    shipped = [str(p.relative_to(ROOT)) for d in ("skills", "evals", "tools", "tests", "examples", "docs",
+                                                  ".claude-plugin")
                for p in (ROOT / d).rglob("*") if p.is_file() and "__pycache__" not in p.parts]
+    shipped.append("plugin.json")
     res = subprocess.run(["git", "check-ignore", "--no-index", "--stdin"], cwd=ROOT, input="\n".join(shipped),
                          capture_output=True, text=True)
     assert res.stdout.strip() == "", f"ignored by .gitignore: {res.stdout}"
