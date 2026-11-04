@@ -1,0 +1,4 @@
+[
+  {"type": "regex", "pattern": "data card|\\|[^\\n]*source[^\\n]*\\|[^\\n]*status", "flags": "i"},
+  {"type": "regex", "pattern": "gate|v1\\.00", "flags": "i"}
+]

@@ -5,7 +5,7 @@
 - [ ] README shows the AuSpire logo and the EU emblem (`assets/`), and the acknowledgment text is
       unchanged (EU rules: https://commission.europa.eu/funding-and-tenders/managing-your-project/communicating-and-raising-eu-visibility_en).
 - [ ] `python -m pytest -q` passes; `claude plugin validate --strict .` and
-      `claude plugin validate --strict plugins/aspen-plus` pass.
+      the portability test (`tests/test_portability.py`) pass.
 - [ ] `python tools/scrub_aspen_files.py --check examples` reports nothing.
 - [ ] No help files, indexes or private models in the tree: `git status`, `.gitignore`.
 
@@ -48,10 +48,12 @@ Without the secrets the workflow skips itself.
 
 ## Releases
 
-- Bump `version` in `plugins/aspen-plus/.claude-plugin/plugin.json` (and `__version__` in
-  `fwlib/__init__.py`); the marketplace entry carries no version. Add a `CHANGELOG.md` entry;
-  update `date-released` and `version` in `CITATION.cff`; publish a GitHub release `vX.Y.Z`
-  (Zenodo adds a new version under the same concept DOI).
+- Set the new `version` in `plugin.json`, in the marketplace entry (`.claude-plugin/marketplace.json`:
+  with no Claude plugin manifest, the entry is the manifest and Claude Code reads the version
+  there), in SKILL.md `metadata.version`, `fwlib/__init__.py`, `CITATION.cff` (with
+  `date-released`) and `.zenodo.json`; `tests/test_repo.py` checks that they agree. Add a
+  `CHANGELOG.md` entry; publish a GitHub release `vX.Y.Z` (Zenodo adds a new version under the
+  same concept DOI).
 - Users update with `/plugin marketplace update proc-sim-agent` or
   `claude plugin update aspen-plus@proc-sim-agent`, or turn on auto-update for the marketplace in
   `/plugin` > Marketplaces.

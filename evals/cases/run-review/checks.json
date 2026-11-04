@@ -1,0 +1,5 @@
+[
+  {"type": "regex", "pattern": "\\|\\s*Item\\s*\\|\\s*Expected[^|\\n]*\\|\\s*Model[^|\\n]*\\|\\s*Verdict[^|\\n]*\\|", "flags": "i"},
+  {"type": "regex", "pattern": "Product temperature[^\\n]*fail", "flags": "i"},
+  {"type": "regex", "pattern": "Make-up water[^\\n]*missing", "flags": "i"}
+]

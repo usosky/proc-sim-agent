@@ -1,0 +1,96 @@
+ PLATFORM: WIN-X64                                       OCTOBER 2, 2026
+ VERSION: 41.0   Build 609                               TUESDAY
+ INSTALLATION:                                           11:02:44 P.M.
+
+ ASPEN PLUS   PLAT: WIN-X64   VER: 41.0                   03/03/2026  PAGE 1
+
+                              RUN CONTROL SECTION
+
+ RUN CONTROL INFORMATION
+ -----------------------
+
+ THIS COPY OF ASPEN PLUS LICENSED TO [removed]
+
+ TYPE OF RUN: NEW
+
+ INPUT FILE NAME: _0003ynx.inm
+ CALLING PROGRAM NAME:          apmain
+ LOCATED IN: [removed]
+
+ SIMULATION REQUESTED FOR ENTIRE FLOWSHEET
+ ASPEN PLUS   PLAT: WIN-X64   VER: 41.0                   03/03/2026  PAGE 2
+
+                               FLOWSHEET SECTION
+
+   TEAR STREAM SUMMARY
+   ===================
+
+   STREAM    VARIABLE         MAXIMUM      MAX. ERR.    ABSOLUTE          CONV
+   ID        ID               ERR/TOL      RELATIVE     ERROR       STAT  BLOCK
+   ------    --------         --------     -------      ---------   ----  -----
+   RECYCLE  CO2 MOLEFLOW       0.5000       0.5000E-04   0.1000E-04  #    $OLVER01
+
+   #  = CONVERGED
+   *  = NOT CONVERGED
+
+ OVERALL FLOWSHEET BALANCE
+ -------------------------
+
+                      ***  MASS AND ENERGY BALANCE  ***
+                              IN          OUT       GENERATION   RELATIVE DIFF.
+    TOTAL BALANCE
+       MOLE(KMOL/HR )         100.000       100.000       0.00000       0.00000
+       MASS(KG/HR   )         2823.40       2823.40                     0.161E-15
+       ENTHALPY(CAL/SEC )    -0.325000E+07 -0.326234E+07                0.379E-02
+ ASPEN PLUS   PLAT: WIN-X64   VER: 41.0                   03/03/2026  PAGE 3
+
+                              U-O-S BLOCK SECTION
+
+ BLOCK:  R1       MODEL: RSTOIC
+ ------------------------------
+   INLET STREAM:          S1
+   OUTLET STREAM:         S2
+                      ***  MASS AND ENERGY BALANCE  ***
+                                    IN              OUT        RELATIVE DIFF.
+    TOTAL BALANCE
+       MOLE(KMOL/HR )            130.000         130.000         0.00000
+
+                           ***  RESULTS  ***
+   OUTLET TEMPERATURE    C                                      40.000
+   OUTLET PRESSURE       BAR                                     1.0133
+   HEAT DUTY             CAL/SEC                           -12,345.6
+   VAPOR FRACTION                                                1.0000
+ ASPEN PLUS   PLAT: WIN-X64   VER: 41.0                   03/03/2026  PAGE 4
+
+                                 STREAM SECTION
+
+ FEED PROD
+ ---------
+
+ STREAM ID               FEED       PROD
+ FROM :                  ----       SPLIT
+ TO   :                  MIX1       ----
+
+ SUBSTREAM: MIXED
+ PHASE:                  VAPOR      VAPOR
+ COMPONENTS: KMOL/HR
+   CO2                   10.0000     1.0000
+   H2O                    5.0000    14.0000
+   N2                    85.0000    85.0000
+ TOTAL FLOW:
+   KMOL/HR              100.0000   100.0000
+   KG/HR               2823.4000  2823.4000
+ TEMPERATURE C            25.0000    40.0000
+ PRESSURE    BAR           1.0133     1.0133
+ ASPEN PLUS   PLAT: WIN-X64   VER: 41.0                   03/03/2026  PAGE 5
+
+                             PROBLEM STATUS SECTION
+
+ BLOCK STATUS
+ ------------
+
+ ****************************************************************************
+ *                                                                          *
+ * Calculations were completed normally                                     *
+ *                                                                          *
+ ****************************************************************************

@@ -1,0 +1,4 @@
+[
+  {"type": "regex", "pattern": "older|stale", "flags": "i"},
+  {"type": "regex", "pattern": "Export\\s*>\\s*Report", "flags": "i"}
+]

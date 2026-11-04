@@ -1,0 +1,148 @@
+{
+  "agent": "claude",
+  "version": "2.1.288 (Claude Code)",
+  "date": "2026-11-04",
+  "results": [
+    {
+      "case": "build-from-paper",
+      "run": 1,
+      "returncode": 0,
+      "seconds": 43.0,
+      "skill_loaded": true,
+      "skill_signal": "pattern",
+      "checks": [
+        {
+          "check": "regex data card|\\|[^\\n]*source[^\\n]*\\|[^\\n]*status",
+          "ok": true
+        },
+        {
+          "check": "regex gate|v1\\.00",
+          "ok": true
+        }
+      ],
+      "rubric": {
+        "verdict": "PASS",
+        "reason": "VERDICT: PASS\n\nThe answer sets up the job before any click paths. It has a strong data card: each value has a source and a status, Fig. 5 is marked \"data (plot)\" with a wider tolerance, and the missing heat losses go in as assumptions with a sensitivity run. It plans equilibrium-stage columns first and rate-based ones later, works out expected values with tolerances before each run, steps through versions with gates where the paper's case must reproduce at v1.00 before the plant basis, and asks before writing files into the user's folders. It misses two points: it never states the model scope or names the hand-over stream, and it doesn't say outright that the frozen v2.00 must not be edited or that each version holds only one change, though neither gap is serious enough to fail it."
+      },
+      "pass": true
+    },
+    {
+      "case": "build-from-paper",
+      "run": 2,
+      "returncode": 0,
+      "seconds": 44.1,
+      "skill_loaded": true,
+      "skill_signal": "pattern",
+      "checks": [
+        {
+          "check": "regex data card|\\|[^\\n]*source[^\\n]*\\|[^\\n]*status",
+          "ok": true
+        },
+        {
+          "check": "regex gate|v1\\.00",
+          "ok": true
+        }
+      ],
+      "rubric": {
+        "verdict": "PASS",
+        "reason": "VERDICT: PASS\n\nThe answer sets the scope before any click paths, including the KPIs as formulas and the product stream as the hand-over. Its data card gives each value a source and a status: Fig. 5 is marked as read from a plot, and the heat losses are listed as assumptions that become data requests. It explains equilibrium against rate-based stages and notes that solvent degradation stays outside Aspen, uses one-change versions with a v1.00 gate that reproduces the paper before the plant basis, invents no paper numbers and asks before writing files. It is weaker in two places: it gives no independent expected values before the first run (only VLE data and Fig. 5 tolerances, not a hand estimate such as a typical reboiler duty for MEA), and it never says a frozen version must not be edited."
+      },
+      "pass": true
+    },
+    {
+      "case": "build-mode-start",
+      "run": 1,
+      "returncode": 0,
+      "seconds": 70.0,
+      "skill_loaded": true,
+      "skill_signal": "pattern",
+      "checks": [
+        {
+          "check": "skill_loaded",
+          "ok": true,
+          "detail": "pattern"
+        }
+      ],
+      "rubric": {
+        "verdict": "PASS",
+        "reason": "VERDICT: PASS\n\nThe answer frames the job well. It turns the 50 ppmw target into about 1 kg/h of NH3 left in the bottoms (\u226599.75 % removal), sets out the feed basis, and lists the open questions (steam type, pressure, CO2 and so on) while making clear that v0.01 can go ahead without the answers. It builds in stages with a check at each one. The first stage sets up ELECNRTL with the true-component approach (and explains why apparent components are wrong), Elec Wizard chemistry, and NH3 and H2S as Henry components, then checks the property model against a hand speciation that I verified (pH \u2248 9.7). After that it moves to a feed stream, a Flash2 and a short RadFrac before the sensitivity and the design spec. Step 1 has concrete click paths, an expected-value table with tolerances, troubleshooting tips and a clear list of what to send back, and nothing on the FAIL list applies."
+      },
+      "pass": true
+    },
+    {
+      "case": "build-mode-start",
+      "run": 2,
+      "returncode": 0,
+      "seconds": 107.2,
+      "skill_loaded": true,
+      "skill_signal": "pattern",
+      "checks": [
+        {
+          "check": "skill_loaded",
+          "ok": true,
+          "detail": "pattern"
+        }
+      ],
+      "rubric": {
+        "verdict": "PASS",
+        "reason": "VERDICT: PASS\n\nThe answer sets the KPI as NH3 below 50 ppmw on an apparent basis and sets secondary targets. It labels its assumed basis (feed 40 \u00b0C and 3 bar, METCBAR units, hand-calculated check values) and asks for the missing data, including CO2, chloride and other fixed-ammonia anions, steam type, column pressure and tray count. The build is staged with a pass criterion for each version. v0.01 covers components and the property method: ELECNRTL, the Electrolyte Wizard chemistry for the four ionisation reactions, the true-component approach and NH3/H2S as Henry components. It checks them with a single-Heater feed pH test against expected values and tolerances before a short 10-stage RadFrac is added. v0.01 also gives concrete click paths and asks the user to send back the `.bkp`, the `.rep` and the `.cpm` if the run fails. It meets every requirement and triggers none of the FAIL conditions: there is no complete column model without checkpoints, no apparent-component approach, and no skipped property-model check."
+      },
+      "pass": true
+    },
+    {
+      "case": "run-review",
+      "run": 1,
+      "returncode": 0,
+      "seconds": 53.5,
+      "skill_loaded": true,
+      "skill_signal": "pattern",
+      "checks": [
+        {
+          "check": "regex \\|\\s*Item\\s*\\|\\s*Expected[^|\\n]*\\|\\s*Model[^|\\n]*\\|\\s*Verdict[^|\\n]*\\|",
+          "ok": true
+        },
+        {
+          "check": "regex Product temperature[^\\n]*fail",
+          "ok": true
+        },
+        {
+          "check": "regex Make-up water[^\\n]*missing",
+          "ok": true
+        }
+      ],
+      "rubric": {
+        "verdict": "PASS",
+        "reason": "VERDICT: PASS\n\nThe answer meets the rubric's main points. It read the folder's files itself and matched the .his to the .rep by their timestamps (38 s apart). Its table has the product temperature failing (40 C against 45 C), the MAKEUP stream missing, and the mass balance, CO2 and R1 duty items passing. It also says what to fix (the temperature setting and adding the MAKEUP feed) and what to send next time (.bkp, .his and .rep from the same run).\n\nThe answer has weak spots. It says \"two fail outright\" when one item fails and one is missing. It also adds a lot that I couldn't check because the grading directory was empty: the calculator faults, the element and mass-flow numbers, and the duty mismatch. These cast doubt on items the rubric counts as clean passes. If any of those values are not in the files, this would be a FAIL for inventing values."
+      },
+      "pass": true
+    },
+    {
+      "case": "run-review",
+      "run": 2,
+      "returncode": 0,
+      "seconds": 50.4,
+      "skill_loaded": true,
+      "skill_signal": "pattern",
+      "checks": [
+        {
+          "check": "regex \\|\\s*Item\\s*\\|\\s*Expected[^|\\n]*\\|\\s*Model[^|\\n]*\\|\\s*Verdict[^|\\n]*\\|",
+          "ok": true
+        },
+        {
+          "check": "regex Product temperature[^\\n]*fail",
+          "ok": true
+        },
+        {
+          "check": "regex Make-up water[^\\n]*missing",
+          "ok": true
+        }
+      ],
+      "rubric": {
+        "verdict": "PASS",
+        "reason": "VERDICT: PASS\n\nThe answer read the v0.04 files itself and confirmed the .his and .rep come from the same run. It gave the per-item table with the correct verdicts: product temperature fails (40 \u00b0C against 45 \u00b0C), make-up water is missing (no MAKEUP stream), and mass balance, CO2 and R1 duty pass. It also said what to fix (R1's temperature setting, adding and connecting MAKEUP) and what to send next time (.bkp, .rep, .his and a note of the steps). One weakness: it shows matching 10:15 timestamps instead of explaining that the .his is stamped at the start and the .rep 38 s later. Its extra claims (trace duty values, CAP calculator bugs) couldn't be checked because the grading folder had no files, and they don't change the required verdicts."
+      },
+      "pass": true
+    }
+  ],
+  "triggers": null
+}

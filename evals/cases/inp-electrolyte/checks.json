@@ -1,0 +1,8 @@
+[
+  {
+    "type": "file_contains",
+    "path": "caustic_absorber.inp",
+    "pattern": "TRUE-COMPS\\s*=\\s*YES",
+    "flags": "i"
+  }
+]

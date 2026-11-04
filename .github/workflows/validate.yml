@@ -16,7 +16,7 @@ jobs:
       fail-fast: false
       matrix:
         os: [ubuntu-latest, windows-latest]
-        python: ["3.9", "3.12"]
+        python: ["3.12"]
         include:
           - os: ubuntu-22.04   # oldest supported Python
             python: "3.8"
@@ -25,24 +25,107 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: ${{ matrix.python }}
+      # before any optional package is installed: every command's -h must work without them
+      - name: fw <command> -h (bash)
+        if: runner.os != 'Windows'
+        shell: bash
+        run: |
+          for c in $(python -c "import sys; sys.path.insert(0, 'skills/aspen-plus/scripts'); import fw; print(' '.join(fw.commands()))"); do
+            python skills/aspen-plus/scripts/fw.py "$c" -h > /dev/null || { echo "fw $c -h failed"; exit 1; }
+          done
+      - name: fw <command> -h (PowerShell)
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          $cmds = python -c "import sys; sys.path.insert(0, 'skills/aspen-plus/scripts'); import fw; print(' '.join(fw.commands()))"
+          foreach ($c in $cmds.Split(' ')) {
+            python skills/aspen-plus/scripts/fw.py $c -h | Out-Null
+            if ($LASTEXITCODE -ne 0) { throw "fw $c -h failed" }
+          }
+      - name: Install into a temporary user profile (PowerShell)
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          $env:USERPROFILE = Join-Path $env:RUNNER_TEMP "profile"
+          New-Item -ItemType Directory -Force $env:USERPROFILE | Out-Null
+          python tools/install_skill.py --target claude
+          python tools/install_skill.py --target copilot
+          python tools/install_skill.py --target agents
+          foreach ($d in ".claude", ".copilot", ".agents") {
+            $md = Join-Path $env:USERPROFILE "$d\skills\aspen-plus\SKILL.md"
+            if (-not (Test-Path $md)) { throw "not installed: $md" }
+          }
+          $skill = Join-Path $env:USERPROFILE ".claude\skills\aspen-plus"
+          python "$skill\scripts\fw.py" status
+          if ($LASTEXITCODE -ne 0) { throw "installed copy does not run" }
+          python tools/install_skill.py --target claude --uninstall
+      - name: gfortran for the fortran-check tests
+        if: runner.os == 'Linux'
+        run: which gfortran || (sudo apt-get update && sudo apt-get install -y gfortran)
       - run: python -m pip install pytest pypdf
-      - run: python -m pytest -q
+      - name: Portability (Agent Skills format, commands for PowerShell and Git Bash)
+        run: python -m pytest -q tests/test_portability.py
+      - name: All tests
+        run: python -m pytest -q
 
-  plugin:
-    name: plugin manifests and privacy
+  skill:
+    name: skill format (skills-ref) and description
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
         with:
           python-version: "3.12"
+      - name: skills-ref validate (agentskills/agentskills at a pinned commit)
+        run: |
+          python -m pip install "git+https://github.com/agentskills/agentskills@69ef37e9424c0a7ea9dd2293b559e43ec8176379#subdirectory=skills-ref"
+          skills-ref validate skills/aspen-plus
+      - name: Description length (spec 1024, our budget 800)
+        run: |
+          python - <<'EOF'
+          import sys
+          from pathlib import Path
+          sys.path.insert(0, "tests")
+          import skillmeta
+          skill = Path("skills/aspen-plus/SKILL.md")
+          fm, body, _ = skillmeta.read(skill)
+          d = fm["description"]
+          lines = len(skill.read_text(encoding="utf-8").splitlines())
+          print(f"description: {len(d)} characters; SKILL.md: {lines} lines, about {len(body) // 4} tokens")
+          assert len(d) <= 800, "description over 800 characters"
+          EOF
+
+  plugin:
+    name: manifests and privacy
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: plugin.json (schema check when the schema can be downloaded)
+        run: |
+          python -m pip install jsonschema
+          python - <<'EOF'
+          import json, urllib.request
+          import jsonschema
+          data = json.load(open("plugin.json", encoding="utf-8"))
+          assert data["name"] == "proc-sim-agent" and data["version"]
+          try:
+              with urllib.request.urlopen(data["$schema"], timeout=30) as r:
+                  schema = json.load(r)
+          except Exception as e:
+              print(f"schema not downloadable ({e}); checked the JSON only")
+              raise SystemExit(0)
+          jsonschema.validate(data, schema)
+          print("plugin.json matches", data["$schema"])
+          EOF
       - uses: actions/setup-node@v4
         with:
           node-version: "22"
-      - name: Validate marketplace and plugin
+      - name: Marketplace (Claude Code)
         run: |
           npm install -g @anthropic-ai/claude-code@2.1.288
           claude plugin validate --strict .
-          claude plugin validate --strict plugins/aspen-plus
-      - name: Example files contain no private data
-        run: python tools/scrub_aspen_files.py --check examples
+      - name: Example and eval files contain no private data
+        run: python tools/scrub_aspen_files.py --check examples evals/cases

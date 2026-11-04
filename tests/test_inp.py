@@ -121,3 +121,48 @@ def test_joule_input_extracts_and_checks():
     unused = [m for m in _msgs(res, "warning") if "no PROPERTIES statement uses it" in m]
     assert len(unused) == 2
     assert len(res["summary"]["blocks"]) == 18
+
+
+def test_inp_diff_by_paragraph():
+    a = samples.INP_FLASH
+    b = (a.replace("BLOCK FL1 FLASH2\n    PARAM TEMP=80. PRES=1.", "BLOCK FL1 FLASH2\n    PARAM TEMP=75. PRES=1.")
+          .replace("PROPERTIES NRTL", "PROPERTIES UNIQUAC")
+          .replace("STREAM-REPOR MOLEFLOW", "BLOCK HX2 HEATER\n    PARAM TEMP=30. PRES=0\n\nSTREAM-REPOR MOLEFLOW"))
+    res = inp.diff_paragraphs(a, b)
+    assert [c["paragraph"] for c in res["changed"]] == ["PROPERTIES", "BLOCK FL1"]
+    assert [p["paragraph"] for p in res["added"]] == ["BLOCK HX2"] and not res["removed"]
+    md = inp.render_diff(res, "a.inp", "b.inp")
+    assert "-PARAM TEMP=80. PRES=1.\n+PARAM TEMP=75. PRES=1." in md
+    assert "2 paragraphs changed, 1 added, 0 removed" in md
+    assert "No differences" in inp.render_diff(inp.diff_paragraphs(a, a + "\n; a comment\n"), "a", "a")
+
+
+def test_inp_diff_cli_on_two_his(tmp_path, run_files):
+    import json
+    import os
+    import subprocess
+    import sys
+    env = dict(os.environ, PROC_SIM_AGENT_HOME=str(tmp_path / "home"), PYTHONIOENCODING="utf-8")
+    p = subprocess.run([sys.executable, str(SCRIPTS / "fw.py"), "inp-diff", str(run_files["his"]),
+                        str(run_files["his_v2"]), "--json"], capture_output=True, text=True, encoding="utf-8",
+                       env=env, timeout=120)
+    assert p.returncode == 0, p.stderr
+    res = json.loads(p.stdout)
+    assert [c["paragraph"] for c in res["changed"]] == ["BLOCK SPLIT"]
+    assert "+FRAC RECYCLE 0.4" in res["changed"][0]["diff"]
+
+
+def test_route_a_heater_added_to_an_exported_model():
+    """docs/live-tests.md T4: one Heater with a new feed, its line inside the existing FLOWSHEET."""
+    base = samples.INP_FLASH
+    i = base.index("FLOWSHEET\n") + len("FLOWSHEET\n")
+    new = (base[:i] + "    BLOCK HX9 IN=T4-IN OUT=T4-OUT\n" + base[i:] +
+           "\nSTREAM T4-IN\n    SUBSTREAM MIXED TEMP=25. <C> PRES=1. <bar> MOLE-FLOW=10. <kmol/hr>\n"
+           "    MOLE-FRAC WATER 1.\n\nBLOCK HX9 HEATER\n    PARAM TEMP=40. <C> PRES=0.\n")
+    assert inp.check(new)["counts"]["error"] == 0 and inp.check(new)["counts"]["warning"] == 0
+    res = inp.diff_paragraphs(base, new)
+    assert [c["paragraph"] for c in res["changed"]] == ["FLOWSHEET"]
+    assert [a["paragraph"] for a in res["added"]] == ["STREAM T4-IN", "BLOCK HX9"]
+    assert "1 paragraph changed, 2 added" in inp.render_diff(res, "base.inp", "new.inp")
+    second = new.replace("BLOCK HX9 IN=T4-IN OUT=T4-OUT\n", "") + "\nFLOWSHEET\n    BLOCK HX9 IN=T4-IN OUT=T4-OUT\n"
+    assert any(c["paragraph"] == "FLOWSHEET #2" for c in inp.diff_paragraphs(base, second)["added"])

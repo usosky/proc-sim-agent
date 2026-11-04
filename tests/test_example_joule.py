@@ -67,6 +67,20 @@ def test_sim_scan_links_lowercase_report():
     assert joule[0]["release"] == "V12.1 file, run in V15"
 
 
+def test_run_stamps_of_the_published_files():
+    """The .bkp holds the 2023 run of the paper; the .his, .rep and .cpm come from a V15 re-run."""
+    from fwlib import freshness
+    res = freshness.check_case(EXAMPLE / "FINAL_FAprocess_50kton_V8_ForEvaluation.his")
+    files = res["files"]
+    assert res["stale"] == ["FINAL_FAprocess_50kton_V8_ForEvaluation.bkp"]
+    assert files["FINAL_FAprocess_50kton_V8_ForEvaluation.bkp"]["time"] == "2023-09-28 12:45:10"
+    assert files["FINAL_FAprocess_50kton_V8_ForEvaluation.his"]["time"] == "2026-10-02 23:02:41"
+    assert files["final_faprocess_50kton_v8_forevaluation.rep"]["time"] == "2026-10-02 23:02:44"
+    assert files["FINAL_FAprocess_50kton_V8_ForEvaluation.cpm"]["event"] == "Report exported"
+    assert {files[n]["run_id"] for n in files if n.endswith((".his", ".rep"))} == {"_0003ynx"}
+    assert files["FINAL_FAprocess_50kton_V8_ForEvaluation.bkp"]["run_id"] == "_4454yhq"
+
+
 def test_check_against_si_script():
     out = subprocess.run([sys.executable, str(EXAMPLE / "check_against_si.py")], cwd=ROOT,
                          capture_output=True, text=True, timeout=120)

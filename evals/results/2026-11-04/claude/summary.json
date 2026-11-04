@@ -1,0 +1,384 @@
+{
+  "agent": "claude",
+  "version": "2.1.288 (Claude Code)",
+  "date": "2026-11-04",
+  "results": [
+    {
+      "case": "automation-sweep",
+      "run": 1,
+      "returncode": 0,
+      "seconds": 29.6,
+      "skill_loaded": true,
+      "skill_signal": "pattern",
+      "checks": [
+        {
+          "check": "regex com-sweep|com-check",
+          "ok": true
+        }
+      ],
+      "rubric": {
+        "verdict": "PASS",
+        "reason": "VERDICT: PASS\n\nThe answer meets the rubric. It runs `com-check` first and gives the `--start` command for the Aspen PC. It uses `com-tree` and `com-get` to find the lean-loading and reboiler-duty paths rather than relying on its guesses, and asks the user to note the units each node shows. It runs the sweep with `com-sweep` on copies, with `--out` set to a new folder outside `v2.01`, so the original `.bkp` is never edited or saved. It reports no duties: it says plainly that automation isn't available on its Linux session and gives the exact commands to run on Windows. The answer never says Aspen is closed afterwards, but it wrote no script of its own and relies on the skill's `com-sweep` command to handle that, so no fail condition is triggered."
+      },
+      "pass": true
+    },
+    {
+      "case": "build-from-paper",
+      "run": 1,
+      "returncode": 0,
+      "seconds": 42.5,
+      "skill_loaded": true,
+      "skill_signal": "pattern",
+      "checks": [
+        {
+          "check": "regex data card",
+          "ok": false
+        },
+        {
+          "check": "regex gate|v1\\.00",
+          "ok": true
+        }
+      ],
+      "rubric": {
+        "verdict": "PASS",
+        "reason": "VERDICT: PASS\n\nThe answer frames the job before any click paths, and it covers most of the rubric:\n- **Scope and boundary:** it sets the boundary, names the hand-over stream (the CO\u2082 product leaving the stripper condenser) and asks whether the direct-contact cooler or compression is part of the unit.\n- **Data card:** every value has a source and a status, Fig. 5 is marked as digitised from a plot, and the missing heat losses are declared assumptions that become questions for the authors or sensitivity cases.\n- **Versions and gates:** each version adds one change, v1.00 is a reproduce-the-paper gate against Fig. 5, and the plant's flue gas comes in only after that gate.\n- **Asking first:** it asks before creating the build guide, `STATUS.md` and the value table, and it invents no values from the paper.\n\nIt is weaker in three places. Equilibrium against rate-based stages is mentioned only in passing, with little on what Aspen cannot represent. The independent check is promised (`expected.csv`) but no expected values or tolerances are given yet, apart from the \u00b15 % gate on duty. It never says a frozen version must not be edited."
+      },
+      "pass": false
+    },
+    {
+      "case": "build-mode-start",
+      "run": 1,
+      "returncode": 0,
+      "seconds": 41.0,
+      "skill_loaded": true,
+      "skill_signal": "pattern",
+      "checks": [
+        {
+          "check": "skill_loaded",
+          "ok": true,
+          "detail": "pattern"
+        }
+      ],
+      "rubric": {
+        "verdict": "FAIL",
+        "reason": "VERDICT: FAIL\n\nThe answer frames the job well: it states the 50 ppmw NH3 KPI, shows it means 99.75 % recovery, asks for reference data and fixed salts, and proposes a staged roadmap with a check at each version. That roadmap puts ENRTL-RK, the true-component approach and Electrolyte Wizard chemistry first, and runs a Flash2 before RadFrac. However, it never mentions Henry components. It also gives no concrete stage 1 steps: there are no click paths or input file, and it says it will write them only after the user answers seven questions. Finally, it doesn't say what result to send back from stage 1, so the \"concrete first steps\" rubric point is missed."
+      },
+      "pass": false
+    },
+    {
+      "case": "example-lookup",
+      "run": 1,
+      "returncode": 0,
+      "seconds": 24.4,
+      "skill_loaded": true,
+      "skill_signal": "pattern",
+      "checks": [],
+      "rubric": {
+        "verdict": "PASS",
+        "reason": "VERDICT: PASS\n\nThe answer offers the example-library tools (`setup --auto`, `setup --examples` with the GUI\\Examples path, `examples-index`, `examples-search`, `examples-show --chemistry-inp`). It also tells the user where the examples are in Aspen Plus: File > Open > Open Local Example, the Carbon Capture folder and the installation's GUI\\Examples folder. No index was available, and the answer says so plainly. It gives no example file names, chemistry constants or results it did not read; the remark that MEA kinetics are \"usually the carbamate and bicarbonate reactions\" is general knowledge, not an invented detail."
+      },
+      "pass": true
+    },
+    {
+      "case": "export-cpm",
+      "run": 1,
+      "returncode": 0,
+      "seconds": 24.9,
+      "skill_loaded": true,
+      "skill_signal": "pattern",
+      "checks": [
+        {
+          "check": "regex run messages.{0,20}\\.cpm",
+          "ok": true
+        }
+      ],
+      "rubric": {
+        "verdict": "PASS",
+        "reason": "VERDICT: PASS\n\nThe answer gives File > Export with \"Run Messages (*.cpm)\" for the Control Panel messages and File > Export with \"Report Files (*.rep)\" for the report. It tells the user to save both under the same base name, next to the `.bkp` in the version folder. It also correctly mentions the history file (Home > Summary > History) as optional, and none of the core click paths are invented. One small doubt: I'm not sure File > Export offers a `.his` type as the answer says. That's a side detail and doesn't affect the required points."
+      },
+      "pass": true
+    },
+    {
+      "case": "fortran-fixed-form",
+      "run": 1,
+      "returncode": 0,
+      "seconds": 28.4,
+      "skill_loaded": false,
+      "skill_signal": "pattern",
+      "checks": [],
+      "rubric": {
+        "verdict": "PASS",
+        "reason": "VERDICT: PASS\n\nThe answer covers every required point. It explains that statements must start in column 7, that the tab is not allowed, and that the third line is cut off at column 72 and needs a column-6 continuation. It also explains the READ-VAR warning: TR is copied to a local TK, which is then guarded and used. The corrected code is valid fixed-form: no tabs, nothing before column 7, no line past column 72, `&` in column 6, and XOUT is still the export. It also warns that AK, EA, TAU and the pressure-correction terms are never set. The only flaws are minor: it says \"three problems\" but lists five, and it suggests making those constants Imports or setting them in code rather than naming the Define sheet."
+      },
+      "pass": true
+    },
+    {
+      "case": "inp-electrolyte",
+      "run": 1,
+      "returncode": 0,
+      "seconds": 96.2,
+      "skill_loaded": true,
+      "skill_signal": "pattern",
+      "checks": [
+        {
+          "check": "file_contains caustic_absorber.inp TRUE-COMPS\\s*=\\s*YES",
+          "ok": true
+        }
+      ],
+      "rubric": {
+        "verdict": "PASS",
+        "reason": "VERDICT: PASS\n\nThe file `caustic_absorber.inp` was written and has every required part:\n- **Setup:** IN-UNITS and DATABANKS.\n- **Components:** H2O, CO2, N2 and NAOH, plus the ions H3O+, OH-, HCO3-, CO3-2 and NA+. CO2 and N2 are listed as HENRY-COMPS.\n- **Chemistry and properties:** the CHEMISTRY paragraph covers water dissociation, the CO2/bicarbonate and bicarbonate/carbonate equilibria, and NaOH dissociation. ELECNRTL uses that chemistry with TRUE-COMPS=YES.\n- **Column and streams:** the RADFRAC block has CONDENSER=NONE and REBOILER=NONE, with liquid fed on stage 1 and gas on stage 10. Both feed streams give two state variables and flows, and FLOWSHEET connectivity is defined.\n- **Report and answer:** the report includes a PH PROP-SET. The answer explains how to open the file (File > Open, Input Files), says the input checker passed, and lists what to check after the first run.\n\nNone of the FAIL conditions apply: the chemistry is present, the true-component approach is used, the column has no condenser or reboiler, and the layout looks parseable."
+      },
+      "pass": true
+    },
+    {
+      "case": "parameter-init",
+      "run": 1,
+      "returncode": 0,
+      "seconds": 25.7,
+      "skill_loaded": true,
+      "skill_signal": "pattern",
+      "checks": [],
+      "rubric": {
+        "verdict": "PASS",
+        "reason": "VERDICT: PASS\n\nThe answer meets all three rubric points. It explains that KFACT's Init value lived only in the deactivated OLDCALC, so MAKEUP reads Aspen's missing-value placeholder (about 1E35), and that is why the makeup and tear flows blow up. It fixes this by entering the Init on the KFACT row of MAKEUP's Define sheet, then Reinitialize and Run, and it states the general rule to move Parameter Init values to an active block before deactivating one. It mentions tear tolerance only as a side note for a small leftover imbalance, never as the main cause, so the FAIL condition doesn't apply."
+      },
+      "pass": true
+    },
+    {
+      "case": "run-review",
+      "run": 1,
+      "returncode": 0,
+      "seconds": 39.0,
+      "skill_loaded": true,
+      "skill_signal": "pattern",
+      "checks": [
+        {
+          "check": "regex \\|\\s*Item\\s*\\|\\s*Expected\\s*\\|\\s*Model\\s*\\|\\s*Verdict\\s*\\|",
+          "ok": false
+        },
+        {
+          "check": "regex Product temperature[^\\n]*fail",
+          "ok": true
+        },
+        {
+          "check": "regex Make-up water[^\\n]*missing",
+          "ok": true
+        }
+      ],
+      "rubric": {
+        "verdict": "FAIL",
+        "reason": "VERDICT: FAIL\n\nThe answer read the files itself and its table is correct. Product temperature fails (40 \u00b0C against 45 \u00b0C), make-up water is missing (no MAKEUP stream), and mass balance, CO2 and R1 duty pass. Its fixes are also sound: set R1 to 45 \u00b0C, add the MAKEUP feed, and send the .bkp, .rep and .his from the same run. It misses the same-run check: the rubric says the three files come from the same run, but the answer says the .bkp is a different model (an ELECNRTL brine absorber) and the .his is from an earlier run. That is a wrong conclusion about the files, and those details look invented."
+      },
+      "pass": false
+    },
+    {
+      "case": "spec-deleted",
+      "run": 1,
+      "returncode": 0,
+      "seconds": 26.5,
+      "skill_loaded": true,
+      "skill_signal": "pattern",
+      "checks": [
+        {
+          "check": "regex use\\s+import\\s*/\\s*export\\s+variables",
+          "ok": true
+        }
+      ],
+      "rubric": {
+        "verdict": "PASS",
+        "reason": "VERDICT: PASS\n\nThe answer meets every rubric point. It names RECYC's explicit Execute Before SPLIT-1 as the cause, and explains that Aspen then ignores the Import/Export list, sees no path from RECFRAC to the sampled purity, and deletes $OLVER02. Its fix is the right one: switch the Sequence sheet to \"Use import/export variables\" with RECFRAC kept as an Import, then Reinitialize, run and check the computation order, and it says the second error only follows from the first."
+      },
+      "pass": true
+    },
+    {
+      "case": "stale-files",
+      "run": 1,
+      "returncode": 0,
+      "seconds": 33.2,
+      "skill_loaded": true,
+      "skill_signal": "pattern",
+      "checks": [
+        {
+          "check": "regex older|stale",
+          "ok": true
+        },
+        {
+          "check": "regex Export\\s*>\\s*Report",
+          "ok": true
+        }
+      ],
+      "rubric": {
+        "verdict": "PASS",
+        "reason": "VERDICT: PASS\n\nBefore any review, the answer warns that `FA.his` and `fa.rep` come from an older run (2 October) than `FA.bkp` (6 October). So the \"ran without errors\" status and the report numbers may not describe the current model. It dates the files from the run stamps inside them and says the file modification times can't be used. It asks the user to run, save and export the report again (File > Export > Report) before the full review; it lists issues from the old run but labels them as not yet confirmed rather than treating the report numbers as current."
+      },
+      "pass": true
+    },
+    {
+      "case": "ure07-conversion-cap",
+      "run": 1,
+      "returncode": 0,
+      "seconds": 38.6,
+      "skill_loaded": true,
+      "skill_signal": "pattern",
+      "checks": [
+        {
+          "check": "skill_loaded",
+          "ok": true,
+          "detail": "pattern"
+        }
+      ],
+      "rubric": {
+        "verdict": "PASS",
+        "reason": "VERDICT: PASS\n\nThe answer meets all four rubric points. It correctly explains that KIN's conversion needs more H2 than the RStoic feed holds, so RStoic scales the conversion by 0.8721 and H2 leaves with zero flow. It also caps the conversion in KIN at 0.999 \u00d7 FH2/FA, and defines FA and FH2 on the Define sheet as Import variables of type Mole-Flow for the component flows. It gives the click path and fixed-form Fortran lines that start in column 7. It doesn't suggest ignoring the warning, loosening tolerances or adding iterations, and it doesn't invent a different meaning for URE07.3."
+      },
+      "pass": true
+    }
+  ],
+  "triggers": {
+    "rows": [
+      {
+        "id": "radfrac-his",
+        "should": true,
+        "loaded": true,
+        "signal": "pattern",
+        "returncode": 0
+      },
+      {
+        "id": "python-sensitivity",
+        "should": true,
+        "loaded": true,
+        "signal": "pattern",
+        "returncode": 0
+      },
+      {
+        "id": "rep-mass-balance",
+        "should": true,
+        "loaded": true,
+        "signal": "pattern",
+        "returncode": 0
+      },
+      {
+        "id": "spec-message",
+        "should": true,
+        "loaded": true,
+        "signal": "pattern",
+        "returncode": 0
+      },
+      {
+        "id": "export-cpm",
+        "should": true,
+        "loaded": true,
+        "signal": "pattern",
+        "returncode": 0
+      },
+      {
+        "id": "write-inp",
+        "should": true,
+        "loaded": true,
+        "signal": "pattern",
+        "returncode": 0
+      },
+      {
+        "id": "review-versions",
+        "should": true,
+        "loaded": true,
+        "signal": "pattern",
+        "returncode": 0
+      },
+      {
+        "id": "elecnrtl-mea",
+        "should": true,
+        "loaded": true,
+        "signal": "pattern",
+        "returncode": 0
+      },
+      {
+        "id": "calculator-fortran",
+        "should": true,
+        "loaded": true,
+        "signal": "pattern",
+        "returncode": 0
+      },
+      {
+        "id": "compr-power",
+        "should": true,
+        "loaded": true,
+        "signal": "pattern",
+        "returncode": 0
+      },
+      {
+        "id": "hysys-column",
+        "should": false,
+        "loaded": false,
+        "signal": "pattern",
+        "returncode": 0
+      },
+      {
+        "id": "adsorption-ada",
+        "should": false,
+        "loaded": false,
+        "signal": "pattern",
+        "returncode": 0
+      },
+      {
+        "id": "sql-bkp",
+        "should": false,
+        "loaded": false,
+        "signal": "pattern",
+        "returncode": 0
+      },
+      {
+        "id": "coolprop",
+        "should": false,
+        "loaded": false,
+        "signal": "pattern",
+        "returncode": 0
+      },
+      {
+        "id": "aspen-colorado",
+        "should": false,
+        "loaded": false,
+        "signal": "pattern",
+        "returncode": 0
+      },
+      {
+        "id": "matlab-plot",
+        "should": false,
+        "loaded": false,
+        "signal": "pattern",
+        "returncode": 0
+      },
+      {
+        "id": "dwsim-flash",
+        "should": false,
+        "loaded": false,
+        "signal": "pattern",
+        "returncode": 0
+      },
+      {
+        "id": "cfd-fortran",
+        "should": false,
+        "loaded": false,
+        "signal": "pattern",
+        "returncode": 0
+      },
+      {
+        "id": "aspen-trees",
+        "should": false,
+        "loaded": false,
+        "signal": "pattern",
+        "returncode": 0
+      },
+      {
+        "id": "excel-vba",
+        "should": false,
+        "loaded": false,
+        "signal": "pattern",
+        "returncode": 0
+      }
+    ],
+    "precision": 1.0,
+    "recall": 1.0
+  }
+}

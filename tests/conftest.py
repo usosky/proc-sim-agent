@@ -5,7 +5,8 @@ from pathlib import Path
 import pytest
 
 ROOT = Path(__file__).resolve().parents[1]
-SCRIPTS = ROOT / "plugins" / "aspen-plus" / "skills" / "aspen-plus" / "scripts"
+SKILL_DIR = ROOT / "skills" / "aspen-plus"
+SCRIPTS = SKILL_DIR / "scripts"
 EXAMPLE = ROOT / "examples" / "joule-formic-acid"
 sys.path.insert(0, str(SCRIPTS))
 sys.path.insert(0, str(Path(__file__).resolve().parent))
@@ -40,3 +41,5 @@ def run_files(tmp_path):
 
 def pytest_configure(config):
     os.environ.setdefault("PYTHONIOENCODING", "utf-8")
+    config.addinivalue_line("markers", "aspen: needs Windows, pywin32 and a licensed Aspen Plus "
+                                       "(run with PSA_LIVE_ASPEN=1; see docs/live-tests.md)")
