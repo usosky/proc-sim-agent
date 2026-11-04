@@ -14,7 +14,7 @@
    RUN ID : _0003ynx
           1    ;
           2    ;Input file created by Aspen Plus Rel. 41.0 at 10:15:01 Tue Mar 3, 2026
-          3    ;Directory <redacted>   Runid DEMO
+          3    ;Directory [removed]   Runid DEMO
           4    ;
           5
           6    IN-UNITS MET PRESSURE=bar TEMPERATURE=C
