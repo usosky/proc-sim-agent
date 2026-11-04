@@ -1,0 +1,165 @@
+ PLATFORM: WIN-X64                                       MARCH 3, 2026
+ VERSION: 41.0   Build 609                               TUESDAY
+ INSTALLATION:                                           10:15:02 A.M.
+
+ THIS COPY OF ASPEN PLUS LICENSED TO [removed]
+
+ *** INPUT SUMMARY ***
+
+ >>CURRENT RUN
+
+   ORIGINAL RUN                           MARCH 3, 2026
+   10:15:02 A.M.                          TUESDAY
+   INPUT FILE: _1234abc.inm
+   RUN ID : _1234abc
+          1    ;
+          2    ;Input file created by Aspen Plus Rel. 41.0 at 10:15:01 Tue Mar 3, 2026
+          3    ;Directory <redacted>   Runid DEMO
+          4    ;
+          5
+          6    IN-UNITS MET PRESSURE=bar TEMPERATURE=C
+          7
+          8    DATABANKS 'APV150 PURE39'
+          9
+         10    COMPONENTS
+         11        CO2 CO2 /
+         12        H2O H2O /
+         13        N2 N2
+         14
+         15    FLOWSHEET
+         16        BLOCK MIX1 IN=FEED RECYCLE OUT=S1
+         17        BLOCK R1 IN=S1 OUT=S2
+         18        BLOCK SPLIT IN=S2 OUT=PROD RECYCLE
+         19
+         20    PROPERTIES PENG-ROB
+         21
+         22    STREAM FEED
+         23        SUBSTREAM MIXED TEMP=25. PRES=1.01325  &
+         24            MOLE-FLOW=100.
+         25        MOLE-FRAC CO2 0.1 / H2O 0.05 / N2 0.85
+         26
+         27    BLOCK MIX1 MIXER
+         28        PARAM
+         29
+         30    BLOCK SPLIT FSPLIT
+         31        FRAC RECYCLE 0.3
+         32
+         33    BLOCK R1 RSTOIC
+         34        PARAM TEMP=40. PRES=0.
+         35        STOIC 1 MIXED CO2 -1. / H2O 1.
+         36        CONV 1 MIXED CO2 0.9
+         37
+         38    CALCULATOR CAP
+         39        DEFINE FCO2 MOLE-FLOW STREAM=S1 SUBSTREAM=MIXED  &
+         40            COMPONENT=CO2 UOM="kmol/hr"
+         41        DEFINE XCONV BLOCK-VAR BLOCK=R1 VARIABLE=CONV  &
+         42            SENTENCE=CONV ID1=1
+         43        DEFINE TIN STREAM-VAR STREAM=S1 SUBSTREAM=MIXED  &
+         44            VARIABLE=TEMP UOM="K"
+         45        DEFINE FN2 MOLE-FLOW STREAM=S1 SUBSTREAM=MIXED  &
+         46            COMPONENT=N2 UOM="kmol/hr"
+         47    C     cap the conversion at what is available
+         48    F     IF (TIN .LT. 200.0D0) TIN = 298.15D0
+         49    F     XCONV = 0.9D0 * FACTOR
+         50    F     XCONV = XCONV + 0.0D0 * FCO2 * TIN + 0.0D0 * 1.0D0 * 2.0D0 * 3.0D0 * 4.0D0
+         51        READ-VARS FCO2 TIN FN2
+         52        WRITE-VARS XCONV
+         53
+         54    DESIGN-SPEC DS1
+         55        DEFINE FPROD MOLE-FLOW STREAM=PROD SUBSTREAM=MIXED  &
+         56            COMPONENT=CO2 UOM="kmol/hr"
+         57        SPEC "FPROD" TO "1.0"
+         58        TOL-SPEC "0.01"
+         59        VARY BLOCK-VAR BLOCK=SPLIT SENTENCE=FRAC VARIABLE=FRAC  &
+         60            ID1=RECYCLE
+         61        LIMITS "0.1" "0.9"
+         62
+         63    DISABLE
+         64        DESIGN-SPEC DS1
+         65
+ *** INPUT TRANSLATOR MESSAGES ***
+
+  *   WARNING IN PHYSICAL PROPERTY SYSTEM                      (PDATAFAP.1)
+      THE FOLLOWING CONVENTIONAL COMPONENTS WERE NOT IN A DATA BANK.
+      CHECK DATA BANK NAMES FOR SPELLING.
+
+      INFORMATION                                              (PSTOP1AP.1)
+      THERE ARE HENRY COMPONENTS DEFINED IN THIS CASE, THE BINARY DATABANK
+      WILL BE SEARCHED AUTOMATICALLY FOR ANY AVAILABLE HENRY CONSTANTS.
+
+ *** CALCULATION TRACE ***
+
+
+ *** FLOWSHEET ANALYSIS MESSAGES ***
+
+  *   WARNING DURING FLOWSHEET ANALYSIS                        (ADFORT.7)
+      FORTRAN READ-VAR TIN IN FORTRAN BLOCK CAP
+      APPEARS ON THE LEFT-HAND SIDE OF AN ASSIGNMENT STATEMENT.
+
+      BLOCK $OLVER01 (METHOD: WEGSTEIN) HAS BEEN DEFINED TO CONVERGE
+               STREAMS: RECYCLE
+
+      COMPUTATION ORDER FOR THE FLOWSHEET IS:
+      $OLVER01 MIX1 CAP R1 SPLIT
+      (RETURN $OLVER01)
+
+Calculations begin                                                              time      0.10
+
+
+ SIMULATION CALCULATIONS BEGIN                                                    TIME =      0.10
+
+      CONVERGENCE BLOCK $OLVER01  METHOD: WEGSTEIN                                TIME =      0.10
+      ITER   0 For Tear Streams: RECYCLE
+
+      UOS BLOCK MIX1     MODEL: MIXER                                             TIME =      0.10
+      KODE = 2  NTRIAL =   1  T = 298.1500  P =  101325.      V =  1.00000      Q =  0.00000
+
+      CALCULATOR BLOCK CAP                                                        TIME =      0.10
+
+      UOS BLOCK R1       MODEL: RSTOIC                                            TIME =      0.10
+
+  *   WARNING WHILE EXECUTING UNIT OPERATIONS BLOCK: "R1" (MODEL: "RSTOIC")
+                                                               (URE07.3)
+      COMPONENT "CO2" HAS ZERO FLOWRATE IN THE OUTLET STREAM.
+      FRACTIONAL CONVERSION HAS BEEN MODIFIED BY
+      A FACTOR OF "0.9500000"
+      KODE = 2  NTRIAL =   3  T = 313.1500  P =  101325.      V =  1.00000      Q = -12345.6
+
+      UOS BLOCK SPLIT    MODEL: FSPLIT                                            TIME =      0.11
+
+      CONVERGENCE BLOCK $OLVER01  METHOD: WEGSTEIN                                TIME =      0.11
+      ITER   1 For Tear Streams: RECYCLE
+
+  LOOP $OLVER01 ITER    1:   3 VARS NOT CONVERGED, MAX ERR/TOL      120.50        TIME =      0.11
+
+      UOS BLOCK MIX1     MODEL: MIXER                                             TIME =      0.11
+      KODE = 2  NTRIAL =   1  T = 300.1500  P =  101325.      V =  1.00000      Q =  0.00000
+
+      CALCULATOR BLOCK CAP                                                        TIME =      0.11
+
+      UOS BLOCK R1       MODEL: RSTOIC                                            TIME =      0.11
+      KODE = 2  NTRIAL =   3  T = 313.1500  P =  101325.      V =  1.00000      Q = -15000.0
+
+      UOS BLOCK SPLIT    MODEL: FSPLIT                                            TIME =      0.12
+
+      CONVERGENCE BLOCK $OLVER01  METHOD: WEGSTEIN                                TIME =      0.12
+      ITER   2 For Tear Streams: RECYCLE
+
+  LOOP $OLVER01 ITER    2:     *** CONVERGED *** , MAX ERR/TOL      0.5000        TIME =      0.12
+
+ Report Writer entered                                                            Time =      0.13
+
+ Results generated                                                                Time =      0.14
+
+RUN SAVED
+
+
+
+ *** SUMMARY OF ERRORS ***
+
+                  PHYSICAL
+                  PROPERTY  SYSTEM  SIMULATION
+ TERMINAL ERRORS      0        0         0
+   SEVERE ERRORS      0        0         0
+          ERRORS      0        0         0
+        WARNINGS      1        0         1

@@ -1,0 +1,38 @@
+# Command templates for evals/run.py. Every list item is one argument (no shell is used).
+# Placeholders: {prompt} (when prompt_via = "arg") and {workspace}.
+# Flags checked with `claude --help` (Claude Code 2.1.288) and `copilot --help` (GitHub Copilot
+# CLI 1.0.105) in November 2026; check them again after an upgrade.
+#
+# answer:        how the final answer is found in stdout ("claude-stream-json" or "text")
+# skill_pattern: regex on the transcript that shows the skill was loaded; empty = not visible in
+#                that agent's output, and run.py falls back to "the transcript runs scripts/fw.py"
+# install:       --project-kind for tools/install_skill.py (claude = <workspace>/.claude/skills,
+#                which both agents read)
+
+[agents.claude]
+version = ["claude", "--version"]
+command = ["claude", "-p", "--output-format", "stream-json", "--verbose", "--no-session-persistence",
+           "--permission-mode", "dontAsk",
+           "--allowedTools", "Read", "Glob", "Grep", "Write", "Edit", "Skill",
+           "Bash(python *)", "Bash(python3 *)", "Bash(py *)"]
+prompt_via = "stdin"
+answer = "claude-stream-json"
+skill_pattern = '"name"\s*:\s*"Skill".{0,400}aspen-plus'
+install = "claude"
+model_flag = "--model"
+
+[agents.copilot]
+version = ["copilot", "--version"]
+command = ["copilot", "-p", "{prompt}", "-s", "--no-ask-user", "--trust-folder", "--no-color",
+           "--allow-tool=shell(python:*)", "--allow-tool=shell(python3:*)", "--allow-tool=shell(py:*)",
+           "--allow-tool=write"]
+prompt_via = "arg"
+answer = "text"
+skill_pattern = ""
+install = "claude"
+model_flag = "--model"
+
+# The rubric grader: any CLI that answers a prompt on stdin with text.
+[grader]
+command = ["claude", "-p", "--output-format", "text", "--no-session-persistence", "--permission-mode", "dontAsk"]
+prompt_via = "stdin"

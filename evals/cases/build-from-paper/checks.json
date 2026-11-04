@@ -1,0 +1,4 @@
+[
+  {"type": "regex", "pattern": "data card", "flags": "i"},
+  {"type": "regex", "pattern": "gate|v1\\.00", "flags": "i"}
+]

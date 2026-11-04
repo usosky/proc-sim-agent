@@ -1,0 +1,8 @@
+# Expected values of v0.04 (from the check model)
+item,source,expected,tol_abs,tol_rel,unit,note
+Overall mass balance,balance(MASS),0,1e-4,,,relative difference
+CO2 in the product,"flow(PROD, CO2)",1.0,,0.1%,kmol/hr,
+CO2 removed,"1 - flow(PROD, CO2)/flow(FEED, CO2)",0.90,0.005,,,
+R1 duty,"block(R1, HEAT DUTY)",-12345.6,,3%,CAL/SEC,
+Product temperature,temp(PROD),45,0.5,,C,step v0.04 sets 45 C
+Make-up water,"flow(MAKEUP, H2O)",1.5,,1%,kmol/hr,stream added in v0.04

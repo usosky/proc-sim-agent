@@ -29,7 +29,10 @@ HtmlHelp/
 *.mcwebhelp
 
 # Eval results
-evals/results/
+# eval transcripts and outputs stay local; the summaries may be committed
+evals/results/*/*/*
+!evals/results/*/*/summary.md
+!evals/results/*/*/summary.json
 
 # OS / editors
 .DS_Store

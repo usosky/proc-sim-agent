@@ -1,0 +1,26 @@
+{
+  "skill": "aspen-plus",
+  "note": "Prompts that should load the skill (true) and near misses that should not (false). Run with: python evals/run.py --agent <agent> --triggers",
+  "prompts": [
+    {"id": "radfrac-his", "should_trigger": true, "prompt": "My RadFrac column won't converge in Aspen Plus V15. The .his is in this folder: what is going on?"},
+    {"id": "python-sensitivity", "should_trigger": true, "prompt": "Can you drive Aspen Plus from Python to run a sensitivity on my absorber model, three values of the solvent flow?"},
+    {"id": "rep-mass-balance", "should_trigger": true, "prompt": "Check this Aspen .rep export for mass balance problems around the flash drums."},
+    {"id": "spec-message", "should_trigger": true, "prompt": "What does SPEC PURITY VARY VARIABLE DOWNSTREAM OF SAMPLED VARIABLES mean in my Aspen Plus run?"},
+    {"id": "export-cpm", "should_trigger": true, "prompt": "How do I export the control panel messages to a .cpm file in Aspen Plus?"},
+    {"id": "write-inp", "should_trigger": true, "prompt": "Write me an Aspen Plus input file for a methanol-water flash at 1 bar that I can open directly."},
+    {"id": "review-versions", "should_trigger": true, "prompt": "Review my simulation folder with the v1.02 and v1.03 .bkp versions and tell me what changed."},
+    {"id": "elecnrtl-mea", "should_trigger": true, "prompt": "How should I set up ELECNRTL chemistry for CO2 capture with MEA in Aspen Plus?"},
+    {"id": "calculator-fortran", "should_trigger": true, "prompt": "My Aspen Plus calculator block gives a Fortran error when I leave the Calculate sheet. Here is the code."},
+    {"id": "compr-power", "should_trigger": true, "prompt": "The compressor power in my Aspen Plus model is about 20 % above the vendor's number. Why?"},
+    {"id": "hysys-column", "should_trigger": false, "prompt": "My Aspen HYSYS column won't converge after I changed the reflux ratio. What should I try?"},
+    {"id": "adsorption-ada", "should_trigger": false, "prompt": "How do I open an Aspen Adsorption .ada file and change the bed length?"},
+    {"id": "sql-bkp", "should_trigger": false, "prompt": "How do I restore a SQL Server .bkp backup file to a new database?"},
+    {"id": "coolprop", "should_trigger": false, "prompt": "Calculate the density of CO2 at 80 bar and 35 C with CoolProp in Python."},
+    {"id": "aspen-colorado", "should_trigger": false, "prompt": "Plan a three-day ski trip to Aspen, Colorado in February."},
+    {"id": "matlab-plot", "should_trigger": false, "prompt": "Plot temperature against time from this CSV in MATLAB, with two y axes."},
+    {"id": "dwsim-flash", "should_trigger": false, "prompt": "Set up a flash drum for a propane-butane mixture in DWSIM."},
+    {"id": "cfd-fortran", "should_trigger": false, "prompt": "My Fortran 90 CFD code fails to compile with gfortran: 'Unclassifiable statement at (1)'. How do I fix it?"},
+    {"id": "aspen-trees", "should_trigger": false, "prompt": "Why do the leaves of aspen trees tremble in the wind?"},
+    {"id": "excel-vba", "should_trigger": false, "prompt": "Write an Excel VBA macro that sums every column of the active sheet."}
+  ]
+}
