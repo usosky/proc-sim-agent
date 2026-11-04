@@ -139,3 +139,31 @@ In Git Bash: `PSA_LIVE_ASPEN=1 py -3 -m pytest tests/test_com_live.py -v`. Set
 6. In the copy of the example: File > Import > File, type Backup, `section.bkp`.
 7. Report: the *Resolve ID Conflicts* dialog (what it offered, what you chose); whether HX9 and its
    streams are on the flowsheet; each Setup or Options value that changed after the import.
+
+## Run stamps
+
+The freshness check was written from the formats of the files in `examples/` and synthetic files.
+These checks confirm it on real runs:
+
+| # | Test | Pass |
+|---|---|---|
+| R1 | Run an example, change one input, run again in the same session; save the `.bkp`, keep the `.his`, export the `.rep` | `fw his` says the file holds 2 runs and describes the second; `fw sim-scan` shows no warning |
+| R2 | Export a summary file (File > Export > Summary, `.sum`) next to the `.bkp` | `fw sim-scan "<folder>" --json`: the `.sum` has a run time under `freshness` |
+| R3 | A run that takes more than two minutes: compare the `.his` start, the `RUN-STATUS` time (`fw bkp`) and the `.rep` header time (`fw rep`) | Report the three times: is the `.bkp` stamp the start or the end of the run? |
+
+## Evals in both agents
+
+| # | Test | Pass |
+|---|---|---|
+| E1 | The eval cases in both agents (`evals/run.py`, or evals/MANUAL.md for VS Code) | Pass rates recorded in the `evals/results/` summary |
+
+Signed in to each CLI, from the repository root:
+
+```text
+python evals/run.py --agent claude --repeat 3 --triggers
+python evals/run.py --agent copilot --repeat 3 --triggers
+```
+
+Add `--use-my-index` to let the agent search your help and example indexes (the cases also work
+without them). Commit `evals/results/<date>/<agent>/summary.md` and `summary.json`; the
+transcripts stay on your PC. For VS Code agent mode follow evals/MANUAL.md.
