@@ -124,7 +124,7 @@ Aspen Plus (automation, copies) <---com-*-------------------+          +--> .inp
 
 The plugin folder `plugins/proc-sim-agent/` is what Claude Code installs: the two manifests, a
 README that says what the scripts run, read, write and send, a copy of the LICENSE, and the skill
-in `skills/aspen-plus/`:
+in `plugins/proc-sim-agent/skills/aspen-plus/`:
 
 - `SKILL.md`: when and how the agent uses the tool, the answer style, privacy rules.
 - `references/`: curated knowledge (messages and fixes, calculator and Fortran rules, workflows,
