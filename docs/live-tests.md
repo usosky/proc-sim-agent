@@ -4,9 +4,10 @@ These tests need a Windows PC with a licensed Aspen Plus, so they cannot run in 
 AspenTech examples copied to a temporary folder, never your own models. Report the results as
 text (command outputs, pass or fail, what you saw); no model files are shared.
 
-Commands run from the skill folder (`skills\aspen-plus` in a clone, or the installed copy such as
-`%USERPROFILE%\.claude\skills\aspen-plus`), in PowerShell or Git Bash. `fw` below stands for
-`py -3 scripts\fw.py`. Pick a small example with a few blocks and a feed, for instance:
+Commands run from the skill folder (`plugins\proc-sim-agent\skills\aspen-plus` in a clone, or the
+installed copy such as `%USERPROFILE%\.claude\skills\aspen-plus`), in PowerShell or Git Bash.
+`fw` below stands for `py -3 scripts\fw.py`. Pick a small example with a few blocks and a feed,
+for instance:
 
 ```text
 py -3 scripts\fw.py examples-search "flash" --block FLASH2 -n 5
@@ -142,7 +143,7 @@ In Git Bash: `PSA_LIVE_ASPEN=1 py -3 -m pytest tests/test_com_live.py -v`. Set
 
 ## Run stamps
 
-The freshness check was written from the formats of the files in `examples/` and synthetic files.
+The freshness check was written from real run files and synthetic files.
 These checks confirm it on real runs:
 
 | # | Test | Pass |

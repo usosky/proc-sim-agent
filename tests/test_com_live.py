@@ -10,23 +10,13 @@ from pathlib import Path
 
 import pytest
 
+from conftest import examples_folder
 from fwlib import check, com
-from fwlib.common import DEFAULT_EXAMPLES_GLOBS, expand_globs, natural_key
 
 LIVE = (sys.platform == "win32" and os.environ.get("PSA_LIVE_ASPEN") == "1"
         and importlib.util.find_spec("win32com") is not None)
 pytestmark = [pytest.mark.aspen,
               pytest.mark.skipif(not LIVE, reason="live Aspen Plus tests: Windows, pywin32, PSA_LIVE_ASPEN=1")]
-
-
-def examples_folder() -> Path:
-    env = os.environ.get("PSA_ASPEN_EXAMPLES")
-    if env:
-        return Path(env)
-    found = expand_globs(DEFAULT_EXAMPLES_GLOBS)
-    if not found:
-        pytest.skip("no Aspen Plus examples folder; set PSA_ASPEN_EXAMPLES")
-    return Path(max(found, key=natural_key))
 
 
 def example(tmp_path, largest=False) -> Path:

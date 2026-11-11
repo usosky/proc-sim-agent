@@ -23,13 +23,16 @@ from __future__ import annotations
 
 import argparse
 import json
+import re
 import shutil
 import sys
 from pathlib import Path
 
 NAME = "aspen-plus"
 ROOT = Path(__file__).resolve().parents[1]
-SOURCE = ROOT / "skills" / NAME
+SOURCE = ROOT / "plugins" / "proc-sim-agent" / "skills" / NAME
+# Claude Code plugins that hold this skill: proc-sim-agent since 0.3.1, aspen-plus in 0.3.0
+PLUGIN_NAMES = ("proc-sim-agent", "aspen-plus")
 USER_FOLDERS = {"claude": (".claude", "skills"), "copilot": (".copilot", "skills"), "agents": (".agents", "skills")}
 PROJECT_FOLDERS = {"github": (".github", "skills"), "claude": (".claude", "skills"), "agents": (".agents", "skills")}
 IGNORE = shutil.ignore_patterns("__pycache__", "*.pyc", "*.pyo", ".pytest_cache", ".DS_Store", "Thumbs.db")
@@ -58,12 +61,16 @@ def seen_by(project) -> dict:
     return out
 
 
-def claude_plugin_installed() -> bool:
+def claude_plugin_installed() -> list:
+    """The installed Claude Code plugins that hold this skill, e.g. ["proc-sim-agent@proc-sim-agent"]
+    (or the 0.3.0 name "aspen-plus@proc-sim-agent"); empty when there is none."""
     f = Path.home() / ".claude" / "plugins" / "installed_plugins.json"
     try:
-        return f"{NAME}@" in json.dumps(json.loads(f.read_text(encoding="utf-8")))
+        text = json.dumps(json.loads(f.read_text(encoding="utf-8")))
     except (OSError, ValueError):
-        return False
+        return []
+    names = "|".join(re.escape(n) for n in PLUGIN_NAMES)
+    return sorted(set(re.findall(r'"((?:%s)@[^"@\s]+)"' % names, text)))
 
 
 def is_our_skill(folder: Path) -> bool:
@@ -79,8 +86,8 @@ def duplicate_warnings(project, dest: Path, installing: bool) -> list:
     msgs = []
     for agent, folders in seen_by(project).items():
         copies = {f for f in folders if (f == dest and installing) or (f != dest and is_our_skill(f))}
-        if agent == "Claude Code" and claude_plugin_installed():
-            copies.add(Path("plugin aspen-plus@proc-sim-agent"))
+        if agent == "Claude Code":
+            copies |= {Path(f"plugin {p}") for p in claude_plugin_installed()}
         if len(copies) > 1:
             msgs.append(f"{agent} will see {len(copies)} copies of {NAME}: "
                         + ", ".join(str(c) for c in sorted(copies, key=str))

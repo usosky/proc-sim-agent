@@ -1,0 +1,11 @@
+{
+  "name": "proc-sim-agent",
+  "displayName": "proc-sim-agent",
+  "version": "0.3.1",
+  "description": "Aspen Plus assistant for chemical engineers: builds models with you stage by stage, writes input files, reads your run files, checks balances and KPIs, searches the Aspen Plus help and example library installed on your computer, and can run Aspen Plus by automation on Windows. Independent project, not affiliated with AspenTech.",
+  "author": { "name": "Denis Usosky", "url": "https://orcid.org/0000-0002-6245-5110" },
+  "homepage": "https://github.com/usosky/proc-sim-agent",
+  "repository": "https://github.com/usosky/proc-sim-agent",
+  "license": "MIT",
+  "keywords": ["agent-skills", "aspen-plus", "process-simulation", "chemical-engineering", "flowsheet"]
+}
