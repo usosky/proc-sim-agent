@@ -32,7 +32,7 @@ cd proc-sim-agent
 
 ## 3. Install the skill
 
-`tools\install_skill.py` copies `skills\aspen-plus` (no links) to where an agent looks for skills:
+`tools\install_skill.py` copies `plugins\proc-sim-agent\skills\aspen-plus` (no links) to where an agent looks for skills:
 
 ```text
 py -3 tools\install_skill.py --target claude
@@ -61,7 +61,7 @@ records what VS Code does.
 
 ```text
 /plugin marketplace add usosky/proc-sim-agent
-/plugin install aspen-plus@proc-sim-agent
+/plugin install proc-sim-agent@proc-sim-agent
 ```
 
 Use either the plugin or the `--target claude` copy, not both (Claude Code would see two skills).
@@ -125,7 +125,9 @@ git pull
 py -3 tools\install_skill.py --target claude --force
 ```
 
-Plugin users: `/plugin marketplace update proc-sim-agent`, then reinstall `aspen-plus@proc-sim-agent`.
+Plugin users: `/plugin marketplace update proc-sim-agent`. Whoever installed the 0.3.0 plugin, which
+was called `aspen-plus`: `/plugin uninstall aspen-plus@proc-sim-agent`, then
+`/plugin install proc-sim-agent@proc-sim-agent`. The skill keeps its name, `aspen-plus`.
 
 ## 8. Where data is stored
 

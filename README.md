@@ -61,7 +61,7 @@ py -3 tools\install_skill.py --target copilot
 
 | Agent | Install | Skill folder |
 |---|---|---|
-| Claude Code | `--target claude`, or the plugin: `/plugin marketplace add usosky/proc-sim-agent`, then `/plugin install aspen-plus@proc-sim-agent` | `%USERPROFILE%\.claude\skills\aspen-plus` |
+| Claude Code | `--target claude`, or the plugin: `/plugin marketplace add usosky/proc-sim-agent`, then `/plugin install proc-sim-agent@proc-sim-agent` | `%USERPROFILE%\.claude\skills\aspen-plus` |
 | GitHub Copilot CLI | `--target copilot` | `%USERPROFILE%\.copilot\skills\aspen-plus` |
 | VS Code agent mode | `--project "<workspace>"` | `<workspace>\.github\skills\aspen-plus` |
 | Codex, Gemini CLI (untested) | `--target agents` | `%USERPROFILE%\.agents\skills\aspen-plus` |
@@ -89,18 +89,23 @@ your .his .rep .cpm .bkp -----------parsers----------------+          |
 Aspen Plus (automation, copies) <---com-*-------------------+          +--> .inp files you open in Aspen
 ```
 
-- `skills/aspen-plus/SKILL.md`: when and how the agent uses the tool, the answer style, privacy rules.
-- `skills/aspen-plus/references/`: curated knowledge (messages and fixes, calculator and Fortran
-  rules, workflows, build mode, input language, example library, GUI paths, file types, help map).
-- `skills/aspen-plus/templates/`: build guide, status, data card, expected values and Fortran calculator templates, and starting input files.
-- `skills/aspen-plus/scripts/fw.py`: standard-library Python, no network access (the `com-*`
-  commands import pywin32 only when they run).
+The plugin folder `plugins/proc-sim-agent/` is what Claude Code installs. The skill is in its
+`skills/aspen-plus/`:
+
+- `SKILL.md`: when and how the agent uses the tool, the answer style, privacy rules.
+- `references/`: curated knowledge (messages and fixes, calculator and Fortran rules, workflows,
+  build mode, input language, example library, GUI paths, file types, help map).
+- `templates/`: build guide, status, data card, expected values and Fortran calculator templates,
+  and starting input files.
+- `scripts/fw.py`: standard-library Python, no network access (the `com-*` commands import pywin32
+  only when they run).
 - `evals/`: agent-neutral test cases and a runner for Claude Code and Copilot; `tests/`: the
   offline test suite (synthetic files only).
 
 ## Commands
 
-Run `python skills/aspen-plus/scripts/fw.py <command> -h` for the options of each.
+Run `python plugins/proc-sim-agent/skills/aspen-plus/scripts/fw.py <command> -h` for the options of
+each.
 
 | Command | Purpose |
 |---|---|

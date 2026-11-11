@@ -11,7 +11,7 @@ only to say which software the tools work with.
 
 ## Third-party code
 
-None is included. The automation module (`skills/aspen-plus/scripts/fwlib/com.py`) was written
+None is included. The automation module (`plugins/proc-sim-agent/skills/aspen-plus/scripts/fwlib/com.py`) was written
 for this project from the facts in the Aspen Plus help ("Using Aspen Plus Via Automation
 (Happ)"); community automation projects were read for ideas only and no code was copied from
 them. AspenTech's type library (`happ.tlb`) is not included: the constants the commands need are
@@ -24,8 +24,8 @@ github.com/agentskills/agentskills, which is downloaded there and not redistribu
 This repository contains no AspenTech help topics, manuals, databanks, example models,
 executables or indexes of them. The tools build their search indexes on the user's computer, from
 the help files and example models installed with the user's own licensed copy, and keep them
-there. The input files in `skills/aspen-plus/templates/` were written for this
-project (MIT); the equilibrium constants in the electrolyte template are the published values that
+there. The input files in `plugins/proc-sim-agent/skills/aspen-plus/templates/` were written
+for this project (MIT); the equilibrium constants in the electrolyte template are the published values that
 Aspen Plus also uses for these reactions. `references/help-map.md` lists only the names of
 the help's books and their table-of-contents headings, to help users narrow a search.
 

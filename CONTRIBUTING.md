@@ -2,14 +2,16 @@
 
 Thank you for helping. Useful contributions, roughly in order of value:
 
-1. **A message you solved**: add it to `skills/aspen-plus/references/messages.md`
-   with Aspen's wording, the phase and severity, the usual cause and a fix that worked.
+1. **A message you solved**: add it to
+   `plugins/proc-sim-agent/skills/aspen-plus/references/messages.md` with Aspen's wording, the
+   phase and severity, the usual cause and a fix that worked.
 2. **A correction**: a click path that differs in your version, a rule that is wrong or incomplete.
 3. **A parser fix**: a .his/.rep/.cpm/.bkp file the tools misread. Add a minimal synthetic
    excerpt (made-up names and values in the same layout) as a test fixture, never your own file.
 4. **An evaluation case** in `evals/cases/<id>/` (`prompt.md`, `rubric.md`, optional `checks.json`
    and synthetic `fixtures/`) from a real question; see `evals/README.md`.
-5. **A new product skill** (HYSYS, Aspen Adsorption, ...), following the `skills/aspen-plus` layout.
+5. **A new product skill** (HYSYS, Aspen Adsorption, ...) in
+   `plugins/proc-sim-agent/skills/<name>/`, with the layout of `aspen-plus`.
 
 ## Ground rules
 
@@ -31,19 +33,22 @@ Thank you for helping. Useful contributions, roughly in order of value:
 python -m pip install pytest pypdf
 python -m pytest -q
 claude plugin validate --strict .
-python tools/scrub_aspen_files.py --check examples evals/cases
+claude plugin validate --strict ./plugins/proc-sim-agent
+python tools/scrub_aspen_files.py --check evals/cases
 python evals/run.py --agent claude --cases <id>
 ```
 
 To try a change without reinstalling: `py -3 tools\install_skill.py --project "<test folder>"
---project-kind claude` and open an agent there, or `claude --plugin-dir .` in Claude Code.
+--project-kind claude` and open an agent there, or `claude --plugin-dir ./plugins/proc-sim-agent`
+in Claude Code.
 
 ## Pull requests
 
 - One topic per pull request, with a line in `CHANGELOG.md`.
-- Bump the version when behaviour changes: `plugin.json`, the marketplace entry, SKILL.md
-  `metadata.version`, `fwlib.__version__`, `CITATION.cff` and `.zenodo.json` (`tests/test_repo.py`
-  checks that they agree).
+- Bump the version when behaviour changes: the two manifests in `plugins/proc-sim-agent/`
+  (`.claude-plugin/plugin.json` and `plugin.json`), SKILL.md `metadata.version`,
+  `fwlib.__version__`, `CITATION.cff` and `.zenodo.json` (`tests/test_directory_preflight.py` checks
+  that they agree). The marketplace entry carries no version.
 - CI must pass (tests on Windows and Linux, manifest validation, privacy check).
 
 By contributing you agree that your contribution is licensed under the MIT License.

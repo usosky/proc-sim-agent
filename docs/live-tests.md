@@ -4,7 +4,7 @@ These tests need a Windows PC with a licensed Aspen Plus, so they cannot run in 
 AspenTech examples copied to a temporary folder, never your own models. Report the results as
 text (command outputs, pass or fail, what you saw); no model files are shared.
 
-Commands run from the skill folder (`skills\aspen-plus` in a clone, or the installed copy such as
+Commands run from the skill folder (`plugins\proc-sim-agent\skills\aspen-plus` in a clone, or the installed copy such as
 `%USERPROFILE%\.claude\skills\aspen-plus`), in PowerShell or Git Bash. `fw` below stands for
 `py -3 scripts\fw.py`. Pick a small example with a few blocks and a feed, for instance:
 
