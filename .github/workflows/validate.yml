@@ -127,5 +127,5 @@ jobs:
         run: |
           npm install -g @anthropic-ai/claude-code@2.1.288
           claude plugin validate --strict .
-      - name: Example and eval files contain no private data
-        run: python tools/scrub_aspen_files.py --check examples evals/cases
+      - name: Eval files contain no private data
+        run: python tools/scrub_aspen_files.py --check evals/cases

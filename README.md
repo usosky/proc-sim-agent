@@ -34,7 +34,7 @@ Aspen Plus installation, on your computer.
 | "Here is run v0.04: did it pass?" | checks that `.bkp`, `.his` and `.rep` come from the same run, then compares the results with your expected values and tolerances: *Item / Expected / Model / Verdict* (`check --expect`) |
 | "What changed between 4.1 and 4.2?" | diffs the input language of two runs (line by line, or by paragraph with `inp-diff`) and compares key results |
 | "Check my calculator code" | extracts the inline Fortran from the run and lints it (column 72, tabs, undefined names, assigned imports, unused imports); a calculator kept as a `.txt` file is linted and, with gfortran, compiled (`fortran-check`) |
-| "Compare the reboiler duty with Table S15 of the paper" | reads the report, converts units, builds the comparison table |
+| "Compare the reboiler duty with the table in the paper" | reads the report, converts units, builds the comparison table |
 | "What does my library say about formic acid / NRTL binaries?" | full-text search of your PDFs and notes, with document and page |
 | "Let's build a model of this process from scratch" | frames the job, keeps a data card, gives expected values from a check model before each run, plans versions and gates in a build guide, reviews every run against the expected values and keeps a STATUS.md |
 | "Write it as an input file" | writes the model as an `.inp`, checks it (`inp-check`), you open it with File > Open and run |
@@ -78,13 +78,6 @@ py -3 scripts\fw.py status
 
 `help-index` repeats until it prints `complete` (each run about 100 s, resumable). Indexes are
 stored in `%USERPROFILE%\.proc-sim-agent` (set `PROC_SIM_AGENT_HOME` to move them).
-
-## Try it on a published model
-
-[`examples/joule-formic-acid`](examples/joule-formic-acid) holds the Aspen Plus model of the
-CO2-hydrogenated formic acid process published in *Joule* 8, 693-713 (2024), with its history,
-report and Control Panel files, and a script that reproduces the paper's SI energy table from the
-report (8 of 9 items within 0.6 %; the one difference is explained).
 
 ## How it works
 
@@ -155,10 +148,8 @@ the AuSpire project (Marie Sklodowska-Curie Actions, Grant Agreement No 10117794
 
 ## License
 
-Code and documentation: MIT, see [LICENSE](LICENSE). Model and run files in
-[`examples/joule-formic-acid`](examples/joule-formic-acid): CC BY 4.0, cite the paper
-([LICENSE.md](examples/joule-formic-acid/LICENSE.md)). Logos in `assets/` are not covered by these
-licences. Aspen Plus, Aspen HYSYS and Aspen Adsorption are trademarks of
+Code and documentation: MIT, see [LICENSE](LICENSE). The logos in `assets/` are not covered by
+this licence. Aspen Plus, Aspen HYSYS and Aspen Adsorption are trademarks of
 Aspen Technology, Inc.; this project is not affiliated with or endorsed by AspenTech
 ([NOTICE.md](NOTICE.md)).
 

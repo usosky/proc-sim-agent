@@ -793,3 +793,966 @@ _SECOND_RUN = (HIS[HIS.index(" *** INPUT SUMMARY ***"):]
                .replace("FRAC RECYCLE 0.3", "FRAC RECYCLE 0.4")
                .replace("        WARNINGS      1        0         1", "        WARNINGS      0        0         0"))
 HIS_TWO_RUNS = HIS + "\n" + _SECOND_RUN
+
+
+# ---------------------------------------------------------------------------
+# v0.3.1: a synthetic case in place of the published example that left the repository.
+# An invented isopropanol-to-acetone unit with a bottoms recycle ("SolvRec"): the backup was saved
+# by V12.1 on 12 May 2026 with the results of a run of that day; the history, report and Control
+# Panel files come from a V15 run on 21 Aug 2026. The report is lower-case like an Aspen export.
+# Names, numbers and messages are made up; only the layouts follow Aspen Plus files.
+# ---------------------------------------------------------------------------
+SOLVREC_HIS = r""" + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + +
+ + +                      ASPEN PLUS CALCULATION HISTORY                     + +
+ + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + +
+
+ PLATFORM: WIN-X64                                       AUGUST 21, 2026
+ VERSION: 41.0   Build 609                               FRIDAY
+ INSTALLATION:                                           02:30:41 P.M.
+
+ THIS COPY OF ASPEN PLUS LICENSED TO NORTHWIND PROCESS LAB
+
+ *** INPUT SUMMARY ***
+
+ >>CURRENT RUN
+
+   ORIGINAL RUN                           AUGUST 21, 2026
+   02:30:41 P.M.                          FRIDAY
+   INPUT FILE: _2207pqr.inm
+   RUN ID : _2207pqr
+          1    ;
+          2    ;Input file created by Aspen Plus Rel. 41.0 at 14:30:39 Fri Aug 21, 2026
+          3    ;Directory D:\Work\jsmith\SolvRec\v0.07  Runid SOLVREC
+          4    ;
+          5
+          6    TITLE 'Solvent recovery demo'
+          7
+          8    IN-UNITS MET PRESSURE=bar TEMPERATURE=C DELTA-T=C PDROP=bar
+          9
+         10    DEF-STREAMS CONVEN ALL
+         11
+         12    DATABANKS 'APV150 PURE41' / 'APV150 AQUEOUS' / 'APV150 SOLIDS' &
+         13             / 'APV150 INORGANIC' / NOASPENPCD
+         14
+         15    PROP-SOURCES 'APV150 PURE41' / 'APV150 AQUEOUS' / 'APV150 SOLIDS' &
+         16             / 'APV150 INORGANIC'
+         17
+         18    COMPONENTS
+         19        WATER H2O /
+         20        ACETONE C3H6O-1 /
+         21        IPA C3H8O-2 /
+         22        H2 H2 /
+         23        CO2 CO2 /
+         24        N2 N2 /
+         25        HEAVY /
+         26        H3O+ H3O+ /
+         27        OH- OH- /
+         28        HCO3- HCO3-
+         29
+         30    HENRY-COMPS HC-1 H2 CO2 N2
+         31
+         32    CHEMISTRY C-W
+         33        STOIC 1 WATER -2. / H3O+ 1. / OH- 1.
+         34        K-STOIC 1 A=140.932 B=-13445.9 C=-22.4773
+         35
+         36    CHEMISTRY C-CO2
+         37        STOIC 1 CO2 -1. / WATER -2. / HCO3- 1. / H3O+ 1.
+         38        K-STOIC 1 A=231.465 B=-12092.1 C=-36.7816
+         39
+         40    FLOWSHEET
+         41        BLOCK FEEDPUMP IN=FEED OUT=S1
+         42        BLOCK PREHEAT IN=S1 OUT=S2
+         43        BLOCK MIXREC IN=S2 RECYCLE OUT=S3
+         44        BLOCK RX-STAGE IN=S3 OUT=S4
+         45        BLOCK COL1 IN=S4 OUT=DIST BTMS
+         46        BLOCK SPLIT1 IN=BTMS OUT=PURGE RECYCLE
+         47        BLOCK GASCOMP IN=N2FEED OUT=GASHP
+         48
+         49    PROPERTIES NRTL HENRY-COMPS=HC-1
+         50        PROPERTIES NRTL-HOC
+         51
+         52    PROP-DATA NRTL-1
+         53        IN-UNITS SI
+         54        PROP-LIST NRTL
+         55        BPVAL WATER IPA 1.0120 315.27 .30 0.0 0.0 0.0 283.15  &
+         56            373.15
+         57        BPVAL IPA WATER -0.6631 105.81 .30 0.0 0.0 0.0 283.15  &
+         58            373.15
+         59
+         60    PROP-DATA PLXANT-1
+         61        IN-UNITS SI
+         62        PROP-LIST PLXANT / MW
+         63        PVAL HEAVY 58.71 -6912.4 0.0 0.0 -6.81 0.0 0.0 6.0 0.0  &
+         64            0.0 290.0 470.0
+         65        PVAL HEAVY 98.145
+         66
+         67    STREAM FEED
+         68        SUBSTREAM MIXED TEMP=30. PRES=1.01325 MOLE-FLOW=100.
+         69        MOLE-FRAC WATER 0.2 / IPA 0.8
+         70
+         71    STREAM N2FEED
+         72        SUBSTREAM MIXED TEMP=25. PRES=1.01325 MOLE-FLOW=10.
+         73        MOLE-FRAC N2 1.
+         74
+         75    STREAM RECYCLE
+         76        SUBSTREAM MIXED TEMP=104. PRES=1.2 MOLE-FLOW=40.
+         77        MOLE-FRAC WATER 0.65 / IPA 0.35
+         78
+         79    BLOCK MIXREC MIXER
+         80        PARAM PRES=1.2
+         81
+         82    BLOCK SPLIT1 FSPLIT
+         83        FRAC RECYCLE 0.6
+         84        PROPERTIES NRTL HENRY-COMPS=HC-1
+         85
+         86    BLOCK PREHEAT HEATER
+         87        PARAM TEMP=95. PRES=-0.2
+         88
+         89    BLOCK COL1 RADFRAC
+         90        PARAM NSTAGE=18
+         91        COL-CONFIG CONDENSER=PARTIAL-V
+         92        FEEDS S4 9 ON-STAGE
+         93        PRODUCTS DIST 1 V / BTMS 18 L
+         94        P-SPEC 1 1.0
+         95        COL-SPECS MOLE-RR=1.8 D:F=0.675
+         96
+         97    BLOCK RX-STAGE RSTOIC
+         98        PARAM TEMP=150. PRES=1.1
+         99        STOIC 1 MIXED IPA -1. / ACETONE 1. / H2 1.
+        100        STOIC 2 MIXED ACETONE -2. / HEAVY 1. / WATER 1.
+        101        CONV 1 MIXED IPA 0.75
+        102        CONV 2 MIXED ACETONE 0.05
+        103
+        104    BLOCK FEEDPUMP PUMP
+        105        PARAM PRES=6. EFF=0.6
+        106
+        107    BLOCK GASCOMP COMPR
+        108        PARAM TYPE=ISENTROPIC PRES=8. SEFF=0.75
+        109
+        110    CALCULATOR RATIO
+        111        DEFINE FIPA MOLE-FLOW STREAM=S2 SUBSTREAM=MIXED  &
+        112            COMPONENT=IPA UOM="kmol/hr"
+        113        DEFINE XEXT BLOCK-VAR BLOCK=RX-STAGE VARIABLE=CONV  &
+        114            SENTENCE=CONV ID1=1
+        115        DEFINE FSPARE MOLE-FLOW STREAM=S2 SUBSTREAM=MIXED  &
+        116            COMPONENT=WATER UOM="kmol/hr"
+        117    F     XEXT = 0.75D0 + 0.0D0 * FIPA
+        118        READ-VARS FIPA FSPARE
+        119        WRITE-VARS XEXT
+        120
+        121    DESIGN-SPEC DS-PUR
+        122        DEFINE XACE MOLE-FRAC STREAM=DIST SUBSTREAM=MIXED  &
+        123            COMPONENT=ACETONE
+        124        SPEC "XACE" TO "0.5"
+        125        TOL-SPEC "0.001"
+        126        VARY BLOCK-VAR BLOCK=COL1 SENTENCE=COL-SPECS  &
+        127            VARIABLE=MOLE-RR
+        128        LIMITS "1." "4."
+        129
+        130    CONV-OPTIONS
+        131        PARAM TEAR-METHOD=WEGSTEIN CHECKSEQ=NO
+        132        WEGSTEIN MAXIT=100 QMIN=-5. QMAX=0.
+        133
+        134    REACTIONS R-COND REAC-DIST
+        135        REAC-DATA 1 CONV
+        136        STOIC 1 ACETONE -2. / HEAVY 1. / WATER 1.
+        137        CONV 1 CONV-A=0.01 KEY-CID=ACETONE
+        138
+        139    STREAM-REPOR MOLEFLOW MOLEFRAC
+        140
+        141    DISABLE
+        142        DESIGN-SPEC DS-PUR
+        143
+ *** INPUT TRANSLATOR MESSAGES ***
+
+      INFORMATION                                              (PSTOP1AP.1)
+      THERE ARE HENRY COMPONENTS DEFINED IN THIS CASE, THE BINARY DATABANK
+      WILL BE SEARCHED AUTOMATICALLY FOR ANY AVAILABLE HENRY CONSTANTS.
+
+ *** FLOWSHEET ANALYSIS MESSAGES ***
+
+  *   WARNING WHILE CHECKING INPUT SPECIFICATIONS              (PRPCHK.1)
+      INCONSISTENT PROPERTIES DETECTED FOR 1 STREAMS
+      SOURCE BLOCK        PROPERTIES STREAM   DESTINATION BLOCK   PROPERTIES
+      =================== ========== ======== =================== ==========
+      SPLIT1              NRTL       RECYCLE  MIXREC              NRTL-HOC
+
+      BLOCK $OLVER01 (METHOD: WEGSTEIN) HAS BEEN DEFINED TO CONVERGE
+               STREAMS: RECYCLE
+
+      COMPUTATION ORDER FOR THE FLOWSHEET IS:
+      FEEDPUMP PREHEAT GASCOMP $OLVER01 MIXREC RX-STAGE RATIO COL1 SPLIT1
+      (RETURN $OLVER01)
+
+Calculations begin                                                              time      0.21
+
+
+ SIMULATION CALCULATIONS BEGIN                                                    TIME =      0.21
+
+      UOS BLOCK FEEDPUMP MODEL: PUMP                                              TIME =      0.21
+      VOL-FLOW   =  0.1794E-02 , DELTA P    =  0.4987E+06 , PUMP EFF   =  0.6000
+      FLUID PWR  =   894.86    , BRAKE PWR  =   1491.4    , ELEC PWR   =   1491.4
+
+      UOS BLOCK PREHEAT  MODEL: HEATER                                            TIME =      0.22
+      KODE = 2  NTRIAL =   1  T = 368.1500  P =  580000.      V =  0.00000      Q =  412345.
+
+      UOS BLOCK GASCOMP  MODEL: COMPR                                             TIME =      0.22
+      OUTLET TEMP =   617.9       OUTLET PRES =  0.8000E+06   INDICATED HP =  0.2594E+05   BRAKE HP =  0.2594E+05
+      ISENTR TEMP =   538.0      CALC ISENTR EFF =  0.7500      ISENTR HP =  0.1946E+05  HP =  0.3479E+02
+
+      CONVERGENCE BLOCK $OLVER01  METHOD: WEGSTEIN                                TIME =      0.22
+      ITER   0 For Tear Streams: RECYCLE
+
+      UOS BLOCK MIXREC   MODEL: MIXER                                             TIME =      0.22
+      KODE = 1  NTRIAL =   6  T = 363.0021  P =  120000.      V = 0.312000      Q =  0.00000
+
+      UOS BLOCK RX-STAGE MODEL: RSTOIC                                            TIME =      0.23
+
+  *   WARNING WHILE EXECUTING UNIT OPERATIONS BLOCK: "RX-STAGE" (MODEL:
+      "RSTOIC")                                                (URE07.2)
+      REACTION NO. "2" IS DROPPED BECAUSE REACTANT "ACETONE" HAS ZERO INLET
+      FLOW RATE.
+      KODE = 2  NTRIAL =   3  T = 423.1500  P =  110000.      V =  1.00000      Q =  298712.
+
+      CALCULATOR BLOCK RATIO                                                      TIME =      0.23
+
+      UOS BLOCK COL1     MODEL: RADFRAC                                           TIME =      0.24
+
+       Convergence iterations:
+         OL   ML   IL     Err/Tol
+          1    1    5      412.07
+          2    4   11      17.235
+          3    3    6     0.41023
+
+      UOS BLOCK SPLIT1   MODEL: FSPLIT                                            TIME =      0.25
+
+      CONVERGENCE BLOCK $OLVER01  METHOD: WEGSTEIN                                TIME =      0.25
+      ITER   1 For Tear Streams: RECYCLE
+
+  LOOP $OLVER01 ITER    1:   4 VARS NOT CONVERGED, MAX ERR/TOL      210.40        TIME =      0.25
+
+      UOS BLOCK MIXREC   MODEL: MIXER                                             TIME =      0.26
+      KODE = 1  NTRIAL =   5  T = 361.8805  P =  120000.      V = 0.041200      Q =  0.00000
+
+      UOS BLOCK RX-STAGE MODEL: RSTOIC                                            TIME =      0.26
+      KODE = 2  NTRIAL =   3  T = 423.1500  P =  110000.      V =  1.00000      Q =  301845.
+
+      CALCULATOR BLOCK RATIO                                                      TIME =      0.26
+
+      UOS BLOCK COL1     MODEL: RADFRAC                                           TIME =      0.27
+
+       Convergence iterations:
+         OL   ML   IL     Err/Tol
+          1    1    4      38.112
+          2    2    5     0.52007
+
+      UOS BLOCK SPLIT1   MODEL: FSPLIT                                            TIME =      0.28
+
+      CONVERGENCE BLOCK $OLVER01  METHOD: WEGSTEIN                                TIME =      0.28
+      ITER   2 For Tear Streams: RECYCLE
+
+  LOOP $OLVER01 ITER    2:     *** CONVERGED *** , MAX ERR/TOL      0.3120        TIME =      0.28
+
+      GENERATING RESULTS FOR UOS BLOCK FEEDPUMP MODEL: PUMP                       TIME =      0.31
+      KODE = 5  NTRIAL =   2  T = 303.5626  P =  100261.      V =  0.00000      Q =  0.00000
+      VOL-FLOW   =  0.1794E-02 , DELTA P    =  0.4987E+06 , PUMP EFF   =  0.6000
+      FLUID PWR  =   894.86    , BRAKE PWR  =   1491.4    , ELEC PWR   =   1491.4
+      NPSH AVAIL =  0.1258E+02
+
+      GENERATING RESULTS FOR UOS BLOCK PREHEAT  MODEL: HEATER                     TIME =      0.31
+
+ Report Writer entered                                                            Time =      0.32
+
+ Results generated                                                                Time =      0.36
+
+RUN SAVED
+
+
+
+ *** SUMMARY OF ERRORS ***
+
+                  PHYSICAL
+                  PROPERTY  SYSTEM  SIMULATION
+ TERMINAL ERRORS      0        0         0
+   SEVERE ERRORS      0        0         0
+          ERRORS      0        0         0
+        WARNINGS      0        1         1
+"""
+
+SOLVREC_REP = r"""
+
+ + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + +
+ + +                                                                         + +
+ + +                      ASPEN PLUS CALCULATION REPORT                      + +
+ + +                                                                         + +
+ + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + +
+
+ PLATFORM: WIN-X64                                       AUGUST 21, 2026
+ VERSION: 41.0   Build 609                               FRIDAY
+ INSTALLATION:                                           02:30:52 P.M.
+
+ ASPEN PLUS   PLAT: WIN-X64   VER: 41.0                   08/21/2026  PAGE    I
+
+                               TABLE OF CONTENTS
+
+            RUN CONTROL SECTION....................................  1
+                 RUN CONTROL INFORMATION...........................  1
+
+            FLOWSHEET SECTION......................................  2
+                 FLOWSHEET CONNECTIVITY BY STREAMS.................  2
+                 OVERALL FLOWSHEET BALANCE.........................  2
+
+            U-O-S BLOCK SECTION....................................  3
+                 BLOCK:  FEEDPUMP MODEL: PUMP......................  3
+                 BLOCK:  COL1     MODEL: RADFRAC...................  4
+
+            STREAM SECTION.........................................  6
+
+            PROBLEM STATUS SECTION.................................  9
+
+@FF@ ASPEN PLUS   PLAT: WIN-X64   VER: 41.0                   08/21/2026  PAGE 1  
+
+                              RUN CONTROL SECTION
+
+ RUN CONTROL INFORMATION
+ -----------------------
+
+ THIS COPY OF ASPEN PLUS LICENSED TO NORTHWIND PROCESS LAB
+
+ TYPE OF RUN: NEW
+
+ INPUT FILE NAME: _2207pqr.inm
+
+ OUTPUT PROBLEM DATA FILE NAME: _2207pqr
+ LOCATED IN: D:\Work\jsmith\SolvRec\v0.07
+
+ CALLING PROGRAM NAME:          apmain
+ LOCATED IN: C:\Program Files\AspenTech\Aspen Plus V15.0\Engine\xeq
+
+ SIMULATION REQUESTED FOR ENTIRE FLOWSHEET
+@FF@ ASPEN PLUS   PLAT: WIN-X64   VER: 41.0                   08/21/2026  PAGE 2  
+
+                               FLOWSHEET SECTION
+
+ FLOWSHEET CONNECTIVITY BY STREAMS
+ ---------------------------------
+
+   STREAM     SOURCE     DEST           STREAM     SOURCE     DEST
+   FEED       ----       FEEDPUMP       N2FEED     ----       GASCOMP
+   S1         FEEDPUMP   PREHEAT        S2         PREHEAT    MIXREC
+   S3         MIXREC     RX-STAGE       S4         RX-STAGE   COL1
+   DIST       COL1       ----           BTMS       COL1       SPLIT1
+   PURGE      SPLIT1     ----           RECYCLE    SPLIT1     MIXREC
+   GASHP      GASCOMP    ----
+
+ FLOWSHEET CONNECTIVITY BY BLOCKS
+ --------------------------------
+
+   BLOCK        INLETS                         OUTLETS
+   FEEDPUMP     FEED                           S1
+   PREHEAT      S1                             S2
+   MIXREC       S2 RECYCLE                     S3
+   RX-STAGE     S3                             S4
+   COL1         S4                             DIST BTMS
+   SPLIT1       BTMS                           PURGE RECYCLE
+   GASCOMP      N2FEED                         GASHP
+
+ CONVERGENCE STATUS SUMMARY
+ --------------------------
+
+   TEAR STREAM SUMMARY
+   ===================
+
+   STREAM    VARIABLE         MAXIMUM      MAX. ERR.    ABSOLUTE          CONV
+   ID        ID               ERR/TOL      RELATIVE     ERROR       STAT  BLOCK
+   ------    --------         --------     -------      ---------   ----  -----
+   RECYCLE  WATER MOLEFLOW     0.3120       0.3120E-04   0.2297E-06  #    $OLVER01
+
+   #  = CONVERGED
+   *  = NOT CONVERGED
+
+ OVERALL FLOWSHEET BALANCE
+ -------------------------
+
+                      ***  MASS AND ENERGY BALANCE  ***
+                              IN          OUT       GENERATION   RELATIVE DIFF.
+    TOTAL BALANCE
+       MOLE(KMOL/HR )         110.000       180.340       70.3400      -0.157E-15
+       MASS(KG/HR   )         5448.11       5448.11                     0.214E-09
+       ENTHALPY(CAL/SEC )    -0.186640E+07 -0.152217E+07               -0.184435
+@FF@ ASPEN PLUS   PLAT: WIN-X64   VER: 41.0                   08/21/2026  PAGE 3  
+
+                              U-O-S BLOCK SECTION
+
+ BLOCK:  FEEDPUMP MODEL: PUMP
+ ----------------------------
+   INLET STREAM:          FEED
+   OUTLET STREAM:         S1
+   PROPERTY OPTION SET:   NRTL      RENON (NRTL) / IDEAL GAS
+
+                      ***  MASS AND ENERGY BALANCE  ***
+                                    IN              OUT        RELATIVE DIFF.
+    TOTAL BALANCE
+       MOLE(KMOL/HR )            100.000         100.000         0.00000
+       MASS(KG/HR   )            5167.98         5167.98         0.00000
+       ENTHALPY(CAL/SEC )      -0.186667E+07   -0.186631E+07   -0.190727E-03
+
+                          ***  INPUT DATA  ***
+   OUTLET PRESSURE BAR                                           6.00000
+   PUMP EFFICIENCY                                               0.60000
+   DRIVER EFFICIENCY                                             1.00000
+
+                           ***  RESULTS  ***
+   VOLUMETRIC FLOW RATE L/MIN                                  107.667
+   PRESSURE CHANGE BAR                                           4.98675
+   NPSH AVAILABLE   M-KGF/KG                                    12.5780
+   FLUID POWER KW                                                0.89486
+   BRAKE POWER KW                                                1.49143
+   ELECTRICITY KW                                                1.49143
+   PUMP EFFICIENCY USED                                          0.60000
+   NET WORK REQUIRED KW                                          1.49143
+   HEAD DEVELOPED M-KGF/KG                                      63.5391
+
+ BLOCK:  GASCOMP  MODEL: COMPR
+ -----------------------------
+   INLET STREAM:          N2FEED
+   OUTLET STREAM:         GASHP
+   PROPERTY OPTION SET:   NRTL      RENON (NRTL) / IDEAL GAS
+
+                           ***  RESULTS  ***
+
+   INDICATED  HORSEPOWER REQUIREMENT   KW                       25.9412
+   BRAKE      HORSEPOWER REQUIREMENT   KW                       25.9412
+   NET WORK REQUIRED                   KW                       25.9412
+   ISENTROPIC HORSEPOWER REQUIREMENT   KW                       19.4559
+   CALCULATED OUTLET TEMP  C                                   344.751
+   ISENTROPIC TEMPERATURE C                                    264.851
+   EFFICIENCY (POLYTR/ISENTR) USED                               0.75000
+   OUTLET VAPOR FRACTION                                         1.00000
+   MECHANICAL EFFICIENCY USED                                    1.00000
+
+ BLOCK:  RX-STAGE MODEL: RSTOIC
+ ------------------------------
+   INLET STREAM:          S3
+   OUTLET STREAM:         S4
+   PROPERTY OPTION SET:   NRTL      RENON (NRTL) / IDEAL GAS
+
+                           ***  RESULTS  ***
+   OUTLET TEMPERATURE    C                                     150.00
+   OUTLET PRESSURE       BAR                                     1.1000
+   HEAT DUTY             CAL/SEC                            301,845.
+   VAPOR FRACTION                                                1.0000
+
+   REACTION EXTENTS:
+
+     REACTION          REACTION
+     NUMBER            EXTENT
+                       KMOL/HR
+     1                  70.340
+     2                  0.02135
+
+ BLOCK:  COL1     MODEL: RADFRAC
+ -------------------------------
+    INLETS   - S4       STAGE   9
+    OUTLETS  - DIST     STAGE   1
+               BTMS     STAGE  18
+@FF@ ASPEN PLUS   PLAT: WIN-X64   VER: 41.0                   08/21/2026  PAGE 4  
+
+                              U-O-S BLOCK SECTION
+
+ BLOCK:  COL1     MODEL: RADFRAC (CONTINUED)
+   PROPERTY OPTION SET:   NRTL      RENON (NRTL) / IDEAL GAS
+   HENRY-COMPS ID:        HC-1
+
+                      ***  MASS AND ENERGY BALANCE  ***
+                                    IN              OUT        RELATIVE DIFF.
+    TOTAL BALANCE
+       MOLE(KMOL/HR )            211.552         211.552        -0.14E-15
+       MASS(KG/HR   )            6527.35         6527.35         0.11E-12
+       ENTHALPY(CAL/SEC )      -0.201190E+07   -0.236514E+07    0.149353
+
+                          **********************
+                          ****  INPUT DATA  ****
+                          **********************
+
+   ****   INPUT PARAMETERS   ****
+
+    NUMBER OF STAGES                                           18
+    ALGORITHM OPTION                                         STANDARD
+    INITIALIZATION OPTION                                    STANDARD
+    MAXIMUM NO. OF OUTSIDE LOOP ITERATIONS                     25
+    OUTSIDE LOOP CONVERGENCE TOLERANCE                          0.000100000
+
+   ****   COL-SPECS   ****
+
+    MOLAR VAPOR DIST / TOTAL DIST                               1.00000
+    MOLAR REFLUX RATIO                                          1.80000
+    DISTILLATE TO FEED RATIO                                    0.67500
+
+   ****    PROFILES   ****
+
+    P-SPEC          STAGE   1  PRES, BAR                        1.00000
+
+@FF@ ASPEN PLUS   PLAT: WIN-X64   VER: 41.0                   08/21/2026  PAGE 5  
+
+                              U-O-S BLOCK SECTION
+
+ BLOCK:  COL1     MODEL: RADFRAC (CONTINUED)
+
+                          *******************
+                          ****  RESULTS  ****
+                          *******************
+
+
+   ***   COMPONENT SPLIT FRACTIONS   ***
+
+                             OUTLET STREAMS
+                             --------------
+                  DIST         BTMS
+    COMPONENT:
+    WATER       .50000E-01   .95000
+    ACETONE     .98000       .20000E-01
+    IPA         .20000E-01   .98000
+    H2          1.0000       0.0000
+    CO2         MISSING      MISSING
+    HEAVY       0.0000       1.0000
+
+ 
+   ***    SUMMARY OF KEY RESULTS    ***
+
+    TOP STAGE TEMPERATURE          C                        38.2417
+    BOTTOM STAGE TEMPERATURE       C                       104.602
+    TOP STAGE LIQUID FLOW          KMOL/HR                 262.930
+    BOTTOM STAGE LIQUID FLOW       KMOL/HR                  68.6873
+    TOP STAGE VAPOR FLOW           KMOL/HR                 142.865
+    BOILUP VAPOR FLOW              KMOL/HR                 187.402
+    MOLAR REFLUX RATIO                                       1.80000
+    MOLAR BOILUP RATIO                                       2.79410
+    CONDENSER DUTY (W/O SUBCOOL)   CAL/SEC                  -0.121733+07
+    REBOILER DUTY                  CAL/SEC           1,482,650.
+
+   ****   MAXIMUM FINAL RELATIVE ERRORS   ****
+
+    DEW POINT                       0.31277E-04  STAGE=  4
+    BUBBLE POINT                    0.20846E-04  STAGE= 17
+    COMPONENT MASS BALANCE          0.61902E-15  STAGE=  9 COMP=IPA
+    ENERGY BALANCE                  0.47105E-04  STAGE= 16
+
+   ****    PROFILES   ****
+
+                                   ENTHALPY
+  STAGE TEMPERATURE   PRESSURE         CAL/MOL             HEAT DUTY
+          C            BAR         LIQUID       VAPOR        CAL/SEC
+
+    1   38.242        1.0000      -61502.      -24210.     -.12173+07
+    2   57.913        1.0118      -62230.      -47785.
+    9   81.264        1.0941      -65117.      -51938.
+   17   99.870        1.1882      -67350.      -55240.
+   18   104.60        1.2000      -67812.      -56021.      .14827+07
+
+  STAGE      FLOW RATE               FEED RATE               PRODUCT RATE
+              KMOL/HR                 KMOL/HR                   KMOL/HR
+       LIQUID    VAPOR         LIQUID   VAPOR    MIXED      LIQUID    VAPOR
+    1  262.9     142.9                                              142.8651
+    9  271.5     409.0                 211.5524
+   18  68.69     187.4                                    68.6873
+
+@FF@ ASPEN PLUS   PLAT: WIN-X64   VER: 41.0                   08/21/2026  PAGE 6  
+
+                                 STREAM SECTION
+
+ BTMS DIST FEED GASHP N2FEED                
+ -----------------------------
+
+ STREAM ID               BTMS       DIST       FEED       GASHP      N2FEED     
+ FROM :                  COL1       COL1       ----       GASCOMP    ----     
+ TO   :                  SPLIT1     ----       FEEDPUMP   ----       GASCOMP     
+
+ SUBSTREAM: MIXED   
+ PHASE:                  LIQUID     MIXED      LIQUID     VAPOR      VAPOR     
+ COMPONENTS: KMOL/HR         
+   WATER                 44.2332     2.3281    20.0000     0.0        0.0   
+   ACETONE                1.4230    69.7281     0.0        0.0        0.0   
+   IPA                   22.9777     0.4689    80.0000     0.0        0.0   
+   H2                     0.0       70.3400     0.0        0.0        0.0   
+   CO2                    0.0        0.0        0.0        0.0        0.0   
+   N2                     0.0        0.0        0.0       10.0000    10.0000
+   HEAVY               5.3363-02     0.0        0.0        0.0        0.0   
+   H3O+                   0.0        0.0        0.0        0.0        0.0   
+   OH-                    0.0        0.0        0.0        0.0        0.0   
+   HCO3-                  0.0        0.0        0.0        0.0        0.0   
+ COMPONENTS: MOLE FRAC       
+   WATER                  0.6440  1.6296-02     0.2000     0.0        0.0   
+   ACETONE             2.0717-02     0.4881     0.0        0.0        0.0   
+   IPA                    0.3345  3.2824-03     0.8000     0.0        0.0   
+   H2                     0.0        0.4924     0.0        0.0        0.0   
+@FF@ ASPEN PLUS   PLAT: WIN-X64   VER: 41.0                   08/21/2026  PAGE 7  
+
+                                 STREAM SECTION
+
+ BTMS DIST FEED GASHP N2FEED (CONTINUED)        
+
+ STREAM ID               BTMS       DIST       FEED       GASHP      N2FEED     
+
+   CO2                    0.0        0.0        0.0        0.0        0.0   
+   N2                     0.0        0.0        0.0        1.0000     1.0000
+   HEAVY               7.7690-04     0.0        0.0        0.0        0.0   
+   H3O+                   0.0        0.0        0.0        0.0        0.0   
+   OH-                    0.0        0.0        0.0        0.0        0.0   
+   HCO3-                  0.0        0.0        0.0        0.0        0.0   
+ TOTAL FLOW:         
+   KMOL/HR               68.6873   142.8651   100.0000    10.0000    10.0000
+   KG/HR               2265.6170  4261.7332  5167.9800   280.1300   280.1300
+   L/MIN                 47.7978  3551.4443   109.0291  1070.2564  4077.3404
+ STATE VARIABLES:    
+   TEMP   C             104.6021    38.2417    30.0000   344.7512    25.0000
+   PRES   BAR             1.2000     1.0000     1.0132     8.0000     1.0132
+   VFRAC                  0.0        0.5263     0.0        1.0000     1.0000
+   LFRAC                  1.0000     0.4737     1.0000     0.0        0.0   
+   SFRAC                  0.0        0.0        0.0        0.0        0.0   
+ ENTHALPY:           
+   CAL/MOL            -6.7200+04 -5.2100+04 -6.7200+04  2271.5000    -1.2507
+   CAL/GM             -2037.3203 -1746.5357 -1300.3146    81.0874 -4.4647-02
+   CAL/SEC            -1.2822+06 -2.0676+06 -1.8667+06  6309.7222    -3.4742
+ AVG MW                  32.9845    29.8305    51.6798    28.0130    28.0130
+
+ PURGE RECYCLE S1 S2 S3                
+ ------------------------
+
+ STREAM ID               PURGE      RECYCLE    S1         S2         S3     
+ FROM :                  SPLIT1     SPLIT1     FEEDPUMP   PREHEAT    MIXREC     
+ TO   :                  ----       MIXREC     PREHEAT    MIXREC     RX-STAGE     
+
+ SUBSTREAM: MIXED   
+ PHASE:                  LIQUID     LIQUID     LIQUID     LIQUID     MIXED     
+ COMPONENTS: KMOL/HR         
+   WATER                 17.6933    26.5399    20.0000    20.0000    46.5399
+   ACETONE                0.5692     0.8538     0.0        0.0        0.8538
+   IPA                    9.1911    13.7866    80.0000    80.0000    93.7866
+   H2                     0.0        0.0        0.0        0.0        0.0   
+   CO2                    0.0        0.0        0.0        0.0        0.0   
+   N2                     0.0        0.0        0.0        0.0        0.0   
+   HEAVY               2.1345-02  3.2018-02     0.0        0.0     3.2018-02
+   H3O+                   0.0        0.0        0.0        0.0        0.0   
+   OH-                    0.0        0.0        0.0        0.0        0.0   
+   HCO3-                  0.0        0.0        0.0        0.0        0.0   
+ COMPONENTS: MOLE FRAC       
+   WATER                  0.6440     0.6440     0.2000     0.2000     0.3296
+   ACETONE             2.0717-02  2.0717-02     0.0        0.0     6.0463-03
+   IPA                    0.3345     0.3345     0.8000     0.8000     0.6642
+   H2                     0.0        0.0        0.0        0.0        0.0   
+@FF@ ASPEN PLUS   PLAT: WIN-X64   VER: 41.0                   08/21/2026  PAGE 8  
+
+                                 STREAM SECTION
+
+ PURGE RECYCLE S1 S2 S3 (CONTINUED)        
+
+ STREAM ID               PURGE      RECYCLE    S1         S2         S3     
+
+   CO2                    0.0        0.0        0.0        0.0        0.0   
+   N2                     0.0        0.0        0.0        0.0        0.0   
+   HEAVY               7.7690-04  7.7690-04     0.0        0.0     2.2674-04
+   H3O+                   0.0        0.0        0.0        0.0        0.0   
+   OH-                    0.0        0.0        0.0        0.0        0.0   
+   HCO3-                  0.0        0.0        0.0        0.0        0.0   
+ TOTAL FLOW:         
+   KMOL/HR               27.4749    41.2124   100.0000   100.0000   141.2124
+   KG/HR                906.2468  1359.3702  5167.9800  5167.9800  6527.3502
+   L/MIN                 19.1191    28.6787   109.0291   109.0291  5439.4585
+ STATE VARIABLES:    
+   TEMP   C             104.6021   104.6021    30.4126    95.0000    88.7305
+   PRES   BAR             1.2000     1.2000     6.0000     5.8000     1.2000
+   VFRAC                  0.0        0.0        0.0        0.0     4.1200-02
+   LFRAC                  1.0000     1.0000     1.0000     1.0000     0.9588
+   SFRAC                  0.0        0.0        0.0        0.0        0.0   
+ ENTHALPY:           
+   CAL/MOL            -6.7200+04 -6.7200+04 -6.7200+04 -6.7200+04 -5.2100+04
+   CAL/GM             -2037.3203 -2037.3203 -1300.3146 -1300.3146 -1127.1290
+   CAL/SEC            -5.1287+05 -7.6930+05 -1.8667+06 -1.8667+06 -2.0437+06
+ AVG MW                  32.9845    32.9845    51.6798    51.6798    46.2236
+
+ S4                
+ ----
+
+ STREAM ID               S4     
+ FROM :                  RX-STAGE     
+ TO   :                  COL1     
+
+ SUBSTREAM: MIXED   
+ PHASE:                  VAPOR     
+ COMPONENTS: KMOL/HR         
+   WATER                 46.5613
+   ACETONE               71.1511
+   IPA                   23.4467
+   H2                    70.3400
+   CO2                    0.0   
+   N2                     0.0   
+   HEAVY               5.3363-02
+   H3O+                   0.0   
+   OH-                    0.0   
+   HCO3-                  0.0   
+ COMPONENTS: MOLE FRAC       
+   WATER                  0.2201
+   ACETONE                0.3363
+   IPA                    0.1108
+   H2                     0.3325
+   CO2                    0.0   
+   N2                     0.0   
+   HEAVY               2.5225-04
+   H3O+                   0.0   
+   OH-                    0.0   
+   HCO3-                  0.0   
+ TOTAL FLOW:         
+   KMOL/HR              211.5524
+   KG/HR               6527.3502
+   L/MIN               1.1277+05
+ STATE VARIABLES:    
+   TEMP   C             150.0000
+   PRES   BAR             1.1000
+   VFRAC                  1.0000
+   LFRAC                  0.0   
+   SFRAC                  0.0   
+ ENTHALPY:           
+   CAL/MOL            -4100.0000
+   CAL/GM              -132.8816
+   CAL/SEC            -2.4093+05
+ AVG MW                  30.8545
+@FF@ ASPEN PLUS   PLAT: WIN-X64   VER: 41.0                   08/21/2026  PAGE 9  
+
+                             PROBLEM STATUS SECTION
+
+ BLOCK STATUS
+ ------------
+
+ ****************************************************************************
+ *                                                                          *
+ * Calculations were completed normally                                     *
+ *                                                                          *
+ * All Unit Operation blocks were completed normally                        *
+ *                                                                          *
+ * All streams were flashed normally                                        *
+ *                                                                          *
+ * All Convergence blocks were completed normally                           *
+ *                                                                          *
+ ****************************************************************************
+""".replace("@FF@", "\f")
+
+SOLVREC_CPM = """<< Run reinitialized 14:30:38 Fri Aug 21, 2026>>
+
+->Processing input specifications ...
+
+      INFORMATION
+      THERE ARE HENRY COMPONENTS DEFINED IN THIS CASE, THE BINARY DATABANK
+      WILL BE SEARCHED AUTOMATICALLY FOR ANY AVAILABLE HENRY CONSTANTS.
+
+  Flowsheet Analysis :
+
+ Block $OLVER01 (Method: WEGSTEIN) has been defined to converge
+         streams: RECYCLE
+
+ COMPUTATION ORDER FOR THE FLOWSHEET:
+ FEEDPUMP PREHEAT GASCOMP $OLVER01 MIXREC RX-STAGE RATIO COL1 SPLIT1
+ (RETURN $OLVER01)
+
+->Calculations begin ...
+
+   Block: FEEDPUMP Model: PUMP
+
+   Block: PREHEAT  Model: HEATER
+
+   Block: GASCOMP  Model: COMPR
+
+> Beginning Convergence Loop $OLVER01 Method: WEGSTEIN
+  Converging tear streams: RECYCLE
+
+   Block: MIXREC   Model: MIXER
+
+   Block: RX-STAGE Model: RSTOIC
+  *   WARNING
+      REACTION NO. "2" IS DROPPED BECAUSE REACTANT "ACETONE" HAS ZERO INLET
+      FLOW RATE.
+
+   Calculator Block RATIO
+
+   Block: COL1     Model: RADFRAC
+
+       Convergence iterations:
+         OL   ML   IL     Err/Tol
+          1    1    5      412.07
+          2    4   11      17.235
+          3    3    6     0.41023
+
+   Block: SPLIT1   Model: FSPLIT
+
+> Loop $OLVER01 Method: WEGSTEIN     Iteration    1
+  Converging tear streams: RECYCLE
+   4 vars not converged, Max Err/Tol   0.21040E+03
+
+   Block: MIXREC   Model: MIXER
+
+   Block: RX-STAGE Model: RSTOIC
+
+   Calculator Block RATIO
+
+   Block: COL1     Model: RADFRAC
+
+       Convergence iterations:
+         OL   ML   IL     Err/Tol
+          1    1    4      38.112
+          2    2    5     0.52007
+
+   Block: SPLIT1   Model: FSPLIT
+
+> Loop $OLVER01 Method: WEGSTEIN     Iteration    2
+  Converging tear streams: RECYCLE
+# Converged              Max Err/Tol   0.31200E+00
+
+->Simulation calculations completed ...
+
+               ***  Summary of Simulation Errors  ***
+
+                   Physical
+                   Property         System        Simulation
+  Terminal Errors      0               0               0
+    Severe Errors      0               0               0
+           Errors      0               0               0
+         Warnings      0               1               1
+
+->Checking phase equilibrium results ...
+
+->Generating results ...
+
+
+  ***  Warning(s) were issued during Input Translation ***
+  ***  Check the Run Status Results for more Information ***
+
+
+<< Report exported 14:31:20 Fri Aug 21, 2026>>
+"""
+
+SOLVREC_BKP = r"""MM "39.0" FLAVOR "NO" VERSION "39.0" DATETIME "Tue May 12 09:41:10 2026"
+MACHINE "WIN-NT/VC"  ;
+startlibrary
+version1
+NumLibs = 1
+Built-In
+NumCats = 1
+Separators
+active
+endlibrary
+;
+7
+>VERSION 0
+FEEDPUMP
+Pump
+Built-In
+PUMP
+>VERSION 0
+PREHEAT
+Heater
+Built-In
+HEATER
+>VERSION 0
+MIXREC
+Mixer
+Built-In
+MIXER
+>VERSION 0
+RX-STAGE
+RStoic
+Built-In
+RSTOIC
+>VERSION 0
+COL1
+RadFrac
+Built-In
+RADFRAC
+>VERSION 0
+SPLIT1
+FSplit
+Built-In
+FSPLIT
+>VERSION 0
+GASCOMP
+Compr
+Built-In
+COMPR
+? SETUP MAIN ? \ "RUN-CLASS" RUN-CLASS = FLOWSHEET \ \ SIMULATE INTERACTIVE = 
+NO \ ? SETUP DESCRIPTION ? \ DESCRIPTION DESCRIP = ( "Solvent recovery demo: 
+isopropanol to acetone" "with a bottoms recycle" ) \ ? SETUP "UNITS-SET" "US-1" 
+? \ DESCRIPTION DESCRIPTION = "Units of the demo" \ \ UNITSET BASESET = MET ( 3 
+3 3 13 3 ) \ ? COMPONENTS MAIN ? \ COMPONENTS CID = WATER ANAME = H2O OUTNAME = 
+WATER DBNAME1 = "WATER" ANAME1 = "H2O" / CID = ACETONE ANAME = "C3H6O-1" 
+OUTNAME = ACETONE DBNAME1 = "ACETONE" ANAME1 = "C3H6O-1" / CID = IPA ANAME = 
+"C3H8O-2" OUTNAME = IPA DBNAME1 = "ISOPROPYL-ALCOHOL" ANAME1 = "C3H8O-2" / CID 
+= H2 ANAME = H2 OUTNAME = H2 DBNAME1 = "HYDROGEN" ANAME1 = "H2" / CID = CO2 
+ANAME = CO2 OUTNAME = CO2 DBNAME1 = "CARBON-DIOXIDE" ANAME1 = "CO2" / CID = N2 
+ANAME = N2 OUTNAME = N2 DBNAME1 = "NITROGEN" ANAME1 = "N2" / CID = HEAVY 
+OUTNAME = HEAVY / CID = "H3O+" ANAME = "H3O+" OUTNAME = "H3O+" DBNAME1 = "H3O+" 
+ANAME1 = "H3O+" / CID = "OH-" ANAME = "OH-" OUTNAME = "OH-" DBNAME1 = "OH-" 
+ANAME1 = "OH-" / CID = "HCO3-" ANAME = "HCO3-" OUTNAME = "HCO3-" DBNAME1 = 
+"HCO3-" ANAME1 = "HCO3-" \ ? COMPONENTS "HENRY-COMPS" "HC-1" ? \ "HENRY-COMPS" 
+CID = ( H2 CO2 N2 ) \ ? CHEMISTRY "C-W" ? \ STOIC REACNO = 1 STOIC-CID = WATER 
+COEF = -2. <0> <0> / REACNO = 1 STOIC-CID = "H3O+" COEF = 1. <0> <0> / REACNO = 
+1 STOIC-CID = "OH-" COEF = 1. <0> <0> \ ? CHEMISTRY "C-CO2" ? \ STOIC REACNO = 
+1 STOIC-CID = CO2 COEF = -1. <0> <0> / REACNO = 1 STOIC-CID = WATER COEF = -2. 
+<0> <0> / REACNO = 1 STOIC-CID = "HCO3-" COEF = 1. <0> <0> / REACNO = 1 
+STOIC-CID = "H3O+" COEF = 1. <0> <0> \ ? PROPERTIES MAIN ? \ GPROPERTIES 
+GPPROCTYPE = ALL GBASEOPSET = NRTL GOPSETNAME = NRTL GHEN = "HC-1" \ ? 
+FLOWSHEET GLOBAL ? \ BLOCK BLKID = FEEDPUMP BLKTYPE = "PUMP" MDLTYPE = "Pump" 
+IN = ( FEED M0-1 ) OUT = ( S1 M0-1 ) \ \ BLOCK BLKID = PREHEAT BLKTYPE = 
+"HEATER" MDLTYPE = "Heater" IN = ( S1 M0-1 ) OUT = ( S2 M0-1 ) \ \ BLOCK BLKID 
+= MIXREC BLKTYPE = "MIXER" MDLTYPE = "Mixer" IN = ( S2 M0-1 RECYCLE M0-1 ) OUT 
+= ( S3 M0-1 ) \ \ BLOCK BLKID = "RX-STAGE" BLKTYPE = "RSTOIC" MDLTYPE = 
+"RStoic" IN = ( S3 M0-1 ) OUT = ( S4 M0-1 ) \ \ BLOCK BLKID = COL1 BLKTYPE = 
+"RADFRAC" MDLTYPE = "RadFrac" IN = ( S4 M0-1 ) OUT = ( DIST M1-2 BTMS M2-3 ) \ 
+\ BLOCK BLKID = SPLIT1 BLKTYPE = "FSPLIT" MDLTYPE = "FSplit" IN = ( BTMS M0-1 ) 
+OUT = ( PURGE M0-1 RECYCLE M0-1 ) \ \ BLOCK BLKID = GASCOMP BLKTYPE = "COMPR" 
+MDLTYPE = "Compr" IN = ( N2FEED M0-1 ) OUT = ( GASHP M0-1 ) \ ? STREAM MATERIAL 
+FEED ? ; "METCBAR_MOLE" ; \ SUBSTREAM SSID = MIXED TEMP = 30. PRES = 1.01325 \ 
+? STREAM MATERIAL N2FEED ? ; "METCBAR_MOLE" ; \ SUBSTREAM SSID = MIXED TEMP = 
+25. PRES = 1.01325 \ ? STREAM MATERIAL RECYCLE ? ; "METCBAR_MOLE" ; \ SUBSTREAM 
+SSID = MIXED TEMP = 104. PRES = 1.2 \ ? BLOCK RSTOIC "RX-STAGE" ? ; 
+"METCBAR_MOLE" ; \ PARAM TEMP = 150. PRES = 1.1 \ ? BLOCK RADFRAC COL1 ? ; 
+"METCBAR_MOLE" ; \ PARAM NSTAGE = 18 \ ? REACTIONS "R-COND" "REAC-DIST" ? \ 
+STOIC REACNO = 1 STOIC-CID = ACETONE COEF = -2. <0> <0> / REACNO = 1 STOIC-CID 
+= HEAVY COEF = 1. <0> <0> / REACNO = 1 STOIC-CID = WATER COEF = 1. <0> <0> \ ? 
+CALCULATOR RATIO ? ; "METCBAR_MOLE" ; \ DEFINE FVN = FIPA FVN-VARTYPE = 
+"MOLE-FLOW" FVN-STREAM = S2 FVN-SUBS = MIXED FVN-COMPONEN = IPA \ \ DEFINE FVN 
+= XEXT FVN-VARTYPE = "BLOCK-VAR" FVN-BLOCK = "RX-STAGE" FVN-VARIABLE = CONV 
+FVN-SENTENCE = CONV FVN-ID1 = 1 \ \ DEFINE FVN = FSPARE FVN-VARTYPE = 
+"MOLE-FLOW" FVN-STREAM = S2 FVN-SUBS = MIXED FVN-COMPONEN = WATER \ \ FORTRAN 
+FORTRAN-EXEC = ( "      XEXT = 0.75D0 + 0.0D0 * FIPA" ) \ ? "DESIGN-SPEC" 
+"DS-PUR" ? ; "METCBAR_MOLE" ; \ DEFINE FVN = XACE FVN-VARTYPE = "MOLE-FRAC" 
+FVN-STREAM = DIST FVN-SUBS = MIXED FVN-COMPONEN = ACETONE \ \ SPEC EXPR1 = 
+"XACE" EXPR2 = "0.5" \ ? "DESIGN-SPEC" "DS-RR" ? \ DEFINE FVN = RRNOW 
+FVN-VARTYPE = "BLOCK-VAR" FVN-BLOCK = COL1 \ ? "CONV-OPTIONS" ? \ PARAM 
+TEAR-METHOD = WEGSTEIN CHECKSEQ = NO \ \ WEGSTEIN WEG-MAXIT = 100 WEG-QMIN = 
+-5. <0> <0> WEG-QMAX = 0. <0> <0> \ ? TEAR ? \ TEAR SID = RECYCLE \ ? DISABLE ? 
+\ "DESIGN-SPEC" LIST = ( "DS-PUR" "DS-RR" ) \ 
+ GRAPHICS_BACKUP
+PFS V 5.00
+$_SUMMARY_FILE
+ DSET RUN-STATUS VERS @VERS ( "39.0" "WIN-X64" "" "" "" )
+ DSET RUN-STATUS IT @IT ( "MAY 12, 2026  09:40:55 A.M." "_7350klm.inm" 4)
+ DSET RUN-STATUS RUNID @RUNID ("_7350klm")
+ DSET RUN-STATUS SP @SP ( "MAY 12, 2026 09:40:55 A.M." )
+ DSET RUN-STATUS ERRTXT @L_12 (
+ "The following messages were issued during Input Translation:"
+ ""
+ "   INFORMATION"
+ "   HENRY COMPONENTS ARE DEFINED: THE BINARY DATABANK IS SEARCHED FOR"
+ "   THEIR HENRY CONSTANTS."
+ )
+ DSET RUN-STATUS TOTSTAT @TSTAT (0)
+"""
+
+SOLVREC_FILES = {"SolvRec.his": SOLVREC_HIS, "solvrec.rep": SOLVREC_REP, "SolvRec.cpm": SOLVREC_CPM,
+                 "SolvRec.bkp": SOLVREC_BKP}
+
+
+def write_solvrec(folder: Path) -> Path:
+    """The four files of the synthetic case in one version folder (CRLF, ANSI like Aspen writes)."""
+    for name, text in SOLVREC_FILES.items():
+        write(folder / name, text)
+    return folder

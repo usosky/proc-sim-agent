@@ -1,7 +1,7 @@
 """Input files (.inp): extraction from .his and the checker run before opening a file in Aspen Plus."""
 import pytest
 
-from conftest import EXAMPLE, SCRIPTS
+from conftest import SCRIPTS
 from fwlib import his, inp
 
 import samples
@@ -111,16 +111,6 @@ def test_his_to_inp_round_trip(run_files):
     assert "FRAC RECYCLE 0.3" in text
     res = inp.check(text)
     assert res["counts"]["error"] == 0, res["findings"]
-
-
-def test_joule_input_extracts_and_checks():
-    d = his.parse(EXAMPLE / "FINAL_FAprocess_50kton_V8_ForEvaluation.his")
-    res = inp.check(inp.from_his(d))
-    assert res["counts"]["error"] == 0, _msgs(res, "error")
-    # the published model defines two chemistry sets that no property method uses
-    unused = [m for m in _msgs(res, "warning") if "no PROPERTIES statement uses it" in m]
-    assert len(unused) == 2
-    assert len(res["summary"]["blocks"]) == 18
 
 
 def test_inp_diff_by_paragraph():

@@ -1,7 +1,6 @@
 """Stream checks (fw.py check): pasted result grids and .rep exports, balances, basis, metrics."""
 import pytest
 
-from conftest import EXAMPLE
 from fwlib import check
 
 import samples
@@ -68,17 +67,3 @@ def test_formulas_from_the_model_and_overrides(tmp_path):
     fml, guessed = check.formulas(["MEOH", "WATER", "X1", "CO2"], aliases, {"X1": "C2H6"})
     assert fml["MEOH"] == {"C": 1, "H": 4, "O": 1} and fml["X1"] == {"C": 2, "H": 6}
     assert guessed == ["CO2"]                               # read from the ID itself
-
-
-def test_joule_report():
-    streams = check.load(EXAMPLE / "final_faprocess_50kton_v8_forevaluation.rep")
-    aliases = check.aliases_from(EXAMPLE / "FINAL_FAprocess_50kton_V8_ForEvaluation.his")
-    res = check.analyse(streams, elements=["C", "H", "O", "N"], aliases=aliases)
-    assert res["streams"]["CO2"]["mass_unit"] == "kg/hr"
-    for b in ("FEEDMIX", "SEP1", "STRIPPER", "C311", "C411"):
-        assert abs(res["blocks"][b]["mass_rel"]) < 1e-4, b
-    # element balances of blocks whose components all have formulas close
-    for b in ("FEEDMIX", "PRES-H2O", "HEAT-NMP"):
-        assert all(abs(v["rel"] or 0) < 1e-9 for v in res["blocks"][b]["elements"].values()), b
-    # ions are zero everywhere: the chemistry sets are not used by any property method
-    assert any("apparent basis" in f for f in res["flags"])

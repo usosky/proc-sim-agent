@@ -7,12 +7,26 @@ import pytest
 ROOT = Path(__file__).resolve().parents[1]
 SKILL_DIR = ROOT / "skills" / "aspen-plus"
 SCRIPTS = SKILL_DIR / "scripts"
-EXAMPLE = ROOT / "examples" / "joule-formic-acid"
 sys.path.insert(0, str(SCRIPTS))
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 sys.path.insert(0, str(ROOT / "tools"))
 
 import samples  # noqa: E402
+
+
+def examples_folder() -> Path:
+    """The Aspen Plus examples folder: PSA_ASPEN_EXAMPLES, else the newest one that `setup --auto` finds.
+    Skips the calling test when there is none (always so on Linux and in CI)."""
+    from fwlib.common import DEFAULT_EXAMPLES_GLOBS, expand_globs, natural_key
+    env = os.environ.get("PSA_ASPEN_EXAMPLES")
+    if env:
+        if not Path(env).is_dir():
+            pytest.skip(f"PSA_ASPEN_EXAMPLES is not a folder: {env}")
+        return Path(env)
+    found = [p for p in expand_globs(DEFAULT_EXAMPLES_GLOBS) if Path(p).is_dir()]
+    if not found:
+        pytest.skip("no Aspen Plus examples folder; set PSA_ASPEN_EXAMPLES")
+    return Path(max(found, key=natural_key))
 
 
 @pytest.fixture

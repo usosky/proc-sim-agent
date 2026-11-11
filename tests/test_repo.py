@@ -86,7 +86,7 @@ def test_gitignore_does_not_hide_shipped_files():
     inside = subprocess.run(["git", "rev-parse", "--is-inside-work-tree"], cwd=ROOT, capture_output=True, text=True)
     if inside.returncode != 0:
         pytest.skip("not a git checkout")
-    shipped = [str(p.relative_to(ROOT)) for d in ("skills", "evals", "tools", "tests", "examples", "docs",
+    shipped = [str(p.relative_to(ROOT)) for d in ("skills", "evals", "tools", "tests", "docs",
                                                   ".claude-plugin")
                for p in (ROOT / d).rglob("*") if p.is_file() and "__pycache__" not in p.parts
                and not (d == "evals" and "results" in p.relative_to(ROOT / d).parts[:1])]   # local eval output

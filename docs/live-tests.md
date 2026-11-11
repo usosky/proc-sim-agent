@@ -142,7 +142,7 @@ In Git Bash: `PSA_LIVE_ASPEN=1 py -3 -m pytest tests/test_com_live.py -v`. Set
 
 ## Run stamps
 
-The freshness check was written from the formats of the files in `examples/` and synthetic files.
+The freshness check was written from real run files and synthetic files.
 These checks confirm it on real runs:
 
 | # | Test | Pass |
