@@ -48,9 +48,10 @@ the Anthropic Software Directory Terms and Policy before submitting:
 https://support.claude.com/en/articles/13145338-anthropic-software-directory-terms and
 https://support.claude.com/en/articles/13145358-anthropic-software-directory-policy.
 
-1. Icon. The directory takes the listing icon once: the first time the plugin is saved or
-   submitted in the portal. Before that, add a square PNG (512 to 2048 px a side, under 2 MB) as
-   icon.png in the plugin's .claude-plugin folder. `claude plugin validate` reports a missing icon.
+1. Icon: `plugins/proc-sim-agent/.claude-plugin/icon.png`, a square PNG (512 to 2048 px a side,
+   under 2 MB; the tests check it). The directory takes the listing icon once: the first time the
+   plugin is saved or submitted in the portal. Changing the file later does not change the
+   listing. `claude plugin validate` reports a missing icon.
 2. Connect GitHub in claude.ai. While the repository is private, validation also needs the Claude
    GitHub App on the repository and your consent to the source upload. Publishing needs the
    repository public.

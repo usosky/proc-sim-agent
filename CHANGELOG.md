@@ -29,6 +29,8 @@ Ready to publish; the skill's behaviour is unchanged.
   plugin directory scans. It holds `.claude-plugin/plugin.json` (new), the Agent Plugins
   `plugin.json`, a README that says what the scripts run, read, write and send, a copy of the
   LICENSE, and the skill.
+- The listing icon, `plugins/proc-sim-agent/.claude-plugin/icon.png` (800 x 800 px PNG,
+  transparent).
 - `.claude-plugin/marketplace.json`: one entry `proc-sim-agent` with source
   `./plugins/proc-sim-agent`, without `strict`, `skills` or `version`; `renames` moves an install of
   the old name `aspen-plus`.
