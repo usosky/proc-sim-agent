@@ -8,7 +8,7 @@ metadata:
   version: "0.3.1"
   homepage: https://github.com/usosky/proc-sim-agent
   aspen-plus-tested: "V15"
-  last-reviewed: "2026-11-04"
+  last-reviewed: "2026-11-11"
 ---
 
 # Aspen Plus assistant (proc-sim-agent)
@@ -27,7 +27,7 @@ by stage, from an empty flowsheet to a checked baseline. Evidence comes from loc
 
 Paths are relative to the folder that contains this SKILL.md. Run the tool as
 `python scripts/fw.py ...` from that folder, or with its full path. On Windows use `py -3` when
-`python` is missing or opens the Microsoft Store.
+`python` is missing or opens the Microsoft Store. On Linux or macOS use `python3`.
 
 ```text
 python scripts/fw.py status
