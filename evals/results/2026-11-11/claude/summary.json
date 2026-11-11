@@ -1,0 +1,58 @@
+{
+  "agent": "claude",
+  "version": "2.1.322 (Claude Code)",
+  "date": "2026-11-11",
+  "results": [
+    {
+      "case": "run-review",
+      "run": 1,
+      "returncode": 0,
+      "seconds": 44.1,
+      "skill_loaded": true,
+      "skill_signal": "pattern",
+      "checks": [
+        {
+          "check": "regex \\|\\s*Item\\s*\\|\\s*Expected[^|\\n]*\\|\\s*Model[^|\\n]*\\|\\s*Verdict[^|\\n]*\\|",
+          "ok": true
+        },
+        {
+          "check": "regex Product temperature[^\\n]*fail",
+          "ok": true
+        },
+        {
+          "check": "regex Make-up water[^\\n]*missing",
+          "ok": true
+        }
+      ],
+      "rubric": {
+        "verdict": "PASS",
+        "reason": "VERDICT: PASS\n\nThe answer meets every rubric point. It reads the v0.04 files itself and confirms the .his and .rep come from the same run (10:15:02 and 10:15:40, 38 s apart). Its table shows the product temperature failing (40 \u00b0C against 45 \u00b0C), MAKEUP missing, and the mass balance, CO2 and R1 duty items passing, and it says the step did not pass. It gives fixes (set R1 to 45 \u00b0C, add MAKEUP into MIX1) and lists what to send next time, including the .bkp. Two things are worth noting: it marks two of the passes \"pass on paper\" with caveats, and it adds extra figures (component-derived mass flows, a \u221215000 W final-iteration duty, bugs in calculator CAP) that I could not check because the grading folder has no files."
+      },
+      "pass": true
+    },
+    {
+      "case": "stale-files",
+      "run": 1,
+      "returncode": 0,
+      "seconds": 49.4,
+      "skill_loaded": true,
+      "skill_signal": "pattern",
+      "checks": [
+        {
+          "check": "regex older|stale",
+          "ok": true
+        },
+        {
+          "check": "regex Export\\s*>\\s*Report",
+          "ok": true
+        }
+      ],
+      "rubric": {
+        "verdict": "PASS",
+        "reason": "VERDICT: PASS\n\nThe answer meets the rubric's freshness requirement. Before discussing any numbers, it says that FA.his and fa.rep come from the 2 October run while FA.bkp is from 6 October, four days later. It dates the files from the run stamps inside them, not from modification times. It says the \"no errors\" status belongs only to that older run, and it asks the user to reinitialize, rerun, save, and export the report again (File > Export > Report) before the review. It treats the later findings from the report as things to check, not as current results, which the rubric allows."
+      },
+      "pass": true
+    }
+  ],
+  "triggers": null
+}

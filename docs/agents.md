@@ -42,7 +42,7 @@ one copy in a project's `.claude\skills`, which both read (`install_skill.py --p
 |---|---|---|
 | Skill format (portability test; skills-ref in CI) | passes | passes (same skill) |
 | Install folders | documented route checked | CLI folders checked with `copilot skill list`; VS Code pending (L0) |
-| Eval suite (`evals/run.py`) | run in November 2026 on Linux, see `evals/results/` | for the owner: `python evals/run.py --agent copilot`, or evals/MANUAL.md in VS Code |
+| Eval suite (`evals/run.py`) | run in November 2026 on Linux: all cases and triggers with 2.1.288; `run-review` and `stale-files` with 2.1.322 after the move to `plugins/proc-sim-agent` (2 of 2 pass); see `evals/results/` | for the owner: `python evals/run.py --agent copilot`, or evals/MANUAL.md in VS Code |
 | On Windows with Aspen Plus | live tests L0-L6, T0-T5, E1 in docs/live-tests.md (owner) | the same |
 | File readers in a Linux sandbox with the user's folders connected (Claude desktop app) | `status` and `bkp` ran on 10 Nov 2026 with Python 3.10 on an AspenTech example; automation is not available there (not Windows) | - |
 

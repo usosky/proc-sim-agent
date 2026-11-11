@@ -50,6 +50,8 @@ Ready to publish; the skill's behaviour is unchanged.
 - `tests/test_examples_local.py`: up to 40 `.bkp` of AspenTech's official examples, read in place
   where an examples folder exists; skipped elsewhere, so CI is not affected.
 - `tests/test_directory_preflight.py`: the plugin directory's checks (P1-P16) as offline tests.
+- Evals: `run-review` and `stale-files` with Claude Code 2.1.322 after the move, 2 of 2 pass
+  (`evals/results/2026-11-11/`): the runner installs the skill from the new path.
 
 ### CI
 - The `-h` loops, the description-length step and `skills-ref` use the plugin folder's paths; the
