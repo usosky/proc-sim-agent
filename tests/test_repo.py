@@ -3,7 +3,7 @@ import json
 import re
 
 import skillmeta
-from conftest import ROOT, SKILL_DIR
+from conftest import PLUGIN_DIR, ROOT, SKILL_DIR
 
 SKILL = SKILL_DIR / "SKILL.md"
 SCHEMA = "https://agent-plugins.org/schemas/1.0.0/plugin.schema.json"
@@ -14,17 +14,16 @@ def _json(*parts):
 
 
 def test_layout():
-    """One copy of the skill, at skills/aspen-plus; tests and evals outside it."""
+    """One copy of the skill, in the plugin folder plugins/proc-sim-agent; tests and evals outside it."""
     assert SKILL.is_file()
-    assert not (ROOT / "plugins").exists(), "the old plugins/ tree must be gone"
+    assert not (ROOT / "skills").exists() and not (ROOT / "plugin.json").exists()
     assert not (SKILL_DIR / "tests").exists() and not (SKILL_DIR / "evals").exists()
-    # Claude Code reads .claude-plugin/plugin.json; with "strict": false it would conflict
-    # with the marketplace entry's skills list, so there must be none anywhere
-    assert not list(ROOT.rglob(".claude-plugin/plugin.json"))
+    found = [p.relative_to(ROOT).as_posix() for p in ROOT.rglob(".claude-plugin/plugin.json")]
+    assert found == ["plugins/proc-sim-agent/.claude-plugin/plugin.json"]
 
 
 def test_agent_plugins_manifest():
-    plugin = _json("plugin.json")
+    plugin = json.loads((PLUGIN_DIR / "plugin.json").read_text(encoding="utf-8"))
     assert plugin["$schema"] == SCHEMA
     assert plugin["name"] == "proc-sim-agent" and plugin["license"] == "MIT"
 
@@ -32,19 +31,17 @@ def test_agent_plugins_manifest():
 def test_claude_marketplace_entry():
     market = _json(".claude-plugin", "marketplace.json")
     assert market["name"] == "proc-sim-agent"
-    entry = next(p for p in market["plugins"] if p["name"] == "aspen-plus")
-    assert entry["source"] == "./" and entry["strict"] is False
-    assert entry["skills"] == ["./skills/aspen-plus"]
+    [entry] = market["plugins"]
+    assert entry["name"] == "proc-sim-agent" and entry["source"] == "./plugins/proc-sim-agent"
+    assert not {"strict", "skills", "version"} & set(entry)       # the plugin manifest is the one source
 
 
 def test_one_version_everywhere():
-    """plugin.json, the marketplace entry (Claude Code reads the version there, as the entry is
-    the manifest), SKILL.md metadata, fwlib.__version__, CITATION.cff and .zenodo.json carry the
-    same version."""
+    """Both manifests in the plugin folder, SKILL.md metadata, fwlib.__version__, CITATION.cff and
+    .zenodo.json carry the same version; the marketplace entry carries none."""
     from fwlib import __version__
-    version = _json("plugin.json")["version"]
-    entry = next(p for p in _json(".claude-plugin", "marketplace.json")["plugins"] if p["name"] == "aspen-plus")
-    assert entry["version"] == version
+    version = json.loads((PLUGIN_DIR / ".claude-plugin" / "plugin.json").read_text(encoding="utf-8"))["version"]
+    assert json.loads((PLUGIN_DIR / "plugin.json").read_text(encoding="utf-8"))["version"] == version
     assert __version__ == version
     assert re.search(rf"^version: {re.escape(version)}$", (ROOT / "CITATION.cff").read_text(encoding="utf-8"), re.M)
     assert _json(".zenodo.json")["version"] == version
@@ -86,11 +83,10 @@ def test_gitignore_does_not_hide_shipped_files():
     inside = subprocess.run(["git", "rev-parse", "--is-inside-work-tree"], cwd=ROOT, capture_output=True, text=True)
     if inside.returncode != 0:
         pytest.skip("not a git checkout")
-    shipped = [str(p.relative_to(ROOT)) for d in ("skills", "evals", "tools", "tests", "docs",
+    shipped = [str(p.relative_to(ROOT)) for d in ("plugins", "evals", "tools", "tests", "docs",
                                                   ".claude-plugin")
                for p in (ROOT / d).rglob("*") if p.is_file() and "__pycache__" not in p.parts
                and not (d == "evals" and "results" in p.relative_to(ROOT / d).parts[:1])]   # local eval output
-    shipped.append("plugin.json")
     res = subprocess.run(["git", "check-ignore", "--no-index", "--stdin"], cwd=ROOT, input="\n".join(shipped),
                          capture_output=True, text=True)
     assert res.stdout.strip() == "", f"ignored by .gitignore: {res.stdout}"

@@ -71,3 +71,17 @@ def test_refuses_to_remove_a_folder_that_is_not_the_skill(home):
     assert "not removing" in run(home, "--target", "claude", "--uninstall", ok=(1,))
     assert "not replacing" in run(home, "--target", "claude", "--force", ok=(1,))
     assert other.exists()
+
+
+@pytest.mark.parametrize("plugin", ["proc-sim-agent@proc-sim-agent", "aspen-plus@proc-sim-agent"])
+def test_warns_when_the_claude_plugin_also_holds_the_skill(home, plugin):
+    """The plugin is proc-sim-agent since 0.3.1; an install of the 0.3.0 name aspen-plus is found too."""
+    f = home / ".claude" / "plugins" / "installed_plugins.json"
+    f.parent.mkdir(parents=True)
+    f.write_text('{"version": 2, "plugins": {"%s": [{"scope": "user", "version": "0.3.1"}]}}' % plugin,
+                 encoding="utf-8")
+    out = run(home, "--target", "claude")
+    assert "Claude Code will see 2 copies" in out and f"plugin {plugin}" in out
+    other = '{"version": 2, "plugins": {"another-plugin@proc-sim-agent": []}}'
+    f.write_text(other, encoding="utf-8")
+    assert "Claude Code will see" not in run(home, "--target", "claude", "--force")

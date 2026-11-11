@@ -5,7 +5,8 @@ from pathlib import Path
 import pytest
 
 ROOT = Path(__file__).resolve().parents[1]
-SKILL_DIR = ROOT / "skills" / "aspen-plus"
+PLUGIN_DIR = ROOT / "plugins" / "proc-sim-agent"
+SKILL_DIR = PLUGIN_DIR / "skills" / "aspen-plus"
 SCRIPTS = SKILL_DIR / "scripts"
 sys.path.insert(0, str(SCRIPTS))
 sys.path.insert(0, str(Path(__file__).resolve().parent))

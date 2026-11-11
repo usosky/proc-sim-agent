@@ -4,25 +4,14 @@
     "name": "Denis Usosky",
     "url": "https://orcid.org/0000-0002-6245-5110"
   },
-  "description": "Agent Skill for Aspen Plus, installable as a Claude Code plugin. Answers are grounded in the user's own locally installed Aspen Plus help, model files and literature; no vendor content is distributed.",
+  "description": "Agent Skills for process simulation software. Answers are grounded in the user's own locally installed product help, model files and literature; no vendor content is distributed.",
   "plugins": [
     {
-      "name": "aspen-plus",
-      "displayName": "Aspen Plus (proc-sim-agent)",
-      "source": "./",
-      "strict": false,
-      "skills": ["./skills/aspen-plus"],
-      "version": "0.3.0",
-      "description": "Aspen Plus assistant: builds models with you stage by stage, writes input files (.inp), reads your .his, .rep, .cpm and .bkp files, checks balances and KPIs, searches your local Aspen Plus help and example library, and runs Aspen Plus by automation on Windows.",
-      "author": {
-        "name": "Denis Usosky",
-        "url": "https://orcid.org/0000-0002-6245-5110"
-      },
-      "homepage": "https://github.com/usosky/proc-sim-agent",
-      "repository": "https://github.com/usosky/proc-sim-agent",
-      "license": "MIT",
-      "keywords": ["aspen-plus", "process-simulation", "chemical-engineering", "flowsheet", "aspentech", "agent-skills"],
+      "name": "proc-sim-agent",
+      "source": "./plugins/proc-sim-agent",
+      "description": "Aspen Plus assistant for chemical engineers: builds models with you stage by stage, writes input files, reads your run files, checks balances and KPIs, searches the Aspen Plus help and example library installed on your computer, and can run Aspen Plus by automation on Windows. Independent project, not affiliated with AspenTech.",
       "category": "engineering"
     }
-  ]
+  ],
+  "renames": { "aspen-plus": "proc-sim-agent" }
 }

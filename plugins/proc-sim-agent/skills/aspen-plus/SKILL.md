@@ -5,7 +5,7 @@ license: MIT
 compatibility: Windows. Python 3.8+ (standard library); pypdf optional for PDFs; pywin32 and a licensed Aspen Plus V12-V15 on the same PC only to run or edit models by automation. Reads Aspen Plus files and the locally installed Aspen Plus help. No network access needed.
 metadata:
   author: Denis Usosky
-  version: "0.3.0"
+  version: "0.3.1"
   homepage: https://github.com/usosky/proc-sim-agent
   aspen-plus-tested: "V15"
   last-reviewed: "2026-11-04"

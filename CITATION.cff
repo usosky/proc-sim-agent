@@ -13,7 +13,7 @@ authors:
   - family-names: Usosky
     given-names: Denis
     orcid: "https://orcid.org/0000-0002-6245-5110"
-version: 0.3.0
+version: 0.3.1
 date-released: 2026-11-04
 license: MIT
 repository-code: "https://github.com/usosky/proc-sim-agent"
