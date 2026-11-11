@@ -42,7 +42,6 @@ the install folders are checked; the eval suite has been run with Claude Code on
 | "Check my calculator code" | extracts the inline Fortran from the run and lints it (column 72, tabs, undefined names, assigned imports, unused imports); a calculator kept as a `.txt` file is linted and, with gfortran, compiled (`fortran-check`) |
 | "Compare the reboiler duty with the table in the paper" | reads the report, converts units, builds the comparison table |
 | "What does my library say about formic acid / NRTL binaries?" | full-text search of your PDFs and notes, with document and page |
-| "Let's build a model of this process from scratch" | frames the job, keeps a data card, gives expected values from a check model before each run, plans versions and gates in a build guide, reviews every run against the expected values and keeps a STATUS.md |
 | "Write it as an input file" | writes the model as an `.inp`, checks it (`inp-check`), you open it with File > Open and run |
 | "Run this case for five feed temperatures" | on Windows with pywin32, runs copies of the model through Aspen's automation interface: one run per point, a CSV with the status of each; reads values with units, adds blocks and streams; your file is never changed |
 | "How does AspenTech model MEA capture?" | searches the example library on your computer by process, block, property method, component; shows the chemistry and block setup |
