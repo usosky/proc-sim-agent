@@ -20,15 +20,13 @@ the installed skill folder (for example `%USERPROFILE%\.claude\skills\aspen-plus
 
 ## 2. Get the repository
 
-While the repository is private you need access to it and a signed-in Git:
-
 ```text
-gh auth login
-gh repo clone usosky/proc-sim-agent
+git clone https://github.com/usosky/proc-sim-agent.git
 cd proc-sim-agent
 ```
 
-(or `git clone https://github.com/usosky/proc-sim-agent.git` with Git Credential Manager).
+While the repository is private, the clone needs access to it and a signed-in Git (Git Credential
+Manager, or `gh auth login` first).
 
 ## 3. Install the skill
 
@@ -63,6 +61,10 @@ records what VS Code does.
 /plugin marketplace add usosky/proc-sim-agent
 /plugin install proc-sim-agent@proc-sim-agent
 ```
+
+With Claude Code 2.1.275 or later one line does both:
+`/plugin install proc-sim-agent --marketplace usosky/proc-sim-agent`. Claude Code installs only
+the plugin folder, `plugins\proc-sim-agent`, and lists the skill as `proc-sim-agent:aspen-plus`.
 
 Use either the plugin or the `--target claude` copy, not both (Claude Code would see two skills).
 

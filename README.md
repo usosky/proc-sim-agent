@@ -24,6 +24,12 @@ automation interface, and searches your own library of papers and notes.
 proc-sim-agent ships no AspenTech content. On first use it indexes the help that came with your
 Aspen Plus installation, on your computer.
 
+**Status (v0.3.1).** The file readers, the checks and the help search are in daily use on real
+models. The automation commands are tested against a simulated Aspen Plus in the test suite; the
+live tests on Windows with a licensed Aspen Plus are in [docs/live-tests.md](docs/live-tests.md)
+and their results in [docs/agents.md](docs/agents.md). For GitHub Copilot the skill format and
+the install folders are checked; the eval suite has been run with Claude Code only.
+
 ## What it does
 
 | You ask | proc-sim-agent does |
@@ -49,11 +55,11 @@ Requirements: Windows with Aspen Plus V12-V15 installed (for its help files), Py
 licensed Aspen Plus (automation), `gfortran` (compiling calculator code). Step by step:
 [docs/install.md](docs/install.md).
 
-While the repository is private, clone it with your GitHub sign-in, then copy the skill to your
-agent's skills folder:
+Clone the repository, then copy the skill to your agent's skills folder (while the repository is
+private, the clone needs your GitHub sign-in):
 
 ```text
-gh repo clone usosky/proc-sim-agent
+git clone https://github.com/usosky/proc-sim-agent.git
 cd proc-sim-agent
 py -3 tools\install_skill.py --target claude
 py -3 tools\install_skill.py --target copilot
@@ -61,10 +67,21 @@ py -3 tools\install_skill.py --target copilot
 
 | Agent | Install | Skill folder |
 |---|---|---|
-| Claude Code | `--target claude`, or the plugin: `/plugin marketplace add usosky/proc-sim-agent`, then `/plugin install proc-sim-agent@proc-sim-agent` | `%USERPROFILE%\.claude\skills\aspen-plus` |
+| Claude Code | `--target claude`, or the plugin (below) | `%USERPROFILE%\.claude\skills\aspen-plus` |
 | GitHub Copilot CLI | `--target copilot` | `%USERPROFILE%\.copilot\skills\aspen-plus` |
 | VS Code agent mode | `--project "<workspace>"` | `<workspace>\.github\skills\aspen-plus` |
 | Codex, Gemini CLI (untested) | `--target agents` | `%USERPROFILE%\.agents\skills\aspen-plus` |
+
+In Claude Code the skill can also be installed as the plugin `proc-sim-agent`, without a clone
+(Claude Code 2.1.275 or later):
+
+```text
+/plugin install proc-sim-agent --marketplace usosky/proc-sim-agent
+```
+
+or in two steps: `/plugin marketplace add usosky/proc-sim-agent`, then
+`/plugin install proc-sim-agent@proc-sim-agent`. Use the plugin or the `--target claude` copy, not
+both.
 
 Then start a new agent session and ask *"Set up proc-sim-agent for my Aspen Plus help"*. The agent
 runs, in the skill folder:
@@ -79,6 +96,22 @@ py -3 scripts\fw.py status
 `help-index` repeats until it prints `complete` (each run about 100 s, resumable). Indexes are
 stored in `%USERPROFILE%\.proc-sim-agent` (set `PROC_SIM_AGENT_HOME` to move them).
 
+## Try it on an AspenTech example
+
+Aspen Plus installs a library of example models (for V15 under
+`C:\Program Files\AspenTech\Aspen Plus V15.0\GUI\Examples`). `setup --auto` finds the newest
+release's library there. Index it once, then search it:
+
+```text
+py -3 scripts\fw.py setup --auto
+py -3 scripts\fw.py examples-index
+py -3 scripts\fw.py examples-search "CO2 capture MEA" --block RADFRAC
+```
+
+Copy an example to a folder of your own, open it in Aspen Plus, run it, save the `.bkp` and
+export the report (File > Export > Report). Then ask the agent *"Look at my model folder"*. The
+examples stay on your computer: none of them is in this repository.
+
 ## How it works
 
 ```text
@@ -89,8 +122,9 @@ your .his .rep .cpm .bkp -----------parsers----------------+          |
 Aspen Plus (automation, copies) <---com-*-------------------+          +--> .inp files you open in Aspen
 ```
 
-The plugin folder `plugins/proc-sim-agent/` is what Claude Code installs. The skill is in its
-`skills/aspen-plus/`:
+The plugin folder `plugins/proc-sim-agent/` is what Claude Code installs: the two manifests, a
+README that says what the scripts run, read, write and send, a copy of the LICENSE, and the skill
+in `skills/aspen-plus/`:
 
 - `SKILL.md`: when and how the agent uses the tool, the answer style, privacy rules.
 - `references/`: curated knowledge (messages and fixes, calculator and Fortran rules, workflows,
@@ -129,8 +163,11 @@ each.
 - The agent you use sends what it reads to its model provider under your account's terms, so keep
   confidential files out of the conversation when that matters.
 - Nothing from your models, results or notes is ever committed or published by this skill;
-  examples come from AspenTech's example library on your own installation or from public,
-  licensed models.
+  examples come from AspenTech's example library on your own installation.
+- Besides Python, the scripts start only `gfortran` (a calculator check you ask for), `pdftotext`
+  (PDFs, when no Python PDF library is installed), the Windows `tasklist` command and, for
+  automation, Aspen Plus: see
+  [What it runs, reads, writes and sends](plugins/proc-sim-agent/README.md#what-it-runs-reads-writes-and-sends).
 - The run-file digests leave out the licence holder, Windows user and computer names and run
   folders; `.def` and `.scr` files are never read.
 - `tools/scrub_aspen_files.py` makes shareable copies of model files (see [NOTICE.md](NOTICE.md)).
@@ -139,7 +176,8 @@ each.
 
 Fixes from the live tests on Windows (docs/live-tests.md); a `.sum` reader; read-only access to
 a case open in Aspen (`--attach`); more verified input-language forms (RPlug, RCSTR, RGibbs,
-MCompr); Aspen HYSYS and Aspen Adsorption skills (the indexer already reads their help).
+MCompr); Aspen HYSYS and Aspen Adsorption as further skills in the same plugin (the indexer
+already reads their help).
 Contributions welcome: [CONTRIBUTING.md](CONTRIBUTING.md).
 
 ## Cite
