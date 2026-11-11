@@ -1,9 +1,60 @@
 # Changelog
 
-All notable changes are listed here. Versions follow [Semantic Versioning](https://semver.org);
-set the same `version` in `plugin.json`, the marketplace entry in `.claude-plugin/marketplace.json`,
-SKILL.md `metadata.version`, `fwlib.__version__`, `CITATION.cff` and `.zenodo.json` with every release
-(`tests/test_repo.py` checks that they agree), or installed copies will not update.
+All notable changes are listed here. Versions follow [Semantic Versioning](https://semver.org).
+The version lives in the two manifests in `plugins/proc-sim-agent/` (`.claude-plugin/plugin.json`
+and `plugin.json`), SKILL.md `metadata.version`, `fwlib.__version__`, `CITATION.cff` and
+`.zenodo.json`; set the same version in all of them with every release
+(`tests/test_directory_preflight.py` checks that they agree), or installed copies will not update.
+The marketplace entry in `.claude-plugin/marketplace.json` carries none.
+
+## [0.3.1] - 2026-11-11
+
+Ready to publish; the skill's behaviour is unchanged.
+
+### Migration
+- The Claude Code plugin is now called `proc-sim-agent`; it was `aspen-plus`. Plugin users run
+  `/plugin marketplace update proc-sim-agent`, then `/plugin uninstall aspen-plus@proc-sim-agent`
+  and `/plugin install proc-sim-agent@proc-sim-agent`. The skill is still called `aspen-plus`.
+- A copied skill is updated with `py -3 tools\install_skill.py --target claude --force`.
+- The skill moved to `plugins/proc-sim-agent/skills/aspen-plus/` and the Agent Plugins manifest to
+  `plugins/proc-sim-agent/plugin.json`.
+
+### Removed
+- `examples/joule-formic-acid/` with its model, run files and check script, and the ten tests that
+  read them. The repository holds no model files: the reference models are AspenTech's examples on
+  the user's own installation, found with `examples-index`.
+
+### Packaging
+- `plugins/proc-sim-agent/` is the plugin folder: what Claude Code installs and what Anthropic's
+  plugin directory scans. It holds `.claude-plugin/plugin.json` (new), the Agent Plugins
+  `plugin.json`, a README that says what the scripts run, read, write and send, a copy of the
+  LICENSE, and the skill.
+- `.claude-plugin/marketplace.json`: one entry `proc-sim-agent` with source
+  `./plugins/proc-sim-agent`, without `strict`, `skills` or `version`; `renames` moves an install of
+  the old name `aspen-plus`.
+- `tools/install_skill.py` copies from the new path; its duplicate warning finds the plugin under
+  both names.
+- `.zenodo.json` and `CITATION.cff`: new title, description and keywords; `url` in `CITATION.cff`;
+  the reference to the removed example's paper is gone.
+
+### Docs
+- README: a status paragraph, "Try it on an AspenTech example" in place of the published model,
+  the external programs the scripts can start, the new paths and plugin commands.
+- `docs/publishing.md` rewritten as the checklist for GitHub, Zenodo and Anthropic's plugin
+  directory (the GitLab section is unchanged). `docs/install.md`, `docs/agents.md`,
+  `docs/live-tests.md`, `CONTRIBUTING.md` and `NOTICE.md`: paths, the plugin name, the migration.
+
+### Tests
+- A synthetic case (`tests/samples.py`, `tests/test_solvrec_case.py`) in place of the Joule files:
+  the coverage of every reader module is at or above its value with the Joule tests.
+- `tests/test_examples_local.py`: up to 40 `.bkp` of AspenTech's official examples, read in place
+  where an examples folder exists; skipped elsewhere, so CI is not affected.
+- `tests/test_directory_preflight.py`: the plugin directory's checks (P1-P16) as offline tests.
+
+### CI
+- The `-h` loops, the description-length step and `skills-ref` use the plugin folder's paths; the
+  Agent Plugins schema check reads `plugins/proc-sim-agent/plugin.json`; Claude Code 2.1.322
+  validates the marketplace and the plugin folder; the scrub step checks `evals/cases` only.
 
 ## [0.3.0] - 2026-11-04
 

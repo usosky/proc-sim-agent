@@ -1,8 +1,8 @@
 {
-  "title": "proc-sim-agent: Claude Code plugins for chemical process simulation",
+  "title": "proc-sim-agent: an Agent Skill for Aspen Plus process simulation",
   "version": "0.3.1",
   "upload_type": "software",
-  "description": "<p>Claude Code plugins that ground answers about process simulation software in the user's own locally installed product help, simulation files and literature. The first plugin covers Aspen Plus: full-text index of the local help and of the example-model library, run-history, report and Control Panel parsers, stream balance and KPI checks, an input-file writer workflow with a checker, staged model building, inline-Fortran checks, model review and version comparison, and a curated knowledge base of run messages and calculator practice. No vendor content is distributed.</p>",
+  "description": "<p>proc-sim-agent is an open-source Agent Skill (agentskills.io) that helps chemical engineers work in Aspen Plus with a coding agent such as Claude Code or GitHub Copilot. It grounds answers in the user's own locally installed Aspen Plus help and example library, simulation files and literature: a full-text index of the local help and of the example models; readers for run history, report, Control Panel and backup files, with a check that they come from the same run; stream balance and KPI checks against expected values; staged model building; an input-file writer workflow with a checker; inline-Fortran checks; Aspen Plus automation (COM) on copies of a model; and a curated knowledge base of run messages and calculator practice. No vendor content is distributed.</p>",
   "creators": [
     {
       "name": "Usosky, Denis",
@@ -16,8 +16,9 @@
     "process simulation",
     "Aspen Plus",
     "chemical engineering",
+    "agent skills",
     "Claude Code",
-    "agent skills"
+    "GitHub Copilot"
   ],
   "grants": [
     {
